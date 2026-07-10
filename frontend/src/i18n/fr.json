@@ -1,0 +1,65 @@
+{
+  "app": {
+    "title": "MamaSafe",
+    "subtitle": "Évaluation des Risques Maternels par IA"
+  },
+  "nav": {
+    "assess": "Nouvelle Évaluation",
+    "history": "Historique",
+    "dashboard": "Tableau de bord",
+    "logout": "Déconnexion"
+  },
+  "auth": {
+    "loginTitle": "Connexion",
+    "registerTitle": "Créer un Compte",
+    "username": "Nom d'utilisateur",
+    "password": "Mot de passe",
+    "loginButton": "Se Connecter",
+    "registerButton": "S'inscrire",
+    "noAccount": "Pas encore de compte ?",
+    "hasAccount": "Déjà un compte ?",
+    "error": "Identifiants incorrects",
+    "registerSuccess": "Compte créé. Veuillez vous connecter."
+  },
+  "assessment": {
+    "title": "Nouvelle Évaluation",
+    "patientRef": "Référence Patient (optionnel)",
+    "age": "Âge (années)",
+    "systolicBP": "PA Systolique (mmHg)",
+    "diastolicBP": "PA Diastolique (mmHg)",
+    "bloodSugar": "Glycémie (mmol/L)",
+    "bodyTemp": "Température Corporelle (°F)",
+    "heartRate": "Fréquence Cardiaque (bpm)",
+    "submit": "Évaluer le Risque",
+    "submitting": "Évaluation en cours..."
+  },
+  "result": {
+    "title": "Résultat de l'Évaluation",
+    "riskLevel": "Niveau de Risque",
+    "confidence": "Confiance",
+    "recommendation": "Recommandation",
+    "shapTitle": "Impact des Variables (SHAP)",
+    "newAssessment": "Nouvelle Évaluation",
+    "backToHistory": "Retour à l'Historique"
+  },
+  "history": {
+    "title": "Historique des Évaluations",
+    "empty": "Aucune évaluation pour le moment.",
+    "date": "Date",
+    "patient": "Patient",
+    "risk": "Risque",
+    "view": "Voir"
+  },
+  "dashboard": {
+    "title": "Tableau de bord",
+    "total": "Total des Évaluations",
+    "highRisk": "Risque Élevé",
+    "midRisk": "Risque Modéré",
+    "lowRisk": "Risque Faible"
+  },
+  "risk": {
+    "high": "Risque Élevé",
+    "mid": "Risque Modéré",
+    "low": "Risque Faible"
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "app": {
+    "title": "MamaSafe",
+    "subtitle": "AI-Powered Maternal Risk Assessment"
+  },
+  "nav": {
+    "assess": "New Assessment",
+    "history": "History",
+    "dashboard": "Dashboard",
+    "logout": "Logout"
+  },
+  "auth": {
+    "loginTitle": "Sign In",
+    "registerTitle": "Create Account",
+    "username": "Username",
+    "password": "Password",
+    "loginButton": "Sign In",
+    "registerButton": "Register",
+    "noAccount": "Don't have an account?",
+    "hasAccount": "Already have an account?",
+    "error": "Invalid credentials",
+    "registerSuccess": "Account created. Please sign in."
+  },
+  "assessment": {
+    "title": "New Assessment",
+    "patientRef": "Patient Reference (optional)",
+    "age": "Age (years)",
+    "systolicBP": "Systolic BP (mmHg)",
+    "diastolicBP": "Diastolic BP (mmHg)",
+    "bloodSugar": "Blood Sugar (mmol/L)",
+    "bodyTemp": "Body Temperature (°F)",
+    "heartRate": "Heart Rate (bpm)",
+    "submit": "Assess Risk",
+    "submitting": "Assessing..."
+  },
+  "result": {
+    "title": "Assessment Result",
+    "riskLevel": "Risk Level",
+    "confidence": "Confidence",
+    "recommendation": "Recommendation",
+    "shapTitle": "Feature Impact (SHAP)",
+    "newAssessment": "New Assessment",
+    "backToHistory": "Back to History"
+  },
+  "history": {
+    "title": "Assessment History",
+    "empty": "No assessments yet.",
+    "date": "Date",
+    "patient": "Patient",
+    "risk": "Risk",
+    "view": "View"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "total": "Total Assessments",
+    "highRisk": "High Risk",
+    "midRisk": "Moderate Risk",
+    "lowRisk": "Low Risk"
+  },
+  "risk": {
+    "high": "High Risk",
+    "mid": "Moderate Risk",
+    "low": "Low Risk"
+  }
+}
