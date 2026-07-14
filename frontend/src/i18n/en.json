@@ -1,65 +1,45 @@
 {
-  "app": {
-    "title": "MamaSafe",
-    "subtitle": "AI-Powered Maternal Risk Assessment"
-  },
-  "nav": {
-    "assess": "New Assessment",
-    "history": "History",
-    "dashboard": "Dashboard",
-    "logout": "Logout"
-  },
-  "auth": {
-    "loginTitle": "Sign In",
-    "registerTitle": "Create Account",
-    "username": "Username",
-    "password": "Password",
-    "loginButton": "Sign In",
-    "registerButton": "Register",
-    "noAccount": "Don't have an account?",
-    "hasAccount": "Already have an account?",
-    "error": "Invalid credentials",
-    "registerSuccess": "Account created. Please sign in."
-  },
-  "assessment": {
-    "title": "New Assessment",
-    "patientRef": "Patient Reference (optional)",
-    "age": "Age (years)",
-    "systolicBP": "Systolic BP (mmHg)",
-    "diastolicBP": "Diastolic BP (mmHg)",
-    "bloodSugar": "Blood Sugar (mmol/L)",
-    "bodyTemp": "Body Temperature (°F)",
-    "heartRate": "Heart Rate (bpm)",
-    "submit": "Assess Risk",
-    "submitting": "Assessing..."
-  },
-  "result": {
-    "title": "Assessment Result",
-    "riskLevel": "Risk Level",
-    "confidence": "Confidence",
-    "recommendation": "Recommendation",
-    "shapTitle": "Feature Impact (SHAP)",
-    "newAssessment": "New Assessment",
-    "backToHistory": "Back to History"
-  },
-  "history": {
-    "title": "Assessment History",
-    "empty": "No assessments yet.",
-    "date": "Date",
-    "patient": "Patient",
-    "risk": "Risk",
-    "view": "View"
-  },
-  "dashboard": {
-    "title": "Dashboard",
-    "total": "Total Assessments",
-    "highRisk": "High Risk",
-    "midRisk": "Moderate Risk",
-    "lowRisk": "Low Risk"
-  },
-  "risk": {
-    "high": "High Risk",
-    "mid": "Moderate Risk",
-    "low": "Low Risk"
-  }
+  "app_name": "MamaSafe",
+  "tagline": "AI-Powered Maternal Risk Assessment",
+  "login": "Login",
+  "logout": "Logout",
+  "username": "Username",
+  "password": "Password",
+  "signing_in": "Signing in...",
+  "new_assessment": "New Assessment",
+  "history": "History",
+  "dashboard": "Dashboard",
+  "patient_ref": "Patient Reference (optional)",
+  "age": "Age (years)",
+  "systolic_bp": "Systolic Blood Pressure (mmHg)",
+  "diastolic_bp": "Diastolic Blood Pressure (mmHg)",
+  "blood_sugar": "Blood Sugar (mmol/L)",
+  "body_temp": "Body Temperature (°F)",
+  "heart_rate": "Heart Rate (bpm)",
+  "assess_risk": "Assess Risk",
+  "assessing": "Assessing...",
+  "risk_result": "Risk Assessment Result",
+  "confidence": "Confidence",
+  "recommendation": "Recommendation",
+  "shap_title": "What drove this prediction",
+  "shap_subtitle": "Each bar shows how much a feature pushed the prediction toward high risk",
+  "prob_distribution": "Probability Distribution",
+  "high_risk": "High Risk",
+  "mid_risk": "Mid Risk",
+  "low_risk": "Low Risk",
+  "new_assessment_btn": "New Assessment",
+  "view_history": "View History",
+  "assessment_history": "Assessment History",
+  "no_assessments": "No assessments yet. Start by assessing a patient.",
+  "patient": "Patient",
+  "date": "Date",
+  "risk_level": "Risk Level",
+  "total_assessments": "Total Assessments",
+  "risk_distribution": "Risk Distribution",
+  "weekly_trend": "Assessments by Risk Level",
+  "loading": "Loading...",
+  "error": "Something went wrong. Please try again.",
+  "pushes_toward": "pushes toward high risk",
+  "pushes_away": "reduces high risk",
+  "feature_value": "Value"
 }

@@ -60,8 +60,11 @@ class DashboardSummary(BaseModel):
 
 
 class UserCreate(BaseModel):
-    username: str
-    password: str
+    username:  str
+    password:  str
+    role:      Optional[str] = "chw"
+    full_name: Optional[str] = None
+    facility:  Optional[str] = None
 
 
 class Token(BaseModel):

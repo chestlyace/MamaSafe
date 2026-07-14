@@ -3,11 +3,9 @@ import NavBar from './NavBar';
 
 export default function Layout() {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #f5f2fe 0%, #ffffff 100%)' }}>
       <NavBar />
-      <main className="max-w-5xl mx-auto px-4 py-8">
-        <Outlet />
-      </main>
+      <Outlet />
     </div>
   );
 }

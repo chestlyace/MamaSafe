@@ -59,11 +59,24 @@ def get_current_user(
 
 
 @router.post("/register")
-def register(user: UserCreate, db: Session = Depends(get_db)):
+def register(
+    user: UserCreate,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
     existing = db.query(User).filter(User.username == user.username).first()
     if existing:
         raise HTTPException(status_code=400, detail="Username already exists")
-    db_user = User(username=user.username, hashed_password=hash_password(user.password))
+    db_user = User(
+        username=user.username,
+        hashed_password=hash_password(user.password),
+        role=user.role if hasattr(user, "role") and user.role else "chw",
+        full_name=user.full_name if hasattr(user, "full_name") else None,
+        facility=user.facility if hasattr(user, "facility") else None,
+        must_change_password=True,
+    )
     db.add(db_user)
     db.commit()
     return {"message": "User created successfully"}

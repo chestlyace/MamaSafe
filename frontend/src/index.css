@@ -31,7 +31,9 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
+@import "tailwindcss";
+
+:root {
     --text: #9ca3af;
     --text-h: #f3f4f6;
     --bg: #16171d;
@@ -54,15 +56,67 @@ body {
   margin: 0;
 }
 
+/* ── Login page styles ─────────────────────────────────── */
+.glass-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.input-glow:focus {
+  box-shadow: 0 0 0 2px #4648d4, 0 0 8px rgba(70, 72, 212, 0.2);
+}
+
+.blob {
+  position: absolute;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(96, 99, 238, 0.08) 0%, rgba(255, 255, 255, 0) 70%);
+  border-radius: 50%;
+  z-index: 0;
+  pointer-events: none;
+  animation: blob-move 20s infinite alternate;
+}
+.blob-1 { top: -10%; left: -10%; }
+.blob-2 { bottom: -10%; right: -10%; animation-delay: -5s; }
+
+@keyframes blob-move {
+  from { transform: translate(-10%, -10%); }
+  to   { transform: translate(10%, 10%); }
+}
+
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-smoothing: antialiased;
+}
+
+.assessment-card {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.assessment-card:hover {
+  border-color: #4648d4;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(70, 72, 212, 0.1);
+}
+
+.donut-segment {
+  transition: stroke-dashoffset 0.8s ease-out;
+}
+
 #root {
-  width: 1126px;
+  width: 100%;
   max-width: 100%;
   margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
-  min-height: 100svh;
-  display: flex;
-  flex-direction: column;
+  text-align: left;
   box-sizing: border-box;
 }
 

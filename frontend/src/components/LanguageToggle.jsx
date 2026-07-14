@@ -12,9 +12,10 @@ export default function LanguageToggle() {
   return (
     <button
       onClick={toggle}
-      className="px-2 py-1 text-sm border rounded hover:bg-gray-100 transition-colors"
+      className="flex items-center gap-1.5 px-4 py-1.5 bg-gray-100 rounded-full text-gray-600 text-xs font-semibold hover:bg-gray-200 transition-colors"
     >
-      {i18n.language === 'en' ? 'FR' : 'EN'}
+      <span className="material-symbols-outlined text-base">language</span>
+      <span>{i18n.language === 'en' ? 'EN/FR' : 'FR/EN'}</span>
     </button>
   );
 }

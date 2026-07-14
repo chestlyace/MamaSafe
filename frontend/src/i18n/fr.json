@@ -1,65 +1,45 @@
 {
-  "app": {
-    "title": "MamaSafe",
-    "subtitle": "Évaluation des Risques Maternels par IA"
-  },
-  "nav": {
-    "assess": "Nouvelle Évaluation",
-    "history": "Historique",
-    "dashboard": "Tableau de bord",
-    "logout": "Déconnexion"
-  },
-  "auth": {
-    "loginTitle": "Connexion",
-    "registerTitle": "Créer un Compte",
-    "username": "Nom d'utilisateur",
-    "password": "Mot de passe",
-    "loginButton": "Se Connecter",
-    "registerButton": "S'inscrire",
-    "noAccount": "Pas encore de compte ?",
-    "hasAccount": "Déjà un compte ?",
-    "error": "Identifiants incorrects",
-    "registerSuccess": "Compte créé. Veuillez vous connecter."
-  },
-  "assessment": {
-    "title": "Nouvelle Évaluation",
-    "patientRef": "Référence Patient (optionnel)",
-    "age": "Âge (années)",
-    "systolicBP": "PA Systolique (mmHg)",
-    "diastolicBP": "PA Diastolique (mmHg)",
-    "bloodSugar": "Glycémie (mmol/L)",
-    "bodyTemp": "Température Corporelle (°F)",
-    "heartRate": "Fréquence Cardiaque (bpm)",
-    "submit": "Évaluer le Risque",
-    "submitting": "Évaluation en cours..."
-  },
-  "result": {
-    "title": "Résultat de l'Évaluation",
-    "riskLevel": "Niveau de Risque",
-    "confidence": "Confiance",
-    "recommendation": "Recommandation",
-    "shapTitle": "Impact des Variables (SHAP)",
-    "newAssessment": "Nouvelle Évaluation",
-    "backToHistory": "Retour à l'Historique"
-  },
-  "history": {
-    "title": "Historique des Évaluations",
-    "empty": "Aucune évaluation pour le moment.",
-    "date": "Date",
-    "patient": "Patient",
-    "risk": "Risque",
-    "view": "Voir"
-  },
-  "dashboard": {
-    "title": "Tableau de bord",
-    "total": "Total des Évaluations",
-    "highRisk": "Risque Élevé",
-    "midRisk": "Risque Modéré",
-    "lowRisk": "Risque Faible"
-  },
-  "risk": {
-    "high": "Risque Élevé",
-    "mid": "Risque Modéré",
-    "low": "Risque Faible"
-  }
+  "app_name": "MamaSafe",
+  "tagline": "Évaluation du Risque Maternel par IA",
+  "login": "Connexion",
+  "logout": "Déconnexion",
+  "username": "Nom d'utilisateur",
+  "password": "Mot de passe",
+  "signing_in": "Connexion en cours...",
+  "new_assessment": "Nouvelle Évaluation",
+  "history": "Historique",
+  "dashboard": "Tableau de bord",
+  "patient_ref": "Référence patient (optionnel)",
+  "age": "Âge (années)",
+  "systolic_bp": "Tension artérielle systolique (mmHg)",
+  "diastolic_bp": "Tension artérielle diastolique (mmHg)",
+  "blood_sugar": "Glycémie (mmol/L)",
+  "body_temp": "Température corporelle (°F)",
+  "heart_rate": "Fréquence cardiaque (bpm)",
+  "assess_risk": "Évaluer le risque",
+  "assessing": "Évaluation en cours...",
+  "risk_result": "Résultat de l'évaluation",
+  "confidence": "Confiance",
+  "recommendation": "Recommandation",
+  "shap_title": "Ce qui a influencé cette prédiction",
+  "shap_subtitle": "Chaque barre montre comment une variable a influencé la prédiction vers un risque élevé",
+  "prob_distribution": "Distribution des probabilités",
+  "high_risk": "Risque élevé",
+  "mid_risk": "Risque moyen",
+  "low_risk": "Risque faible",
+  "new_assessment_btn": "Nouvelle évaluation",
+  "view_history": "Voir l'historique",
+  "assessment_history": "Historique des évaluations",
+  "no_assessments": "Aucune évaluation. Commencez par évaluer un patient.",
+  "patient": "Patient",
+  "date": "Date",
+  "risk_level": "Niveau de risque",
+  "total_assessments": "Total des évaluations",
+  "risk_distribution": "Distribution des risques",
+  "weekly_trend": "Évaluations par niveau de risque",
+  "loading": "Chargement...",
+  "error": "Une erreur est survenue. Veuillez réessayer.",
+  "pushes_toward": "augmente le risque élevé",
+  "pushes_away": "réduit le risque élevé",
+  "feature_value": "Valeur"
 }

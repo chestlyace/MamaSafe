@@ -38,10 +38,15 @@ class Assessment(Base):
 class User(Base):
     __tablename__ = "users"
 
-    id              = Column(Integer, primary_key=True, index=True)
-    username        = Column(String, unique=True, index=True)
-    hashed_password = Column(String)
-    is_active       = Column(Boolean, default=True)
+    id                     = Column(Integer, primary_key=True, index=True)
+    username               = Column(String, unique=True, index=True)
+    hashed_password        = Column(String)
+    role                   = Column(String, default="chw")  # "admin" or "chw"
+    is_active              = Column(Boolean, default=True)
+    full_name              = Column(String, nullable=True)
+    facility               = Column(String, nullable=True)  # health post name
+    created_at             = Column(DateTime, default=datetime.utcnow)
+    must_change_password   = Column(Boolean, default=True)
 
 
 def get_db():
