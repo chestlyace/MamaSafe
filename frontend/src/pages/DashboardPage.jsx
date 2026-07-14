@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { getDashboardSummary } from '../api/client';
 
 function DonutChart({ high, mid, low, total }) {
+  const { t } = useTranslation();
   const [hovered, setHovered] = useState(null);
 
   if (total === 0) return null;
@@ -10,47 +11,33 @@ function DonutChart({ high, mid, low, total }) {
   const highPct = (high / total) * 100;
   const midPct = (mid / total) * 100;
   const lowPct = (low / total) * 100;
-  const circumference = 2 * Math.PI * 15.915;
 
   const segments = [
     { key: 'high', pct: highPct, color: '#ef4444', offset: 0 },
-    { key: 'mid', pct: midPct, color: '#825100', offset: -highPct },
-    { key: 'low', pct: lowPct, color: '#006e2f', offset: -(highPct + midPct) },
+    { key: 'mid', pct: midPct, color: '#d97706', offset: -highPct },
+    { key: 'low', pct: lowPct, color: '#16a34a', offset: -(highPct + midPct) },
   ];
 
   const formatTotal = (n) => (n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(n));
 
   return (
-    <div className="flex flex-col gap-6 h-full justify-between">
-      <div className="flex flex-col gap-1">
-        <h3 className="text-lg font-semibold text-gray-900">Risk Distribution</h3>
-        <p className="text-sm text-gray-500">
-          Breakdown of maternal health risk levels across all patients.
-        </p>
-      </div>
+    <div className="flex flex-col">
+      <h3 className="text-sm font-semibold text-text-heading mb-1">{t('risk_distribution')}</h3>
+      <p className="text-xs text-text-muted mb-5">{t('risk_distribution_desc')}</p>
 
-      <div className="relative flex justify-center py-4">
-        <svg
-          className="transform -rotate-90"
-          height="220"
-          width="220"
-          viewBox="0 0 42 42"
-        >
-          <circle cx="21" cy="21" fill="transparent" r="15.915" stroke="#efecf8" strokeWidth="4" />
+      <div className="relative flex justify-center">
+        <svg className="transform -rotate-90" height="180" width="180" viewBox="0 0 42 42">
+          <circle cx="21" cy="21" fill="transparent" r="15.915" stroke="#E8E5EC" strokeWidth="3.5" />
           {segments.map((s) => (
             <circle
               key={s.key}
-              cx="21"
-              cy="21"
-              fill="transparent"
-              r="15.915"
+              cx="21" cy="21" fill="transparent" r="15.915"
               stroke={s.color}
-              strokeWidth={hovered === s.key ? 6 : 4}
+              strokeWidth={hovered === s.key ? 5 : 3.5}
               strokeDasharray={`${s.pct} ${100 - s.pct}`}
               strokeDashoffset={s.offset}
               style={{
-                transition: 'stroke-width 0.2s ease, filter 0.2s ease',
-                filter: hovered === s.key ? 'drop-shadow(0 0 4px rgba(0,0,0,0.15))' : 'none',
+                transition: 'stroke-width 0.15s ease',
                 cursor: 'pointer',
               }}
               onMouseEnter={() => setHovered(s.key)}
@@ -59,24 +46,21 @@ function DonutChart({ high, mid, low, total }) {
           ))}
         </svg>
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center">
-          <div className="text-3xl font-bold text-gray-900">{formatTotal(total)}</div>
-          <div className="text-[10px] font-semibold text-gray-500 uppercase">Total</div>
+          <div className="text-2xl font-bold text-text-heading">{formatTotal(total)}</div>
+          <div className="text-[10px] font-medium text-text-muted uppercase">{t('total')}</div>
         </div>
       </div>
 
       {/* Legend */}
-      <div className="flex flex-col gap-2">
+      <div className="flex justify-center gap-5 mt-5">
         {[
-          { label: 'High Risk', pct: highPct, color: 'bg-red-500', count: high },
-          { label: 'Mid Risk', pct: midPct, color: 'bg-amber-700', count: mid },
-          { label: 'Low Risk', pct: lowPct, color: 'bg-green-700', count: low },
+          { label: t('high_risk'), pct: highPct, color: 'bg-red-500' },
+          { label: t('mid_risk'), pct: midPct, color: 'bg-amber-500' },
+          { label: t('low_risk'), pct: lowPct, color: 'bg-green-500' },
         ].map((item) => (
-          <div key={item.label} className="flex items-center justify-between text-sm">
-            <div className="flex items-center gap-2">
-              <span className={`w-3 h-3 rounded-sm ${item.color}`} />
-              <span className="text-gray-800">{item.label}</span>
-            </div>
-            <span className="font-semibold">{item.pct.toFixed(0)}%</span>
+          <div key={item.label} className="flex items-center gap-1.5">
+            <span className={`w-2 h-2 rounded-full ${item.color}`} />
+            <span className="text-xs text-text-muted">{item.label} {item.pct.toFixed(0)}%</span>
           </div>
         ))}
       </div>
@@ -98,12 +82,10 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <main className="max-w-[1200px] mx-auto px-4 md:px-12 py-12">
+      <main className="max-w-[1200px] mx-auto px-5 py-12">
         <div className="flex items-center justify-center py-24">
-          <span className="material-symbols-outlined text-4xl animate-spin text-indigo-500 mr-3">
-            progress_activity
-          </span>
-          <span className="text-gray-400">{t('loading')}</span>
+          <span className="material-symbols-outlined text-4xl animate-spin text-rose-500 mr-3">progress_activity</span>
+          <span className="text-text-muted">{t('loading')}</span>
         </div>
       </main>
     );
@@ -111,138 +93,137 @@ export default function DashboardPage() {
 
   if (!summary) {
     return (
-      <main className="max-w-[1200px] mx-auto px-4 md:px-12 py-12">
-        <div className="text-center py-24 text-gray-500">Failed to load dashboard.</div>
+      <main className="max-w-[1200px] mx-auto px-5 py-12">
+        <div className="text-center py-24 text-text-muted">{t('error')}</div>
       </main>
     );
   }
 
   const { total_assessments, high_risk_count, mid_risk_count, low_risk_count } = summary;
 
-  const statCards = [
-    {
-      label: 'Total Assessments',
-      value: total_assessments.toLocaleString(),
-      icon: 'assessment',
-      iconColor: 'text-indigo-600',
-      valueColor: 'text-gray-900',
-      subtitle: null,
-    },
-    {
-      label: 'High Risk',
-      value: high_risk_count,
-      dot: 'bg-red-500 ring-red-100',
-      valueColor: 'text-red-600',
-      subtitle: 'Requires immediate intervention',
-    },
-    {
-      label: 'Mid Risk',
-      value: mid_risk_count,
-      dot: 'bg-amber-600 ring-amber-100',
-      valueColor: 'text-amber-700',
-      subtitle: 'Needs clinical follow-up',
-    },
-    {
-      label: 'Low Risk',
-      value: low_risk_count,
-      dot: 'bg-green-600 ring-green-100',
-      valueColor: 'text-green-700',
-      subtitle: 'Regular monitoring recommended',
-    },
+  const stats = [
+    { label: t('total_assessments'), value: total_assessments.toLocaleString(), icon: 'assessment', color: 'text-rose-500', valueColor: 'text-text-heading', sub: null },
+    { label: t('high_risk'), value: high_risk_count, dot: 'bg-red-500', color: 'text-red-500', valueColor: 'text-red-600', sub: t('requires_immediate') },
+    { label: t('mid_risk'), value: mid_risk_count, dot: 'bg-amber-500', color: 'text-amber-500', valueColor: 'text-amber-600', sub: t('needs_followup') },
+    { label: t('low_risk'), value: low_risk_count, dot: 'bg-green-500', color: 'text-green-500', valueColor: 'text-green-600', sub: t('regular_monitoring') },
   ];
 
   return (
-    <main className="max-w-[1200px] mx-auto px-4 md:px-12 py-8 mb-20 md:mb-8">
-      <div className="flex flex-col gap-6">
-        {/* Header */}
-        <header className="flex flex-col gap-1">
-          <h1 className="text-3xl font-bold text-gray-900">{t('dashboard')}</h1>
-          <p className="text-base text-gray-500">
-            Clinical summary and population risk oversight.
-          </p>
-        </header>
+    <main className="max-w-[1200px] mx-auto px-5 pt-8 pb-24 md:pb-8">
+      {/* Header */}
+      <header className="mb-8">
+        <h1 className="text-2xl font-bold text-text-heading tracking-tight">{t('dashboard')}</h1>
+        <p className="text-sm text-text-muted mt-1">{t('clinical_summary')}</p>
+      </header>
 
-        {/* Main Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          {/* Stat Cards 2x2 */}
-          <div className="lg:col-span-7 grid grid-cols-2 gap-4">
-            {statCards.map((card) => (
-              <div
-                key={card.label}
-                className="bg-white p-6 rounded-xl shadow-md border border-gray-100 flex flex-col gap-1"
-              >
-                <div className="flex justify-between items-start">
-                  <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                    {card.label}
-                  </span>
-                  {card.icon ? (
-                    <span className={`material-symbols-outlined text-xl ${card.iconColor}`}>
-                      {card.icon}
-                    </span>
-                  ) : (
-                    <span
-                      className={`w-3 h-3 rounded-full ring-4 ${card.dot}`}
-                    />
+      {/* Stat cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+        {stats.map((s) => (
+          <div key={s.label} className="bg-white border border-border rounded-xl p-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[11px] font-semibold text-text-muted uppercase tracking-wider">{s.label}</span>
+              {s.icon ? (
+                <span className={`material-symbols-outlined text-[18px] ${s.color}`}>{s.icon}</span>
+              ) : (
+                <span className={`w-2 h-2 rounded-full ${s.dot}`} />
+              )}
+            </div>
+            <div className={`text-2xl font-bold ${s.valueColor}`}>{s.value}</div>
+            {s.sub && <span className="text-xs text-text-muted mt-0.5 block">{s.sub}</span>}
+          </div>
+        ))}
+      </div>
+
+      {/* Donut + Distribution */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+        {/* Donut */}
+        <div className="bg-white border border-border rounded-xl p-5">
+          <DonutChart high={high_risk_count} mid={mid_risk_count} low={low_risk_count} total={total_assessments} />
+        </div>
+
+        {/* Stacked bar */}
+        {total_assessments > 0 && (
+          <div className="bg-white border border-border rounded-xl p-5">
+            <h3 className="text-sm font-semibold text-text-heading mb-1">{t('weekly_trend')}</h3>
+            <p className="text-xs text-text-muted mb-5">{t('weekly_trend_desc')}</p>
+            <div className="w-full h-7 rounded-full overflow-hidden flex bg-surface">
+              {high_risk_count > 0 && (
+                <div
+                  className="h-full bg-red-500 flex items-center justify-center"
+                  style={{ width: `${(high_risk_count / total_assessments) * 100}%` }}
+                >
+                  {(high_risk_count / total_assessments) * 100 > 10 && (
+                    <span className="text-[10px] font-bold text-white">{high_risk_count}</span>
                   )}
                 </div>
-                <div className={`text-3xl font-bold ${card.valueColor}`}>{card.value}</div>
-                {card.subtitle && (
-                  <span className="text-sm text-gray-500">{card.subtitle}</span>
-                )}
-              </div>
-            ))}
+              )}
+              {mid_risk_count > 0 && (
+                <div
+                  className="h-full bg-amber-500 flex items-center justify-center"
+                  style={{ width: `${(mid_risk_count / total_assessments) * 100}%` }}
+                >
+                  {(mid_risk_count / total_assessments) * 100 > 10 && (
+                    <span className="text-[10px] font-bold text-white">{mid_risk_count}</span>
+                  )}
+                </div>
+              )}
+              {low_risk_count > 0 && (
+                <div
+                  className="h-full bg-green-500 flex items-center justify-center"
+                  style={{ width: `${(low_risk_count / total_assessments) * 100}%` }}
+                >
+                  {(low_risk_count / total_assessments) * 100 > 10 && (
+                    <span className="text-[10px] font-bold text-white">{low_risk_count}</span>
+                  )}
+                </div>
+              )}
+            </div>
+            <div className="flex justify-between mt-3">
+              {[
+                { label: t('high_risk'), pct: high_risk_count, color: 'bg-red-500' },
+                { label: t('mid_risk'), pct: mid_risk_count, color: 'bg-amber-500' },
+                { label: t('low_risk'), pct: low_risk_count, color: 'bg-green-500' },
+              ].map((item) => (
+                <div key={item.label} className="flex items-center gap-1.5">
+                  <span className={`w-2 h-2 rounded-full ${item.color}`} />
+                  <span className="text-xs text-text-muted">{item.label} ({((item.pct / total_assessments) * 100).toFixed(0)}%)</span>
+                </div>
+              ))}
+            </div>
           </div>
+        )}
+      </div>
 
-          {/* Donut Chart */}
-          <div className="lg:col-span-5 bg-white p-6 rounded-xl shadow-md border border-gray-100">
-            <DonutChart
-              high={high_risk_count}
-              mid={mid_risk_count}
-              low={low_risk_count}
-              total={total_assessments}
-            />
-          </div>
+      {/* Critical Alerts */}
+      <div className="bg-white border border-border rounded-xl p-5">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-sm font-semibold text-text-heading">{t('critical_alerts')}</h3>
+          <button className="text-rose-500 text-xs font-semibold hover:underline">{t('view_all')}</button>
         </div>
-
-        {/* Critical Alerts */}
-        <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">Critical Alerts</h3>
-            <button className="text-indigo-600 text-xs font-semibold hover:underline">
-              View All
+        {high_risk_count > 0 ? (
+          <div className="flex items-center gap-4 p-4 bg-red-50 rounded-xl">
+            <div className="w-9 h-9 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+              <span className="material-symbols-outlined text-red-600 text-[20px]">warning</span>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-text-heading">{t('high_risk_count_alert', { count: high_risk_count })}</p>
+              <p className="text-xs text-text-muted">{t('high_risk_alert_desc')}</p>
+            </div>
+            <button className="bg-red-600 text-white px-3.5 py-1.5 rounded-lg text-xs font-semibold flex-shrink-0 hover:bg-red-700 transition-colors">
+              {t('escalate')}
             </button>
           </div>
-          <div className="flex flex-col gap-3">
-            {high_risk_count > 0 ? (
-              <div className="flex items-center gap-4 p-4 bg-red-50 rounded-xl border-l-4 border-red-500">
-                <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
-                  <span className="material-symbols-outlined text-red-600">warning</span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-semibold text-gray-900">
-                    {high_risk_count} patient{high_risk_count !== 1 ? 's' : ''} flagged as high risk
-                  </div>
-                  <div className="text-sm text-gray-500">
-                    Requires immediate clinical review and intervention
-                  </div>
-                </div>
-                <button className="bg-red-600 text-white px-4 py-1 rounded-lg text-xs font-semibold flex-shrink-0 hover:bg-red-700 transition-colors">
-                  Escalate
-                </button>
-              </div>
-            ) : (
-              <div className="flex items-center gap-4 p-4 bg-green-50 rounded-xl border-l-4 border-green-500">
-                <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
-                  <span className="material-symbols-outlined text-green-600">check_circle</span>
-                </div>
-                <div className="flex-1">
-                  <div className="text-sm font-semibold text-gray-900">No critical alerts</div>
-                  <div className="text-sm text-gray-500">All patients are within safe thresholds</div>
-                </div>
-              </div>
-            )}
+        ) : (
+          <div className="flex items-center gap-4 p-4 bg-green-50 rounded-xl">
+            <div className="w-9 h-9 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+              <span className="material-symbols-outlined text-green-600 text-[20px]">check_circle</span>
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-text-heading">{t('no_critical_alerts')}</p>
+              <p className="text-xs text-text-muted">{t('all_patients_safe')}</p>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </main>
   );

@@ -24,16 +24,12 @@ export default function AssessmentPage() {
     e.preventDefault();
     setSubmitting(true);
     setError('');
-
     try {
       const payload = {};
       if (form.patient_ref) payload.patient_ref = form.patient_ref;
       Object.keys(form).forEach((k) => {
-        if (k !== 'patient_ref' && form[k] !== '') {
-          payload[k] = parseFloat(form[k]);
-        }
+        if (k !== 'patient_ref' && form[k] !== '') payload[k] = parseFloat(form[k]);
       });
-
       const data = await predict(payload);
       navigate('/result', { state: data });
     } catch {
@@ -43,197 +39,111 @@ export default function AssessmentPage() {
     }
   };
 
-  const inputBase =
-    'w-full p-3 bg-white border border-gray-200 rounded-xl text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all';
+  const fields = [
+    { key: 'age', min: 10, max: 60, step: 'any', placeholder: '25', icon: 'cake' },
+    { key: 'systolic_bp', min: 70, max: 200, step: 'any', placeholder: '120', icon: 'monitor_heart' },
+    { key: 'diastolic_bp', min: 40, max: 120, step: 'any', placeholder: '80', icon: 'favorite' },
+    { key: 'blood_sugar', min: 4, max: 25, step: 0.1, placeholder: '7.0', icon: 'water_drop' },
+    { key: 'body_temp', min: 95, max: 105, step: 0.1, placeholder: '98.6', icon: 'thermostat' },
+    { key: 'heart_rate', min: 40, max: 100, step: 'any', placeholder: '72', icon: 'ecg' },
+  ];
+
+  const inputClass =
+    'w-full pl-10 pr-4 py-3 bg-surface border border-border rounded-xl text-sm text-text-heading placeholder:text-text-muted/50 focus:outline-none focus:ring-2 focus:ring-rose-primary/30 focus:border-rose-primary transition-all';
 
   return (
-    <main className="max-w-[800px] mx-auto px-4 md:px-0 pt-6 pb-24">
+    <main className="max-w-[720px] mx-auto px-5 pt-8 pb-24 md:pb-8">
       {/* Header */}
-      <header className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-1">{t('new_assessment')}</h1>
-        <p className="text-base text-gray-500">Enter patient clinical data for risk analysis</p>
+      <header className="mb-8">
+        <h1 className="text-2xl font-bold text-text-heading tracking-tight">{t('new_assessment')}</h1>
+        <p className="text-sm text-text-muted mt-1">{t('enter_patient_data')}</p>
       </header>
-
-      {/* Patient Reference */}
-      <div className="mb-8">
-        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 ml-1"
-          htmlFor="patient_ref">
-          {t('patient_ref')}
-        </label>
-        <div className="relative">
-          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xl">
-            badge
-          </span>
-          <input
-            id="patient_ref"
-            type="text"
-            value={form.patient_ref}
-            onChange={(e) => update('patient_ref', e.target.value)}
-            placeholder="Enter patient ID or name"
-            className="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
-          />
-        </div>
-      </div>
 
       {/* Error */}
       {error && (
-        <div className="mb-6 bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl px-4 py-3 text-center">
+        <div className="mb-6 bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl px-4 py-3">
           {error}
         </div>
       )}
 
-      {/* Form Card */}
       <form onSubmit={handleSubmit}>
-        <div className="bg-white rounded-2xl p-6 md:p-8 border border-gray-100 shadow-[0_4px_12px_rgba(0,0,0,0.05)]">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-y-5 gap-x-6">
-            {/* Age */}
-            <div className="flex flex-col gap-1">
-              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                {t('age')}
-              </label>
-              <input
-                type="number"
-                min="10"
-                max="60"
-                step="any"
-                value={form.age}
-                onChange={(e) => update('age', e.target.value)}
-                placeholder="25"
-                required
-                className={inputBase}
-              />
-              <span className="text-xs text-gray-400">Range: 10 - 60</span>
-            </div>
-
-            {/* Systolic BP */}
-            <div className="flex flex-col gap-1">
-              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                {t('systolic_bp')}
-              </label>
-              <input
-                type="number"
-                min="70"
-                max="200"
-                step="any"
-                value={form.systolic_bp}
-                onChange={(e) => update('systolic_bp', e.target.value)}
-                placeholder="120"
-                required
-                className={inputBase}
-              />
-              <span className="text-xs text-gray-400">Range: 70 - 200</span>
-            </div>
-
-            {/* Diastolic BP */}
-            <div className="flex flex-col gap-1">
-              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                {t('diastolic_bp')}
-              </label>
-              <input
-                type="number"
-                min="40"
-                max="120"
-                step="any"
-                value={form.diastolic_bp}
-                onChange={(e) => update('diastolic_bp', e.target.value)}
-                placeholder="80"
-                required
-                className={inputBase}
-              />
-              <span className="text-xs text-gray-400">Range: 40 - 120</span>
-            </div>
-
-            {/* Blood Sugar */}
-            <div className="flex flex-col gap-1">
-              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                {t('blood_sugar')}
-              </label>
-              <input
-                type="number"
-                min="4"
-                max="25"
-                step="0.1"
-                value={form.blood_sugar}
-                onChange={(e) => update('blood_sugar', e.target.value)}
-                placeholder="7.0"
-                required
-                className={inputBase}
-              />
-              <span className="text-xs text-gray-400">Range: 4 - 25</span>
-            </div>
-
-            {/* Body Temperature */}
-            <div className="flex flex-col gap-1">
-              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                {t('body_temp')}
-              </label>
-              <input
-                type="number"
-                min="95"
-                max="105"
-                step="0.1"
-                value={form.body_temp}
-                onChange={(e) => update('body_temp', e.target.value)}
-                placeholder="98.6"
-                required
-                className={inputBase}
-              />
-              <span className="text-xs text-gray-400">Range: 95 - 105</span>
-            </div>
-
-            {/* Heart Rate */}
-            <div className="flex flex-col gap-1">
-              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                {t('heart_rate')}
-              </label>
-              <input
-                type="number"
-                min="40"
-                max="100"
-                step="any"
-                value={form.heart_rate}
-                onChange={(e) => update('heart_rate', e.target.value)}
-                placeholder="72"
-                required
-                className={inputBase}
-              />
-              <span className="text-xs text-gray-400">Range: 40 - 100</span>
-            </div>
-          </div>
-
-          {/* Submit */}
-          <div className="mt-8">
-            <button
-              type="submit"
-              disabled={submitting}
-              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-xl shadow-lg transition-all active:scale-[0.98] flex justify-center items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              {submitting ? (
-                <>
-                  <span className="material-symbols-outlined text-xl animate-spin">
-                    progress_activity
-                  </span>
-                  <span>{t('assessing')}</span>
-                </>
-              ) : (
-                <>
-                  <span className="material-symbols-outlined text-xl"
-                    style={{ fontVariationSettings: "'FILL' 1" }}>
-                    analytics
-                  </span>
-                  <span>{t('assess_risk')}</span>
-                </>
-              )}
-            </button>
+        {/* Patient Reference */}
+        <div className="mb-6">
+          <label htmlFor="patient_ref" className="block text-xs font-semibold text-text-muted uppercase tracking-wider mb-1.5">
+            {t('patient_ref')}
+          </label>
+          <div className="relative">
+            <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted text-[20px]">
+              badge
+            </span>
+            <input
+              id="patient_ref"
+              type="text"
+              value={form.patient_ref}
+              onChange={(e) => update('patient_ref', e.target.value)}
+              placeholder={t('enter_patient_id')}
+              className={inputClass}
+            />
           </div>
         </div>
 
+        {/* Clinical Fields */}
+        <div className="bg-white rounded-2xl border border-border p-5 sm:p-6 mb-6">
+          <h2 className="text-sm font-semibold text-text-heading mb-5">{t('enter_patient_data')}</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {fields.map((f) => (
+              <div key={f.key}>
+                <label className="block text-xs font-medium text-text-muted mb-1.5">
+                  {t(f.key)}
+                </label>
+                <div className="relative">
+                  <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-[18px]">
+                    {f.icon}
+                  </span>
+                  <input
+                    type="number"
+                    min={f.min}
+                    max={f.max}
+                    step={f.step}
+                    value={form[f.key]}
+                    onChange={(e) => update(f.key, e.target.value)}
+                    placeholder={f.placeholder}
+                    required
+                    className="w-full pl-10 pr-4 py-2.5 bg-surface border border-border rounded-xl text-sm text-text-heading placeholder:text-text-muted/50 focus:outline-none focus:ring-2 focus:ring-rose-primary/30 focus:border-rose-primary transition-all"
+                  />
+                </div>
+                <span className="text-[11px] text-text-muted mt-1 block">
+                  {f.min} – {f.max}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Submit */}
+        <button
+          type="submit"
+          disabled={submitting}
+          className="w-full py-3.5 bg-rose-500 text-white text-sm font-semibold rounded-xl hover:bg-rose-600 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {submitting ? (
+            <>
+              <span className="material-symbols-outlined text-xl animate-spin">progress_activity</span>
+              <span>{t('assessing')}</span>
+            </>
+          ) : (
+            <>
+              <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>analytics</span>
+              <span>{t('assess_risk')}</span>
+            </>
+          )}
+        </button>
+
         {/* Disclaimer */}
-        <div className="mt-6 p-4 bg-gray-50 rounded-xl flex items-start gap-3">
-          <span className="material-symbols-outlined text-amber-600 mt-0.5">info</span>
-          <p className="text-sm text-gray-500">
-            This clinical assessment tool is designed for healthcare professionals.
-            Please ensure all data points are verified before submitting for risk analysis.
+        <div className="mt-5 flex items-start gap-2.5 px-1">
+          <span className="material-symbols-outlined text-amber-500 text-[18px] mt-0.5">info</span>
+          <p className="text-xs text-text-muted leading-relaxed">
+            {t('clinical_summary')}
           </p>
         </div>
       </form>
