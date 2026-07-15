@@ -66,9 +66,9 @@ export default function DashboardPage() {
         <Card className="mb-6">
           <Text className="text-sm font-semibold text-text-heading mb-4">{t("risk_distribution")}</Text>
           <View className="h-7 rounded-full overflow-hidden flex-row bg-surface">
-            {high_risk_count > 0 && <View className="bg-red-500 h-full items-center justify-center" style={{ width: `${(high_risk_count / total_assessments) * 100}%` }}><Text className="text-[10px] font-bold text-white">{high_risk_count}</Text></View>}
-            {mid_risk_count > 0 && <View className="bg-amber-500 h-full items-center justify-center" style={{ width: `${(mid_risk_count / total_assessments) * 100}%` }}><Text className="text-[10px] font-bold text-white">{mid_risk_count}</Text></View>}
-            {low_risk_count > 0 && <View className="bg-green-500 h-full items-center justify-center" style={{ width: `${(low_risk_count / total_assessments) * 100}%` }}><Text className="text-[10px] font-bold text-white">{low_risk_count}</Text></View>}
+            {high_risk_count > 0 && <View className="bg-red-500 h-full items-center justify-center" style={{ width: `${(high_risk_count / total_assessments) * 100}%` as any }}><Text className="text-[10px] font-bold text-white">{high_risk_count}</Text></View>}
+            {mid_risk_count > 0 && <View className="bg-amber-500 h-full items-center justify-center" style={{ width: `${(mid_risk_count / total_assessments) * 100}%` as any }}><Text className="text-[10px] font-bold text-white">{mid_risk_count}</Text></View>}
+            {low_risk_count > 0 && <View className="bg-green-500 h-full items-center justify-center" style={{ width: `${(low_risk_count / total_assessments) * 100}%` as any }}><Text className="text-[10px] font-bold text-white">{low_risk_count}</Text></View>}
           </View>
           <View className="flex-row justify-between mt-3">
             {[{ label: t("high_risk"), pct: high_risk_count, dot: "bg-red-500" }, { label: t("mid_risk"), pct: mid_risk_count, dot: "bg-amber-500" }, { label: t("low_risk"), pct: low_risk_count, dot: "bg-green-500" }].map((i) => (

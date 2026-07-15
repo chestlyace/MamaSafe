@@ -74,7 +74,7 @@ export default function HistoryPage() {
           <TouchableOpacity
             className="bg-white border border-border rounded-2xl p-5 mb-3"
             onPress={() => {
-              setLastResult({ risk_level: item.risk_level, confidence: item.prob_high, prob_high: item.prob_high, prob_mid: item.prob_mid, prob_low: item.prob_low, recommendation: "", shap_values: [], assessment_id: item.id });
+              setLastResult({ risk_level: item.risk_level as "high risk" | "mid risk" | "low risk", confidence: item.prob_high, prob_high: item.prob_high, prob_mid: item.prob_mid, prob_low: item.prob_low, recommendation: "", shap_values: [], assessment_id: item.id });
               router.push("/(main)/result");
             }}
           >

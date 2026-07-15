@@ -65,7 +65,7 @@ export default function ResultPage() {
                   </Text>
                 </View>
                 <View className="h-1.5 bg-surface rounded-full overflow-hidden flex-row">
-                  <View className={`h-full rounded-full ${isPos ? "bg-red-500" : "bg-green-500"}`} style={{ width: `${widthPct}%` }} />
+                  <View className={`h-full rounded-full ${isPos ? "bg-red-500" : "bg-green-500"}`} style={{ width: `${widthPct}%` as any }} />
                 </View>
               </View>
             );
@@ -86,7 +86,7 @@ export default function ResultPage() {
               <Text className="text-lg font-bold text-text-heading">{p.val}%</Text>
             </View>
             <View className="h-2.5 bg-surface rounded-full overflow-hidden">
-              <View className={`h-full rounded-full ${p.color}`} style={{ width: `${p.val}%` }} />
+              <View className={`h-full rounded-full ${p.color}`} style={{ width: `${p.val}%` as any }} />
             </View>
           </View>
         ))}
