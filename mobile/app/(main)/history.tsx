@@ -53,7 +53,7 @@ export default function HistoryPage() {
 
   return (
     <View className="flex-1 bg-canvas">
-      <View className="px-5 pt-8 pb-4">
+      <View className="px-5 pt-4 pb-4">
         <Text className="text-2xl font-bold text-text-heading tracking-tight mb-1">{t("assessment_history")}</Text>
         <Text className="text-sm text-text-muted mb-4">{t("manage_history")}</Text>
         <TextInput

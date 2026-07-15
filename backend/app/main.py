@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.database import create_tables, SessionLocal, User
-from app.routers import predict, assessments, auth, dashboard
+from app.routers import predict, assessments, auth, dashboard, anc
 from app.routers.auth import hash_password
 
 app = FastAPI(
@@ -48,6 +48,7 @@ app.include_router(auth.router)
 app.include_router(predict.router)
 app.include_router(assessments.router)
 app.include_router(dashboard.router)
+app.include_router(anc.router)
 
 
 @app.get("/health")

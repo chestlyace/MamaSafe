@@ -17,14 +17,20 @@ export default function NavBar() {
 
   const navLinks = [
     { path: '/assess', label: t('new_assessment'), icon: 'assessment' },
+    { path: '/patients', label: t('patients'), icon: 'people' },
     { path: '/history', label: t('history'), icon: 'history' },
     { path: '/dashboard', label: t('dashboard'), icon: 'monitoring' },
   ];
 
   const linkClass = (path) =>
-    `text-sm transition-colors ${location.pathname === path
-      ? 'text-rose-500 font-semibold'
-      : 'text-text-body hover:text-rose-500'
+    `text-sm transition-colors ${
+      path === '/patients'
+        ? location.pathname.startsWith('/patients')
+          ? 'text-rose-500 font-semibold'
+          : 'text-text-body hover:text-rose-500'
+        : location.pathname === path
+          ? 'text-rose-500 font-semibold'
+          : 'text-text-body hover:text-rose-500'
     }`;
 
   return (
@@ -82,10 +88,11 @@ export default function NavBar() {
                   key={link.path}
                   to={link.path}
                   onClick={() => setMobileOpen(false)}
-                  className={`flex items-center gap-3 px-5 py-3 text-sm transition-colors ${location.pathname === link.path
+                  className={`flex items-center gap-3 px-5 py-3 text-sm transition-colors ${
+                    (link.path === '/patients' ? location.pathname.startsWith('/patients') : location.pathname === link.path)
                       ? 'text-rose-500 font-semibold bg-rose-50'
                       : 'text-text-body hover:bg-gray-50'
-                    }`}
+                  }`}
                 >
                   <span className="material-symbols-outlined text-[20px]">{link.icon}</span>
                   {link.label}

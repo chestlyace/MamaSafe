@@ -64,3 +64,53 @@ export const getDashboardSummary = async () => {
   const res = await client.get('/api/v1/dashboard/summary');
   return res.data;
 };
+
+// ── PATIENTS ─────────────────────────────────────────────
+export const getPatients = async (search = '', skip = 0, limit = 50) => {
+  const params = { skip, limit };
+  if (search) params.search = search;
+  const res = await client.get('/api/v1/patients', { params });
+  return res.data;
+};
+
+export const getPatient = async (id) => {
+  const res = await client.get(`/api/v1/patients/${id}`);
+  return res.data;
+};
+
+export const getPatientCard = async (id) => {
+  const res = await client.get(`/api/v1/patients/${id}/card`);
+  return res.data;
+};
+
+export const createPatient = async (data) => {
+  const res = await client.post('/api/v1/patients', data);
+  return res.data;
+};
+
+// ── PREGNANCIES ──────────────────────────────────────────
+export const registerPregnancy = async (data) => {
+  const res = await client.post('/api/v1/pregnancies', data);
+  return res.data;
+};
+
+export const recordDelivery = async (pregnancyId, data) => {
+  const res = await client.patch(`/api/v1/pregnancies/${pregnancyId}/delivery`, data);
+  return res.data;
+};
+
+// ── ANC VISITS ───────────────────────────────────────────
+export const recordVisit = async (data) => {
+  const res = await client.post('/api/v1/anc-visits', data);
+  return res.data;
+};
+
+export const getVisit = async (id) => {
+  const res = await client.get(`/api/v1/anc-visits/${id}`);
+  return res.data;
+};
+
+export const listVisits = async (pregnancyId) => {
+  const res = await client.get(`/api/v1/pregnancies/${pregnancyId}/visits`);
+  return res.data;
+};

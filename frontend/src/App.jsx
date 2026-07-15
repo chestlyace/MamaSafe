@@ -6,6 +6,11 @@ import AssessmentPage from './pages/AssessmentPage';
 import ResultPage from './pages/ResultPage';
 import HistoryPage from './pages/HistoryPage';
 import DashboardPage from './pages/DashboardPage';
+import PatientListPage from './pages/PatientListPage';
+import PatientRegisterPage from './pages/PatientRegisterPage';
+import PatientDetailPage from './pages/PatientDetailPage';
+import PregnancyRegisterPage from './pages/PregnancyRegisterPage';
+import VisitLogPage from './pages/VisitLogPage';
 
 export default function App() {
   return (
@@ -18,6 +23,11 @@ export default function App() {
           <Route path="/result" element={<ResultPage />} />
           <Route path="/history" element={<HistoryPage />} />
           <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/patients" element={<PatientListPage />} />
+          <Route path="/patients/new" element={<PatientRegisterPage />} />
+          <Route path="/patients/:id" element={<PatientDetailPage />} />
+          <Route path="/patients/:id/pregnancies/new" element={<PregnancyRegisterPage />} />
+          <Route path="/patients/:id/pregnancies/:pregnancyId/visits/new" element={<VisitLogPage />} />
           <Route path="*" element={<Navigate to="/assess" replace />} />
         </Route>
       </Routes>

@@ -19,7 +19,7 @@ const mockLogin = apiLogin as jest.MockedFunction<typeof apiLogin>;
 describe("AuthStore", () => {
   beforeEach(() => {
     AsyncStorage.clear();
-    useAuthStore.setState({ token: null, user: null, isLoading: false });
+    useAuthStore.setState({ token: null, isLoading: false });
     jest.clearAllMocks();
   });
 
@@ -56,7 +56,7 @@ describe("AuthStore", () => {
   it("should logout", async () => {
     useAuthStore.setState({
       token: "test",
-      user: { id: 1, username: "admin", role: "admin" },
+      isLoading: false,
     });
     await useAuthStore.getState().logout();
     expect(useAuthStore.getState().token).toBeNull();

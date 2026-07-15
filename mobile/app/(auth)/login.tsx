@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useAuthStore } from "../../stores/authStore";
 import LanguageToggle from "../../components/LanguageToggle";
 import Button from "../../components/ui/Button";
+import Icon from "../../components/ui/Icon";
 
 export default function LoginPage() {
   const { t } = useTranslation();
@@ -61,7 +62,7 @@ export default function LoginPage() {
                   placeholderTextColor="#8E8696"
                 />
                 <TouchableOpacity onPress={() => setShowPassword(!showPassword)} className="absolute right-3 top-3">
-                  <Text className="text-text-muted text-sm">{showPassword ? "🙈" : "👁️"}</Text>
+                  <Icon name={showPassword ? "eye-off" : "eye"} size={20} color="#8E8696" />
                 </TouchableOpacity>
               </View>
 

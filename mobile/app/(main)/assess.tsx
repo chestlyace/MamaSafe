@@ -5,6 +5,7 @@ import { useRouter } from "expo-router";
 import { useAssessmentStore } from "../../stores/assessmentStore";
 import Button from "../../components/ui/Button";
 import Card from "../../components/ui/Card";
+import Icon from "../../components/ui/Icon";
 import type { AssessmentPayload } from "../../types";
 
 interface FieldDef {
@@ -102,7 +103,7 @@ export default function AssessPage() {
         </Button>
 
         <View className="flex-row items-start gap-2 mt-4 px-1">
-          <Text className="text-text-muted text-sm">ℹ️</Text>
+          <Icon name="information-circle" size={18} color="#8E8696" className="mt-0.5" />
           <Text className="text-xs text-text-muted leading-relaxed flex-1">{t("clinical_summary")}</Text>
         </View>
       </ScrollView>

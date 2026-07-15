@@ -161,6 +161,15 @@ export default function ResultPage() {
 
           {/* Actions */}
           <div className="flex flex-col gap-2.5">
+            {state.patient_id && (
+              <Link
+                to={`/patients/${state.patient_id}`}
+                className="py-3 bg-rose-500 text-white rounded-xl text-sm font-semibold text-center hover:bg-rose-600 transition-colors flex items-center justify-center gap-2"
+              >
+                <span className="material-symbols-outlined text-[18px]">person</span>
+                {t('view_patient_card')}
+              </Link>
+            )}
             <Link
               to="/history"
               className="py-3 bg-rose-500 text-white rounded-xl text-sm font-semibold text-center hover:bg-rose-600 transition-colors flex items-center justify-center gap-2"

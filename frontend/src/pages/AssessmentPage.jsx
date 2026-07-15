@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { predict } from '../api/client';
+import { predict, getPatients } from '../api/client';
 
 export default function AssessmentPage() {
   const { t } = useTranslation();
@@ -17,8 +17,35 @@ export default function AssessmentPage() {
   });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [patientSearch, setPatientSearch] = useState('');
+  const [patientResults, setPatientResults] = useState([]);
+  const [selectedPatient, setSelectedPatient] = useState(null);
+  const [showPatientDropdown, setShowPatientDropdown] = useState(false);
 
   const update = (key, val) => setForm((prev) => ({ ...prev, [key]: val }));
+
+  const searchPatients = async (term) => {
+    setPatientSearch(term);
+    setSelectedPatient(null);
+    if (term.length < 2) {
+      setPatientResults([]);
+      setShowPatientDropdown(false);
+      return;
+    }
+    try {
+      const results = await getPatients(term);
+      setPatientResults(results);
+      setShowPatientDropdown(true);
+    } catch {
+      setPatientResults([]);
+    }
+  };
+
+  const selectPatient = (patient) => {
+    setSelectedPatient(patient);
+    setPatientSearch(patient.full_name);
+    setShowPatientDropdown(false);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -30,6 +57,7 @@ export default function AssessmentPage() {
       Object.keys(form).forEach((k) => {
         if (k !== 'patient_ref' && form[k] !== '') payload[k] = parseFloat(form[k]);
       });
+      if (selectedPatient) payload.patient_id = selectedPatient.id;
       const data = await predict(payload);
       navigate('/result', { state: data });
     } catch {
@@ -67,6 +95,50 @@ export default function AssessmentPage() {
       )}
 
       <form onSubmit={handleSubmit}>
+        {/* Patient Selector */}
+        <div className="mb-6">
+          <label className="block text-xs font-semibold text-text-muted uppercase tracking-wider mb-1.5">
+            {t("select_patient")}
+          </label>
+          <div className="relative">
+            <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted text-[20px]">
+              person_search
+            </span>
+            <input
+              type="text"
+              value={patientSearch}
+              onChange={(e) => searchPatients(e.target.value)}
+              onFocus={() => patientResults.length > 0 && setShowPatientDropdown(true)}
+              placeholder={t("search_select_patient")}
+              className={`${inputClass} pl-10`}
+            />
+            {showPatientDropdown && patientResults.length > 0 && (
+              <div className="absolute z-20 top-full mt-1 w-full bg-white border border-border rounded-xl shadow-lg max-h-48 overflow-y-auto">
+                {patientResults.map((p) => (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => selectPatient(p)}
+                    className="w-full text-left px-4 py-2.5 text-sm hover:bg-rose-50 transition-colors border-b border-border last:border-0"
+                  >
+                    <span className="font-medium text-text-heading">{p.full_name}</span>
+                    <span className="text-text-muted ml-2">{p.date_of_birth}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          {selectedPatient && (
+            <p className="text-xs text-green-600 mt-1.5 flex items-center gap-1">
+              <span className="material-symbols-outlined text-[14px]">check_circle</span>
+              {selectedPatient.full_name} — {t("patient_id")}: {selectedPatient.id}
+            </p>
+          )}
+          {!selectedPatient && (
+            <p className="text-xs text-text-muted mt-1.5">{t("no_patient_selected")}</p>
+          )}
+        </div>
+
         {/* Patient Reference */}
         <div className="mb-6">
           <label htmlFor="patient_ref" className="block text-xs font-semibold text-text-muted uppercase tracking-wider mb-1.5">

@@ -3,6 +3,7 @@ import { View, Text, ScrollView, RefreshControl } from "react-native";
 import { useTranslation } from "react-i18next";
 import { getDashboardSummary } from "../../services/api";
 import Card from "../../components/ui/Card";
+import Icon from "../../components/ui/Icon";
 import type { DashboardSummary } from "../../types";
 
 export default function DashboardPage() {
@@ -85,7 +86,9 @@ export default function DashboardPage() {
         <Text className="text-sm font-semibold text-text-heading mb-3">{t("critical_alerts")}</Text>
         {high_risk_count > 0 ? (
           <View className="flex-row items-center gap-3 p-4 bg-red-50 rounded-xl">
-            <View className="w-9 h-9 rounded-full bg-red-100 items-center justify-center"><Text className="text-red-600">⚠️</Text></View>
+            <View className="w-9 h-9 rounded-full bg-red-100 items-center justify-center">
+              <Icon name="alert-circle" size={20} color="#DC2626" />
+            </View>
             <View className="flex-1">
               <Text className="text-sm font-semibold text-text-heading">{t("high_risk_count_alert", { count: high_risk_count })}</Text>
               <Text className="text-xs text-text-muted">{t("high_risk_alert_desc")}</Text>
@@ -93,7 +96,9 @@ export default function DashboardPage() {
           </View>
         ) : (
           <View className="flex-row items-center gap-3 p-4 bg-green-50 rounded-xl">
-            <View className="w-9 h-9 rounded-full bg-green-100 items-center justify-center"><Text className="text-green-600">✅</Text></View>
+            <View className="w-9 h-9 rounded-full bg-green-100 items-center justify-center">
+              <Icon name="checkmark-circle" size={20} color="#16A34A" />
+            </View>
             <View>
               <Text className="text-sm font-semibold text-text-heading">{t("no_critical_alerts")}</Text>
               <Text className="text-xs text-text-muted">{t("all_patients_safe")}</Text>
