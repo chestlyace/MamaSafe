@@ -1,5 +1,7 @@
 import { useLocation, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useState } from 'react';
+import ReferralModal from '../components/ReferralModal';
 
 const RISK_CONFIG = {
   'high risk': {
@@ -31,6 +33,7 @@ const RISK_CONFIG = {
 export default function ResultPage() {
   const { t } = useTranslation();
   const { state } = useLocation();
+  const [showReferral, setShowReferral] = useState(false);
 
   if (!state) {
     return (
@@ -185,8 +188,29 @@ export default function ResultPage() {
               {t('new_assessment')}
             </Link>
           </div>
-        </div>
       </div>
-    </main>
+    </div>
+
+    {state?.risk_level === 'High Risk' && (
+      <div className="mt-6">
+        <button
+          onClick={() => setShowReferral(true)}
+          className="w-full py-4 bg-red-600 text-white rounded-2xl font-bold text-base hover:bg-red-700 transition-colors flex items-center justify-center gap-2 shadow-lg"
+        >
+          <span className="material-symbols-outlined">emergency</span>
+          {t('emergency_referral')}
+        </button>
+      </div>
+    )}
+
+    {showReferral && (
+      <ReferralModal
+        patientId={state.patient_id}
+        patientName={state.patient_name}
+        assessmentId={state.assessment_id}
+        onClose={() => setShowReferral(false)}
+      />
+    )}
+  </main>
   );
 }
