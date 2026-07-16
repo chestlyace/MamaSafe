@@ -52,3 +52,59 @@ export interface AssessmentPayload {
   body_temp: number;
   heart_rate: number;
 }
+
+// ── FACILITIES ──────────────────────────────────────────
+export interface Facility {
+  id: number;
+  name: string;
+  facility_type: string;
+  phone?: string;
+  whatsapp?: string;
+  latitude?: number;
+  longitude?: number;
+  is_approved: boolean;
+  suggested_by?: number;
+  created_at: string;
+}
+
+// ── REFERRALS ──────────────────────────────────────────
+export interface Referral {
+  id: number;
+  patient_id?: number;
+  patient_name: string;
+  assessment_id?: number;
+  facility_id?: number;
+  facility_name: string;
+  clinical_summary: string;
+  delivery_method: "sms" | "whatsapp" | "app";
+  status: "sent" | "received" | "patient_arrived";
+  sent_at: string;
+  received_at?: string;
+  arrived_at?: string;
+  created_by: number;
+  created_at: string;
+}
+
+export interface ReferralStats {
+  total: number;
+  pending: number;
+  delivered: number;
+  by_status: Record<string, number>;
+}
+
+export interface CreateReferralPayload {
+  patient_id?: number;
+  patient_name: string;
+  assessment_id?: number;
+  facility_id?: number;
+  clinical_summary: string;
+  delivery_method: "sms" | "whatsapp" | "app";
+}
+
+export interface QuickReferralPayload {
+  patient_id?: number;
+  assessment_id?: number;
+  facility_id?: number;
+  clinical_summary: string;
+  delivery_method: "sms" | "whatsapp" | "app";
+}
