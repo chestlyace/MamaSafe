@@ -114,3 +114,50 @@ export const listVisits = async (pregnancyId) => {
   const res = await client.get(`/api/v1/pregnancies/${pregnancyId}/visits`);
   return res.data;
 };
+
+// ── FACILITIES ──────────────────────────────────────────
+export const getFacilities = async () => {
+  const res = await client.get('/api/v1/facilities');
+  return res.data;
+};
+
+export const suggestFacility = async (data) => {
+  const res = await client.post('/api/v1/facilities', data);
+  return res.data;
+};
+
+export const approveFacility = async (id) => {
+  const res = await client.post(`/api/v1/facilities/${id}/approve`);
+  return res.data;
+};
+
+// ── REFERRALS ──────────────────────────────────────────
+export const createReferral = async (data) => {
+  const res = await client.post('/api/v1/referrals', data);
+  return res.data;
+};
+
+export const quickReferral = async (data) => {
+  const res = await client.post('/api/v1/referrals/quick', data);
+  return res.data;
+};
+
+export const getReferrals = async (params = {}) => {
+  const res = await client.get('/api/v1/referrals', { params });
+  return res.data;
+};
+
+export const getReferral = async (id) => {
+  const res = await client.get(`/api/v1/referrals/${id}`);
+  return res.data;
+};
+
+export const updateReferralStatus = async (id, status) => {
+  const res = await client.patch(`/api/v1/referrals/${id}/status`, { status });
+  return res.data;
+};
+
+export const getReferralStats = async () => {
+  const res = await client.get('/api/v1/referrals/stats');
+  return res.data;
+};
