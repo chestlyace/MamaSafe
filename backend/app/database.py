@@ -50,6 +50,68 @@ class User(Base):
     must_change_password   = Column(Boolean, default=True)
 
 
+class Facility(Base):
+    __tablename__ = "facilities"
+
+    id              = Column(Integer, primary_key=True, index=True)
+    name            = Column(String, nullable=False)
+    level           = Column(String, nullable=False)  # health_post, health_center, district_hospital, regional_hospital, central_hospital
+    phone           = Column(String, nullable=True)
+    whatsapp        = Column(String, nullable=True)
+    address         = Column(String, nullable=True)
+    region          = Column(String, nullable=True)
+    is_active       = Column(Boolean, default=True)
+    suggested_by    = Column(Integer, ForeignKey("users.id"), nullable=True)
+    approved        = Column(Boolean, default=False)
+    created_at      = Column(DateTime, default=datetime.utcnow)
+
+
+class Referral(Base):
+    __tablename__ = "referrals"
+
+    id                      = Column(Integer, primary_key=True, index=True)
+    patient_id              = Column(Integer, ForeignKey("patients.id"), nullable=False)
+    assessment_id           = Column(Integer, ForeignKey("assessments.id"), nullable=True)
+    facility_id             = Column(Integer, ForeignKey("facilities.id"), nullable=False)
+    facility_name           = Column(String, nullable=False)
+    status                  = Column(String, default="SENT")  # SENT, RECEIVED, PATIENT_ARRIVED
+
+    # Patient snapshot
+    patient_name            = Column(String, nullable=False)
+    patient_age             = Column(Integer, nullable=True)
+    patient_phone           = Column(String, nullable=True)
+    patient_blood_group     = Column(String, nullable=True)
+    patient_allergies       = Column(String, nullable=True)
+    emergency_contact_name  = Column(String, nullable=True)
+    emergency_contact_phone = Column(String, nullable=True)
+
+    # Pregnancy snapshot
+    gravida                 = Column(Integer, nullable=True)
+    parity                  = Column(Integer, nullable=True)
+    edd_date                = Column(String, nullable=True)
+    gestational_age         = Column(Integer, nullable=True)
+
+    # Clinical snapshot
+    systolic_bp             = Column(Float, nullable=True)
+    diastolic_bp            = Column(Float, nullable=True)
+    heart_rate              = Column(Integer, nullable=True)
+    body_temp               = Column(Float, nullable=True)
+    blood_sugar             = Column(Float, nullable=True)
+    risk_level              = Column(String, nullable=True)
+    risk_probability        = Column(Float, nullable=True)
+
+    # Referral-specific
+    complication_type       = Column(String, nullable=True)
+    chw_notes               = Column(String, nullable=True)
+    chw_id                  = Column(Integer, ForeignKey("users.id"), nullable=False)
+
+    # Timestamps
+    sent_at                 = Column(DateTime, nullable=True)
+    received_at             = Column(DateTime, nullable=True)
+    patient_arrived_at      = Column(DateTime, nullable=True)
+    created_at              = Column(DateTime, default=datetime.utcnow)
+
+
 def get_db():
     db = SessionLocal()
     try:
