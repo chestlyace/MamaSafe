@@ -11,6 +11,7 @@ import PatientRegisterPage from './pages/PatientRegisterPage';
 import PatientDetailPage from './pages/PatientDetailPage';
 import PregnancyRegisterPage from './pages/PregnancyRegisterPage';
 import VisitLogPage from './pages/VisitLogPage';
+import ReferralListPage from './pages/ReferralListPage';
 
 export default function App() {
   return (
@@ -28,6 +29,7 @@ export default function App() {
           <Route path="/patients/:id" element={<PatientDetailPage />} />
           <Route path="/patients/:id/pregnancies/new" element={<PregnancyRegisterPage />} />
           <Route path="/patients/:id/pregnancies/:pregnancyId/visits/new" element={<VisitLogPage />} />
+          <Route path="/referrals" element={<ReferralListPage />} />
           <Route path="*" element={<Navigate to="/assess" replace />} />
         </Route>
       </Routes>

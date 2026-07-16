@@ -148,5 +148,26 @@
   "no_patient_selected": "Pas de patiente — évaluation autonome",
   "view_patient_card": "Voir la Carte Patiente",
   "patient_name": "Nom de la Patiente",
-  "patient_not_found": "Patiente non trouvée"
+  "patient_not_found": "Patiente non trouvée",
+
+  "referrals": "Référals",
+  "referral_history": "Historique des Référals",
+  "no_referrals": "Aucun réferral pour l'instant",
+  "pending": "En attente",
+  "delivered": "Livrés",
+  "arrived": "Arrivés",
+  "all": "Tous",
+  "select_facility": "Sélectionner un établissement",
+  "other_facility": "Autre établissement (suggérer)",
+  "emergency_referral": "Réferral d'Urgence",
+  "referring_patient": "Référer la patiente",
+  "clinical_summary": "Résumé Clinique",
+  "clinical_summary_placeholder": "Brève description de l'état du patient...",
+  "send_via": "Envoyer via",
+  "in_app": "Dans l'app",
+  "send_referral": "Envoyer le Réferral",
+  "sending": "Envoi en cours...",
+  "referral_sent": "Réferral Envoyé",
+  "referral_sent_desc": "L'établissement a été notifié. Suivez le statut ici.",
+  "close": "Fermer"
 }

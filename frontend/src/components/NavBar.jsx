@@ -18,6 +18,7 @@ export default function NavBar() {
   const navLinks = [
     { path: '/assess', label: t('new_assessment'), icon: 'assessment' },
     { path: '/patients', label: t('patients'), icon: 'people' },
+    { path: '/referrals', label: t('referrals'), icon: 'local_hospital' },
     { path: '/history', label: t('history'), icon: 'history' },
     { path: '/dashboard', label: t('dashboard'), icon: 'monitoring' },
   ];
