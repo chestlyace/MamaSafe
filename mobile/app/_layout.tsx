@@ -8,6 +8,7 @@ import "../i18n";
 import "../global.css";
 import { useAuthStore } from "../stores/authStore";
 import { useAssessmentStore } from "../stores/assessmentStore";
+import { useReferralStore } from "../stores/referralStore";
 import { initNetworkListener } from "../services/network";
 
 export default function RootLayout() {
@@ -15,14 +16,20 @@ export default function RootLayout() {
   const hydrate = useAuthStore((s) => s.hydrate);
   const hydrateQueue = useAssessmentStore((s) => s.hydrateQueue);
   const syncQueue = useAssessmentStore((s) => s.syncQueue);
+  const hydrateReferralQueue = useReferralStore((s) => s.hydrateQueue);
+  const syncReferralQueue = useReferralStore((s) => s.syncQueue);
   const token = useAuthStore((s) => s.token);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
     hydrate();
     hydrateQueue();
+    hydrateReferralQueue();
     initNetworkListener((online) => {
-      if (online) syncQueue();
+      if (online) {
+        syncQueue();
+        syncReferralQueue();
+      }
     });
     setReady(true);
   }, []);
