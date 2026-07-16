@@ -7,6 +7,7 @@ const TAB_ICONS: Record<string, { focused: keyof typeof import("@expo/vector-ico
   assess: { focused: "document-text", unfocused: "document-text-outline" },
   history: { focused: "book", unfocused: "book-outline" },
   dashboard: { focused: "bar-chart", unfocused: "bar-chart-outline" },
+  refer: { focused: "medkit", unfocused: "medkit-outline" },
 };
 
 function TabIcon({ name, focused }: { name: string; focused: boolean }) {
@@ -53,6 +54,13 @@ export default function MainLayout() {
         options={{
           title: t("dashboard"),
           tabBarIcon: ({ focused }) => <TabIcon name="dashboard" focused={focused} />,
+        }}
+      />
+      <Tabs.Screen
+        name="refer"
+        options={{
+          title: t("referrals"),
+          tabBarIcon: ({ focused }) => <TabIcon name="refer" focused={focused} />,
         }}
       />
       <Tabs.Screen name="result" options={{ href: null }} />
