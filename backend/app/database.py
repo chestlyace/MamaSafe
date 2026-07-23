@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, Integer, Float, String, Boolean, DateTime, ForeignKey
+from sqlalchemy import create_engine, Column, Integer, Float, String, Boolean, DateTime, ForeignKey, inspect, text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 from datetime import datetime
@@ -70,7 +70,7 @@ class Referral(Base):
     __tablename__ = "referrals"
 
     id                      = Column(Integer, primary_key=True, index=True)
-    patient_id              = Column(Integer, ForeignKey("patients.id"), nullable=False)
+    patient_id              = Column(Integer, ForeignKey("patients.id"), nullable=True)
     assessment_id           = Column(Integer, ForeignKey("assessments.id"), nullable=True)
     facility_id             = Column(Integer, ForeignKey("facilities.id"), nullable=False)
     facility_name           = Column(String, nullable=False)
@@ -104,6 +104,10 @@ class Referral(Base):
     complication_type       = Column(String, nullable=True)
     chw_notes               = Column(String, nullable=True)
     chw_id                  = Column(Integer, ForeignKey("users.id"), nullable=False)
+
+    # WhatsApp delivery
+    whatsapp_sent           = Column(Boolean, default=False)
+    whatsapp_message_id     = Column(String, nullable=True)
 
     # Timestamps
     sent_at                 = Column(DateTime, nullable=True)
@@ -189,5 +193,32 @@ class ANCVisit(Base):
     pregnancy = relationship("Pregnancy", back_populates="anc_visits")
 
 
+def _migrate_columns(engine):
+    """Add missing columns to existing tables without data loss."""
+    inspector = inspect(engine)
+    migrations = [
+        ("referrals", "whatsapp_sent", "BOOLEAN DEFAULT FALSE"),
+        ("referrals", "whatsapp_message_id", "VARCHAR"),
+    ]
+    for table, column, col_type in migrations:
+        if table in inspector.get_table_names():
+            existing = {col["name"] for col in inspector.get_columns(table)}
+            if column not in existing:
+                with engine.connect() as conn:
+                    conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {column} {col_type}"))
+                    conn.commit()
+                print(f"  Migration: added {table}.{column}")
+
+    # Make referrals.patient_id nullable (was NOT NULL, now optional for assessment-only referrals)
+    if "referrals" in inspector.get_table_names():
+        cols = {col["name"]: col for col in inspector.get_columns("referrals")}
+        if "patient_id" in cols and cols["patient_id"].get("nullable") is False:
+            with engine.connect() as conn:
+                conn.execute(text("ALTER TABLE referrals ALTER COLUMN patient_id DROP NOT NULL"))
+                conn.commit()
+            print("  Migration: referrals.patient_id made nullable")
+
+
 def create_tables():
     Base.metadata.create_all(bind=engine)
+    _migrate_columns(engine)

@@ -3,26 +3,35 @@ import { quickReferral } from '../api/client';
 import FacilityPicker from './FacilityPicker';
 import { useTranslation } from 'react-i18next';
 
+const COMPLICATION_OPTIONS = [
+  { value: 'hypertension', label: 'Hypertension' },
+  { value: 'hemorrhage', label: 'Hemorrhage' },
+  { value: 'eclampsia', label: 'Eclampsia' },
+  { value: 'sepsis', label: 'Sepsis' },
+  { value: 'obstruction', label: 'Obstruction' },
+  { value: 'anemia', label: 'Anemia' },
+  { value: 'other', label: 'Other' },
+];
+
 export default function ReferralModal({ patientId, patientName, assessmentId, onClose }) {
   const { t } = useTranslation();
   const [facilityId, setFacilityId] = useState(null);
-  const [clinicalSummary, setClinicalSummary] = useState('');
-  const [deliveryMethod, setDeliveryMethod] = useState('sms');
+  const [complicationType, setComplicationType] = useState('');
+  const [chwNotes, setChwNotes] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
 
   const handleSubmit = async () => {
-    if (!clinicalSummary.trim()) return;
+    if (!facilityId) return;
     setLoading(true);
     setError(null);
     try {
       await quickReferral({
-        patient_id: patientId,
         assessment_id: assessmentId,
-        facility_id: facilityId || null,
-        clinical_summary: clinicalSummary,
-        delivery_method: deliveryMethod,
+        facility_id: parseInt(facilityId),
+        complication_type: complicationType || null,
+        chw_notes: chwNotes || null,
       });
       setSuccess(true);
     } catch (err) {
@@ -74,33 +83,33 @@ export default function ReferralModal({ patientId, patientName, assessmentId, on
         </div>
 
         <div className="space-y-1">
-          <label className="text-xs font-medium text-gray-500 uppercase">{t('clinical_summary')}</label>
+          <label className="text-xs font-medium text-gray-500 uppercase">{t('complication_type')}</label>
+          <select
+            value={complicationType}
+            onChange={(e) => setComplicationType(e.target.value)}
+            className="w-full p-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-rose-300"
+          >
+            <option value="">{t('select_complication')}</option>
+            {COMPLICATION_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="space-y-1">
+          <label className="text-xs font-medium text-gray-500 uppercase">{t('chw_notes')}</label>
           <textarea
             rows={3}
-            value={clinicalSummary}
-            onChange={(e) => setClinicalSummary(e.target.value)}
-            placeholder={t('clinical_summary_placeholder')}
+            value={chwNotes}
+            onChange={(e) => setChwNotes(e.target.value)}
+            placeholder={t('chw_notes_placeholder')}
             className="w-full p-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-rose-300 resize-none"
           />
         </div>
 
-        <div className="space-y-1">
-          <label className="text-xs font-medium text-gray-500 uppercase">{t('send_via')}</label>
-          <div className="grid grid-cols-3 gap-2">
-            {['sms', 'whatsapp', 'app'].map((m) => (
-              <button
-                key={m}
-                onClick={() => setDeliveryMethod(m)}
-                className={`py-2 rounded-xl text-xs font-semibold uppercase border transition-colors ${
-                  deliveryMethod === m
-                    ? 'bg-rose-600 text-white border-rose-600'
-                    : 'bg-white text-gray-600 border-gray-200 hover:border-rose-300'
-                }`}
-              >
-                {m === 'app' ? t('in_app') : m}
-              </button>
-            ))}
-          </div>
+        <div className="bg-blue-50 text-blue-700 text-xs rounded-xl p-3 flex items-start gap-2">
+          <span className="material-symbols-outlined text-[16px] mt-0.5">info</span>
+          <span>{t('whatsapp_auto_note')}</span>
         </div>
 
         {error && (
@@ -109,7 +118,7 @@ export default function ReferralModal({ patientId, patientName, assessmentId, on
 
         <button
           onClick={handleSubmit}
-          disabled={!clinicalSummary.trim() || loading}
+          disabled={!facilityId || loading}
           className="w-full py-3 bg-rose-600 text-white rounded-xl font-semibold text-sm hover:bg-rose-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           {loading ? t('sending') : t('send_referral')}

@@ -1,22 +1,22 @@
-"""SMS and WhatsApp delivery service for emergency referrals.
+"""WhatsApp delivery service for emergency referrals via Baileys gateway.
 
-In production, integrate with:
-- SMS: Africa's Talking, Twilio, or local Cameroon gateway
-- WhatsApp: WhatsApp Business API (via Twilio or direct)
-
-For now, this logs the messages. Replace send_sms/send_whatsapp
-with actual gateway calls when API keys are configured.
+Sends referral notifications to receiving facilities through the local
+Baileys Node.js subprocess (localhost:3001). Handles both formatted
+WhatsApp messages and plain SMS fallback formatting.
 """
 
 import os
 import logging
+import httpx
 from typing import Optional
 
 logger = logging.getLogger(__name__)
 
+BAILEYS_URL = os.getenv("BAILEYS_URL", "http://localhost:3001")
+
 
 def format_sms(referral) -> str:
-    """Format a condensed SMS referral summary (≤160 chars per segment)."""
+    """Format a condensed SMS referral summary (<=160 chars per segment)."""
     name = referral.patient_name or "Unknown"
     age = referral.patient_age or "?"
     bp = f"{referral.systolic_bp:.0f}/{referral.diastolic_bp:.0f}" if referral.systolic_bp and referral.diastolic_bp else "?"
@@ -58,6 +58,8 @@ def format_whatsapp(referral) -> str:
     facility = referral.facility_name or "N/A"
     sent = referral.sent_at.strftime("%d %b %Y, %H:%M") if referral.sent_at else "N/A"
 
+    ref_id = str(referral.id).zfill(4) if referral.id else "????"
+
     msg = (
         f"\U0001f6a8 *MAMASAFE URGENT REFERRAL*\n\n"
         f"\U0001f464 *Patient:* {name}, {age} years\n"
@@ -75,54 +77,68 @@ def format_whatsapp(referral) -> str:
         f"\U0001f534 *Complication:* {complication}\n\n"
         f"\U0001f4dd *CHW Notes:* {notes}\n\n"
         f"\U0001f4cd *Referred to:* {facility}\n"
-        f"\U0001f551 *Sent:* {sent}"
+        f"\U0001f551 *Sent:* {sent}\n"
+        f"\U0001f4cb *Referral:* #{ref_id}\n\n"
+        f"Reply *RECEIVED #{ref_id}* to confirm."
     )
     return msg
 
 
-def send_sms(phone_number: str, message: str) -> bool:
-    """Send SMS via gateway. Returns True on success.
+def send_whatsapp(phone_number: str, message: str) -> dict:
+    """Send WhatsApp message via Baileys gateway.
 
-    TODO: Integrate with Africa's Talking or Twilio:
-        from africastalking import SMS
-        sms = SMS()
-        sms.send(message=message, recipients=[phone_number])
+    Returns:
+        dict: {success: bool, message_id: str|None, error: str|None}
     """
     if not phone_number:
-        logger.warning("No phone number for SMS delivery")
-        return False
-    logger.info(f"SMS to {phone_number}: {message[:80]}...")
-    # Placeholder: replace with actual SMS gateway call
-    return True
+        logger.warning("No phone number for WhatsApp delivery")
+        return {"success": False, "message_id": None, "error": "No phone number"}
 
-
-def send_whatsapp(phone_number: str, message: str) -> bool:
-    """Send WhatsApp message via Business API. Returns True on success.
-
-    TODO: Integrate with WhatsApp Business API:
-        - Via Twilio: client.messages.create(from='whatsapp:+14155238886', body=message, to=f'whatsapp:{phone_number}')
-        - Via direct API: POST to graph.facebook.com/v17.0/{phone_number_id}/messages
-    """
-    if not phone_number:
-        logger.warning("No WhatsApp number for delivery")
-        return False
-    logger.info(f"WhatsApp to {phone_number}: {message[:80]}...")
-    # Placeholder: replace with actual WhatsApp API call
-    return True
+    try:
+        resp = httpx.post(
+            f"{BAILEYS_URL}/send",
+            json={"phone": phone_number, "message": message},
+            timeout=10.0,
+        )
+        result = resp.json()
+        if result.get("success"):
+            return {"success": True, "message_id": result.get("message_id"), "error": None}
+        else:
+            return {"success": False, "message_id": None, "error": result.get("error", "Unknown")}
+    except httpx.ConnectError:
+        logger.error("Baileys gateway not reachable at %s", BAILEYS_URL)
+        return {"success": False, "message_id": None, "error": "Baileys gateway not running"}
+    except Exception as e:
+        logger.error("WhatsApp delivery failed: %s", e)
+        return {"success": False, "message_id": None, "error": str(e)}
 
 
 def deliver_referral(referral) -> dict:
-    """Send referral via all available channels. Returns delivery status dict."""
-    results = {"sms": False, "whatsapp": False}
+    """Send referral notification via WhatsApp. Returns delivery status dict.
 
-    sms_msg = format_sms(referral)
-    whatsapp_msg = format_whatsapp(referral)
+    This is the main entry point called after referral creation.
+    WhatsApp is the primary channel. SMS is not used (WhatsApp covers
+    all phones in Cameroon via Baileys).
+    """
+    results = {"whatsapp": False, "whatsapp_message_id": None}
 
-    if referral.facility and referral.facility.phone:
-        results["sms"] = send_sms(referral.facility.phone, sms_msg)
+    # Prefer facility WhatsApp number, fall back to phone
+    phone = None
+    if hasattr(referral, 'facility') and referral.facility:
+        phone = referral.facility.whatsapp or referral.facility.phone
 
-    if referral.facility and referral.facility.whatsapp:
-        results["whatsapp"] = send_whatsapp(referral.facility.whatsapp, whatsapp_msg)
+    if not phone:
+        logger.warning("Referral %s: No phone number for facility", referral.id)
+        return results
 
-    logger.info(f"Referral {referral.id} delivery: {results}")
+    message = format_whatsapp(referral)
+    wa_result = send_whatsapp(phone, message)
+    results["whatsapp"] = wa_result["success"]
+    results["whatsapp_message_id"] = wa_result.get("message_id")
+
+    if wa_result["success"]:
+        logger.info("Referral %s: WhatsApp sent to %s", referral.id, phone)
+    else:
+        logger.warning("Referral %s: WhatsApp failed — %s", referral.id, wa_result.get("error"))
+
     return results

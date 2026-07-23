@@ -25,7 +25,7 @@ export default function FacilityPicker({ value, onChange, placeholder }) {
       <option value="">{placeholder || t('select_facility')}</option>
       {facilities.map((f) => (
         <option key={f.id} value={f.id}>
-          {f.name} — {f.facility_type}
+          {f.name} — {f.level}
         </option>
       ))}
       <option value="__other__">{t('other_facility')}</option>

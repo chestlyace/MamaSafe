@@ -13,21 +13,46 @@ from app.routers.auth import get_current_user
 router = APIRouter(prefix="/api/v1", tags=["referrals"])
 
 
+def _deliver_whatsapp(referral, facility, db):
+    """Attempt WhatsApp delivery and update referral with result."""
+    from app.services.delivery import send_whatsapp, format_whatsapp
+    import logging
+    _log = logging.getLogger(__name__)
+
+    phone = facility.whatsapp or facility.phone
+    if not phone:
+        _log.warning("Referral %s: no phone for facility %s", referral.id, facility.id)
+        return
+
+    try:
+        message = format_whatsapp(referral)
+        result = send_whatsapp(phone, message)
+        referral.whatsapp_sent = result["success"]
+        referral.whatsapp_message_id = result.get("message_id")
+        db.commit()
+        if result["success"]:
+            _log.info("Referral %s: WhatsApp sent", referral.id)
+        else:
+            _log.warning("Referral %s: WhatsApp failed — %s", referral.id, result.get("error"))
+    except Exception as e:
+        _log.error("Referral %s: delivery exception: %s", referral.id, e)
+
+
 def build_referral_snapshot(patient, pregnancy, assessment, facility, data, current_user):
     """Build the self-contained referral snapshot from patient/pregnancy/assessment data."""
     snapshot = {
-        "patient_id": patient.id,
+        "patient_id": patient.id if patient else None,
         "assessment_id": getattr(assessment, 'id', None) if assessment else None,
         "facility_id": facility.id,
         "facility_name": facility.name,
         "chw_id": current_user.id,
-        "patient_name": patient.full_name,
+        "patient_name": patient.full_name if patient else "Unknown",
         "patient_age": int(assessment.age) if assessment and assessment.age else None,
-        "patient_phone": patient.phone,
-        "patient_blood_group": patient.blood_group,
-        "patient_allergies": patient.allergies,
-        "emergency_contact_name": patient.emergency_contact_name,
-        "emergency_contact_phone": patient.emergency_contact_phone,
+        "patient_phone": patient.phone if patient else None,
+        "patient_blood_group": patient.blood_group if patient else None,
+        "patient_allergies": patient.allergies if patient else None,
+        "emergency_contact_name": patient.emergency_contact_name if patient else None,
+        "emergency_contact_phone": patient.emergency_contact_phone if patient else None,
         "gravida": pregnancy.gravida if pregnancy else None,
         "parity": pregnancy.parity if pregnancy else None,
         "edd_date": pregnancy.edd_date if pregnancy else None,
@@ -74,6 +99,10 @@ def create_referral(
     db.add(referral)
     db.commit()
     db.refresh(referral)
+
+    # Deliver via WhatsApp (non-blocking — referral already saved)
+    _deliver_whatsapp(referral, facility, db)
+
     return referral
 
 
@@ -101,14 +130,14 @@ def quick_referral(
             Pregnancy.patient_id == patient.id, Pregnancy.is_active == True
         ).first()
 
-    if not patient:
-        raise HTTPException(status_code=400, detail="Assessment has no linked patient. Use POST /referrals instead.")
-
     snapshot = build_referral_snapshot(patient, pregnancy, assessment, facility, data, current_user)
     referral = Referral(**snapshot)
     db.add(referral)
     db.commit()
     db.refresh(referral)
+
+    _deliver_whatsapp(referral, facility, db)
+
     return referral
 
 
@@ -126,47 +155,12 @@ def list_referrals(
     if current_user.role != "admin":
         q = q.filter(Referral.chw_id == current_user.id)
     if status:
-        q = q.filter(Referral.status == status)
+        q = q.filter(Referral.status == status.upper())
     if facility_id:
         q = q.filter(Referral.facility_id == facility_id)
     if patient_id:
         q = q.filter(Referral.patient_id == patient_id)
     return q.order_by(Referral.created_at.desc()).offset(skip).limit(limit).all()
-
-
-@router.get("/referrals/{referral_id}", response_model=ReferralOut)
-def get_referral(
-    referral_id: int,
-    db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)
-):
-    referral = db.query(Referral).filter(Referral.id == referral_id).first()
-    if not referral:
-        raise HTTPException(status_code=404, detail="Referral not found")
-    return referral
-
-
-@router.patch("/referrals/{referral_id}/status", response_model=ReferralOut)
-def update_referral_status(
-    referral_id: int,
-    data: ReferralStatusUpdate,
-    db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)
-):
-    referral = db.query(Referral).filter(Referral.id == referral_id).first()
-    if not referral:
-        raise HTTPException(status_code=404, detail="Referral not found")
-
-    referral.status = data.status
-    now = datetime.utcnow()
-    if data.status == "RECEIVED":
-        referral.received_at = now
-    elif data.status == "PATIENT_ARRIVED":
-        referral.patient_arrived_at = now
-
-    db.commit()
-    db.refresh(referral)
-    return referral
 
 
 @router.get("/referrals/stats", response_model=ReferralStats)
@@ -204,3 +198,38 @@ def get_referral_stats(
         avg_response_minutes=avg_response_minutes,
         stale_count=stale_count,
     )
+
+
+@router.get("/referrals/{referral_id}", response_model=ReferralOut)
+def get_referral(
+    referral_id: int,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    referral = db.query(Referral).filter(Referral.id == referral_id).first()
+    if not referral:
+        raise HTTPException(status_code=404, detail="Referral not found")
+    return referral
+
+
+@router.patch("/referrals/{referral_id}/status", response_model=ReferralOut)
+def update_referral_status(
+    referral_id: int,
+    data: ReferralStatusUpdate,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    referral = db.query(Referral).filter(Referral.id == referral_id).first()
+    if not referral:
+        raise HTTPException(status_code=404, detail="Referral not found")
+
+    referral.status = data.status
+    now = datetime.utcnow()
+    if data.status == "RECEIVED":
+        referral.received_at = now
+    elif data.status == "PATIENT_ARRIVED":
+        referral.patient_arrived_at = now
+
+    db.commit()
+    db.refresh(referral)
+    return referral

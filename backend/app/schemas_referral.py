@@ -51,7 +51,7 @@ class ReferralQuickCreate(BaseModel):
 
 class ReferralOut(BaseModel):
     id:                      int
-    patient_id:              int
+    patient_id:              Optional[int] = None
     assessment_id:           Optional[int]
     facility_id:             int
     facility_name:           str
@@ -77,6 +77,8 @@ class ReferralOut(BaseModel):
     complication_type:       Optional[str]
     chw_notes:               Optional[str]
     chw_id:                  int
+    whatsapp_sent:           Optional[bool] = None
+    whatsapp_message_id:     Optional[str] = None
     sent_at:                 Optional[datetime]
     received_at:             Optional[datetime]
     patient_arrived_at:      Optional[datetime]
@@ -94,3 +96,9 @@ class ReferralStats(BaseModel):
     completion_rate:     float
     avg_response_minutes: Optional[float]
     stale_count:         int
+
+class WebhookWhatsApp(BaseModel):
+    from_number: str
+    text:        str
+    timestamp:   Optional[str] = None
+    secret:      Optional[str] = None

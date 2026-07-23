@@ -41,18 +41,22 @@ export default function ReferralListPage() {
       </div>
 
       {stats && (
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 gap-3">
           <div className="bg-white rounded-2xl p-4 text-center shadow-sm border border-gray-100">
-            <p className="text-2xl font-bold text-gray-800">{stats.total}</p>
+            <p className="text-2xl font-bold text-gray-800">{stats.total_sent + stats.total_received + stats.total_arrived}</p>
             <p className="text-xs text-gray-500 mt-1">{t('total')}</p>
           </div>
           <div className="bg-white rounded-2xl p-4 text-center shadow-sm border border-gray-100">
-            <p className="text-2xl font-bold text-yellow-600">{stats.pending}</p>
+            <p className="text-2xl font-bold text-yellow-600">{stats.total_sent}</p>
             <p className="text-xs text-gray-500 mt-1">{t('pending')}</p>
           </div>
           <div className="bg-white rounded-2xl p-4 text-center shadow-sm border border-gray-100">
-            <p className="text-2xl font-bold text-green-600">{stats.delivered}</p>
-            <p className="text-xs text-gray-500 mt-1">{t('delivered')}</p>
+            <p className="text-2xl font-bold text-blue-600">{stats.total_received}</p>
+            <p className="text-xs text-gray-500 mt-1">{t('received')}</p>
+          </div>
+          <div className="bg-white rounded-2xl p-4 text-center shadow-sm border border-gray-100">
+            <p className="text-2xl font-bold text-green-600">{stats.total_arrived}</p>
+            <p className="text-xs text-gray-500 mt-1">{t('arrived')}</p>
           </div>
         </div>
       )}

@@ -29,13 +29,33 @@ export default function ReferralCard({ referral }) {
         {referral.facility_name || 'Unknown facility'}
       </p>
 
-      <p className="text-xs text-gray-500">
-        <span className="material-symbols-outlined text-[14px] align-middle mr-1">description</span>
-        {referral.clinical_summary}
-      </p>
+      {referral.complication_type && (
+        <p className="text-xs text-gray-500">
+          <span className="material-symbols-outlined text-[14px] align-middle mr-1">warning</span>
+          {referral.complication_type}
+        </p>
+      )}
+
+      {referral.chw_notes && (
+        <p className="text-xs text-gray-400 italic">
+          {referral.chw_notes}
+        </p>
+      )}
 
       <div className="flex items-center justify-between text-xs text-gray-400">
-        <span>{referral.delivery_method.toUpperCase()}</span>
+        <span className="flex items-center gap-1">
+          {referral.whatsapp_sent ? (
+            <>
+              <span className="material-symbols-outlined text-[14px] text-green-500">check_circle</span>
+              <span className="text-green-600">WhatsApp sent</span>
+            </>
+          ) : (
+            <>
+              <span className="material-symbols-outlined text-[14px]">cancel</span>
+              <span>Not sent</span>
+            </>
+          )}
+        </span>
         <span>{created}</span>
       </div>
     </div>

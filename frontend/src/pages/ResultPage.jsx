@@ -191,7 +191,7 @@ export default function ResultPage() {
       </div>
     </div>
 
-    {state?.risk_level === 'High Risk' && (
+    {state?.risk_level === 'high risk' && (
       <div className="mt-6">
         <button
           onClick={() => setShowReferral(true)}
