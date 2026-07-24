@@ -18,6 +18,7 @@ export default function NavBar() {
   const navLinks = [
     { path: '/assess', label: t('new_assessment'), icon: 'assessment' },
     { path: '/patients', label: t('patients'), icon: 'people' },
+    { path: '/schedule', label: t('schedule'), icon: 'calendar_month' },
     { path: '/referrals', label: t('referrals'), icon: 'local_hospital' },
     { path: '/history', label: t('history'), icon: 'history' },
     { path: '/dashboard', label: t('dashboard'), icon: 'monitoring' },
@@ -25,8 +26,8 @@ export default function NavBar() {
 
   const linkClass = (path) =>
     `text-sm transition-colors ${
-      path === '/patients'
-        ? location.pathname.startsWith('/patients')
+      path === '/patients' || path === '/schedule'
+        ? location.pathname.startsWith(path)
           ? 'text-rose-500 font-semibold'
           : 'text-text-body hover:text-rose-500'
         : location.pathname === path
@@ -90,7 +91,9 @@ export default function NavBar() {
                   to={link.path}
                   onClick={() => setMobileOpen(false)}
                   className={`flex items-center gap-3 px-5 py-3 text-sm transition-colors ${
-                    (link.path === '/patients' ? location.pathname.startsWith('/patients') : location.pathname === link.path)
+                    (link.path === '/patients' || link.path === '/schedule'
+                      ? location.pathname.startsWith(link.path)
+                      : location.pathname === link.path)
                       ? 'text-rose-500 font-semibold bg-rose-50'
                       : 'text-text-body hover:bg-gray-50'
                   }`}

@@ -4,8 +4,15 @@ import sys
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.database import create_tables, SessionLocal, User
-from app.routers import predict, assessments, auth, dashboard, anc, facilities, referrals, whatsapp_webhook
+from app.routers import predict, assessments, auth, dashboard, anc, facilities, referrals, whatsapp_webhook, schedule
 from app.routers.auth import hash_password
+from app.utils.scheduler_jobs import (
+    job_send_48h_reminders,
+    job_send_day_reminders_and_chw_list,
+    job_detect_missed_visits,
+)
+from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.triggers.cron import CronTrigger
 
 app = FastAPI(
     title="MamaSafe API",
@@ -72,6 +79,29 @@ def startup():
     seed_admin()
     start_baileys()
 
+    # Start APScheduler for ANC visit reminders
+    scheduler = BackgroundScheduler(timezone="Africa/Douala")
+    scheduler.add_job(
+        job_send_48h_reminders,
+        CronTrigger(hour=7, minute=0),
+        id="48h_reminders",
+        replace_existing=True,
+    )
+    scheduler.add_job(
+        job_send_day_reminders_and_chw_list,
+        CronTrigger(hour=6, minute=0),
+        id="day_reminders",
+        replace_existing=True,
+    )
+    scheduler.add_job(
+        job_detect_missed_visits,
+        CronTrigger(hour=18, minute=0),
+        id="missed_visits",
+        replace_existing=True,
+    )
+    scheduler.start()
+    print("APScheduler started — 3 daily ANC reminder jobs registered")
+
 
 @app.on_event("shutdown")
 def shutdown():
@@ -92,6 +122,7 @@ app.include_router(anc.router)
 app.include_router(facilities.router)
 app.include_router(referrals.router)
 app.include_router(whatsapp_webhook.router)
+app.include_router(schedule.router)
 
 
 @app.get("/health")

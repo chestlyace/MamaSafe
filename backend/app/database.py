@@ -46,6 +46,7 @@ class User(Base):
     is_active              = Column(Boolean, default=True)
     full_name              = Column(String, nullable=True)
     facility               = Column(String, nullable=True)  # health post name
+    whatsapp_number        = Column(String, nullable=True)
     created_at             = Column(DateTime, default=datetime.utcnow)
     must_change_password   = Column(Boolean, default=True)
 
@@ -138,6 +139,7 @@ class Patient(Base):
     allergies       = Column(String, nullable=True)
     emergency_contact_name  = Column(String, nullable=True)
     emergency_contact_phone = Column(String, nullable=True)
+    preferred_language      = Column(String, default="fr")  # "fr" or "en"
     created_at      = Column(DateTime, default=datetime.utcnow)
 
     pregnancies = relationship("Pregnancy", back_populates="patient",
@@ -162,6 +164,9 @@ class Pregnancy(Base):
     patient   = relationship("Patient", back_populates="pregnancies")
     anc_visits = relationship("ANCVisit", back_populates="pregnancy",
                               cascade="all, delete-orphan")
+    scheduled_visits = relationship("ScheduledVisit", back_populates="pregnancy",
+                                    cascade="all, delete-orphan",
+                                    order_by="ScheduledVisit.visit_number")
 
 
 class ANCVisit(Base):
@@ -193,12 +198,40 @@ class ANCVisit(Base):
     pregnancy = relationship("Pregnancy", back_populates="anc_visits")
 
 
+class ScheduledVisit(Base):
+    __tablename__ = "scheduled_visits"
+
+    id                     = Column(Integer, primary_key=True, index=True)
+    pregnancy_id           = Column(Integer, ForeignKey("pregnancies.id"), nullable=False)
+    visit_number           = Column(Integer, nullable=False)
+    gestational_week       = Column(Integer, nullable=False)
+    label                  = Column(String, nullable=True)
+    scheduled_date         = Column(String, nullable=False)   # YYYY-MM-DD
+    original_date          = Column(String, nullable=True)    # set if rescheduled
+    reschedule_reason      = Column(String, nullable=True)
+    status                 = Column(String, default="scheduled")
+    # scheduled | completed | missed | rescheduled | cancelled
+    anc_visit_id           = Column(Integer, ForeignKey("anc_visits.id"), nullable=True)
+    reminder_48h_sent      = Column(Boolean, default=False)
+    reminder_48h_sent_at   = Column(DateTime, nullable=True)
+    reminder_day_sent      = Column(Boolean, default=False)
+    reminder_day_sent_at   = Column(DateTime, nullable=True)
+    whatsapp_delivered_48h = Column(Boolean, default=False)
+    whatsapp_delivered_day = Column(Boolean, default=False)
+    notes                  = Column(String, nullable=True)
+    created_at             = Column(DateTime, default=datetime.utcnow)
+
+    pregnancy = relationship("Pregnancy", back_populates="scheduled_visits")
+
+
 def _migrate_columns(engine):
     """Add missing columns to existing tables without data loss."""
     inspector = inspect(engine)
     migrations = [
         ("referrals", "whatsapp_sent", "BOOLEAN DEFAULT FALSE"),
         ("referrals", "whatsapp_message_id", "VARCHAR"),
+        ("users", "whatsapp_number", "VARCHAR"),
+        ("patients", "preferred_language", "VARCHAR DEFAULT 'fr'"),
     ]
     for table, column, col_type in migrations:
         if table in inspector.get_table_names():

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { getPatientCard } from "../api/client";
+import VisitSchedule from "../components/VisitSchedule";
 
 export default function PatientDetailPage() {
   const { t } = useTranslation();
@@ -215,6 +216,13 @@ function PregnancySection({ pregnancy, visits, patientId, t }) {
               <span className="material-symbols-outlined text-[16px]">add</span>
               {t("log_visit")}
             </Link>
+          )}
+
+          {/* Visit schedule (auto-generated 8-visit timeline) */}
+          {pregnancy.is_active && (
+            <div className="mb-6">
+              <VisitSchedule pregnancyId={pregnancy.id} />
+            </div>
           )}
 
           {/* Visit timeline */}

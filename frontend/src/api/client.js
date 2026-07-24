@@ -161,3 +161,46 @@ export const getReferralStats = async () => {
   const res = await client.get('/api/v1/referrals/stats');
   return res.data;
 };
+
+// ── SCHEDULE ───────────────────────────────────────────
+export const getSchedule = async (pregnancyId) => {
+  const res = await client.get(`/api/v1/schedule/${pregnancyId}`);
+  return res.data;
+};
+
+export const rescheduleVisit = async (visitId, newDate, reason) => {
+  const res = await client.patch(`/api/v1/schedule/${visitId}/reschedule`,
+    { new_date: newDate, reason });
+  return res.data;
+};
+
+export const completeScheduledVisit = async (visitId, ancVisitId) => {
+  const res = await client.patch(`/api/v1/schedule/${visitId}/complete`,
+    { anc_visit_id: ancVisitId });
+  return res.data;
+};
+
+export const cancelScheduledVisit = async (visitId) => {
+  const res = await client.patch(`/api/v1/schedule/${visitId}/cancel`);
+  return res.data;
+};
+
+export const getTodaysVisits = async () => {
+  const res = await client.get('/api/v1/schedule/today/list');
+  return res.data;
+};
+
+export const getUpcomingVisits = async (days = 7) => {
+  const res = await client.get(`/api/v1/schedule/upcoming/list?days=${days}`);
+  return res.data;
+};
+
+export const getScheduleAnalytics = async () => {
+  const res = await client.get('/api/v1/schedule/analytics/summary');
+  return res.data;
+};
+
+export const manualReminder = async (visitId) => {
+  const res = await client.post(`/api/v1/schedule/send-reminder/${visitId}`);
+  return res.data;
+};

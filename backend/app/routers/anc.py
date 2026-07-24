@@ -12,6 +12,7 @@ from app.schemas_anc import (
     ANCCardOut, DeliveryUpdate
 )
 from app.routers.auth import get_current_user
+from app.routers.schedule import auto_schedule_visits
 
 router = APIRouter(prefix="/api/v1", tags=["anc"])
 
@@ -119,6 +120,10 @@ def register_pregnancy(
     db.add(pregnancy)
     db.commit()
     db.refresh(pregnancy)
+
+    # Auto-generate 8 scheduled visits from LMP date
+    auto_schedule_visits(db, pregnancy.id, data.lmp_date)
+
     return pregnancy
 
 
