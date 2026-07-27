@@ -27,9 +27,18 @@ VISIT_SCHEDULE = [
 
 def auto_schedule_visits(db: Session, pregnancy_id: int, lmp_date_str: str):
     """Called automatically when a pregnancy is registered.
-    Creates 8 ScheduledVisit records based on LMP date."""
+    Creates 8 ScheduledVisit records based on LMP date.
+    Skips any visit numbers that already exist for this pregnancy."""
+    existing_numbers = {
+        sv.visit_number for sv in
+        db.query(ScheduledVisit.visit_number)
+          .filter(ScheduledVisit.pregnancy_id == pregnancy_id)
+          .all()
+    }
     lmp = datetime.strptime(lmp_date_str, "%Y-%m-%d").date()
     for v in VISIT_SCHEDULE:
+        if v["visit_number"] in existing_numbers:
+            continue
         visit_date = lmp + timedelta(weeks=v["gestational_week"])
         sv = ScheduledVisit(
             pregnancy_id    = pregnancy_id,
@@ -65,12 +74,13 @@ def get_todays_visits(
     today = str(date.today())
     visits = (db.query(ScheduledVisit)
                 .filter(ScheduledVisit.scheduled_date == today,
-                        ScheduledVisit.status == "scheduled")
+                        ScheduledVisit.status.in_(["scheduled", "rescheduled"]))
                 .all())
     result = []
     for v in visits:
         preg = db.query(Pregnancy).filter(
-            Pregnancy.id == v.pregnancy_id).first()
+            Pregnancy.id == v.pregnancy_id,
+            Pregnancy.is_active == True).first()
         if not preg:
             continue
         patient = db.query(Patient).filter(
@@ -102,13 +112,14 @@ def get_upcoming_visits(
     visits = (db.query(ScheduledVisit)
                 .filter(ScheduledVisit.scheduled_date >= str(today),
                         ScheduledVisit.scheduled_date <= str(end),
-                        ScheduledVisit.status == "scheduled")
+                        ScheduledVisit.status.in_(["scheduled", "rescheduled"]))
                 .order_by(ScheduledVisit.scheduled_date)
                 .all())
     result = []
     for v in visits:
         preg = db.query(Pregnancy).filter(
-            Pregnancy.id == v.pregnancy_id).first()
+            Pregnancy.id == v.pregnancy_id,
+            Pregnancy.is_active == True).first()
         if not preg:
             continue
         patient = db.query(Patient).filter(

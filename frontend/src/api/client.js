@@ -204,3 +204,29 @@ export const manualReminder = async (visitId) => {
   const res = await client.post(`/api/v1/schedule/send-reminder/${visitId}`);
   return res.data;
 };
+
+// ── RISK TREND ────────────────────────────────────────────
+export const getRiskTrend = async (patientId) => {
+  const res = await client.get(`/api/v1/patients/${patientId}/risk-trend`);
+  return res.data;
+};
+
+export const getRiskSummary = async (patientId) => {
+  const res = await client.get(`/api/v1/patients/${patientId}/risk-summary`);
+  return res.data;
+};
+
+export const getPatientEscalations = async (patientId) => {
+  const res = await client.get(`/api/v1/patients/${patientId}/escalations`);
+  return res.data;
+};
+
+export const getRecentEscalations = async (days = 7) => {
+  const res = await client.get(`/api/v1/risk-escalations/recent?days=${days}`);
+  return res.data;
+};
+
+export const getEscalationAnalytics = async () => {
+  const res = await client.get('/api/v1/risk-escalations/analytics');
+  return res.data;
+};

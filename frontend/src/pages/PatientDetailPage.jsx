@@ -1,8 +1,11 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { getPatientCard } from "../api/client";
+import { getPatientCard, getRiskTrend } from "../api/client";
 import VisitSchedule from "../components/VisitSchedule";
+import RiskTrendChart from "../components/RiskTrendChart";
+import FeatureTrendTable from "../components/FeatureTrendTable";
+import EscalationBadge from "../components/EscalationBadge";
 
 export default function PatientDetailPage() {
   const { t } = useTranslation();
@@ -10,12 +13,19 @@ export default function PatientDetailPage() {
   const [card, setCard] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("current");
+  const [trendData, setTrendData] = useState(null);
 
   useEffect(() => {
     getPatientCard(id)
       .then((data) => setCard(data))
       .catch(() => setCard(null))
       .finally(() => setLoading(false));
+  }, [id]);
+
+  useEffect(() => {
+    if (id) {
+      getRiskTrend(id).then(setTrendData).catch(() => {});
+    }
   }, [id]);
 
   if (loading) {
@@ -94,6 +104,22 @@ export default function PatientDetailPage() {
       </div>
 
       {/* Tabs */}
+      {trendData && (
+        <div className="space-y-4 mb-6">
+          {trendData.last_escalation && (
+            <EscalationBadge
+              escalation={trendData.last_escalation}
+              assessmentId={trendData.assessments?.at(-1)?.id}
+            />
+          )}
+          <RiskTrendChart
+            assessments={trendData.assessments}
+            trend={trendData.risk_trend}
+          />
+          <FeatureTrendTable assessments={trendData.assessments} />
+        </div>
+      )}
+
       <div className="flex gap-1 mb-6 bg-surface rounded-xl p-1 w-fit">
         <button
           onClick={() => setActiveTab("current")}

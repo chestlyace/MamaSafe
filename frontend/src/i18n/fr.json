@@ -194,5 +194,20 @@
   "completion_rate": "Taux de Complétion",
   "missed_rate_label": "des visites manquées",
   "todays_visits": "Visites du Jour",
-  "no_visits_today": "Aucune visite prévue aujourd'hui"
+  "no_visits_today": "Aucune visite prévue aujourd'hui",
+  "total_patients": "Total Patientes",
+  "active_pregnancies": "Grossesses Actives",
+  "upcoming_visits": "Visites à Venir",
+  "pending_referrals": "Référals en Attente",
+  "recent_escalations": "Escalades Récentes",
+  "last_7_days": "7 derniers jours",
+  "escalation_feed": "Flux des Escalades de Risque",
+  "escalation_feed_desc": "Escalades de risque récentes détectées parmi vos patientes.",
+  "no_escalations": "Aucune escalade au cours des 7 derniers jours.",
+  "low_to_mid": "Faible → Moyen",
+  "mid_to_high": "Moyen → Élevé",
+  "low_to_high": "Faible → Élevé",
+  "days_ago": "Il y a {{count}} jour(s)",
+  "yesterday": "Hier",
+  "today_label": "Aujourd'hui"
 }

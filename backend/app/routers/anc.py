@@ -4,7 +4,7 @@ from typing import List
 from datetime import datetime, date
 from dateutil.relativedelta import relativedelta
 
-from app.database import get_db, Patient, Pregnancy, ANCVisit
+from app.database import get_db, Patient, Pregnancy, ANCVisit, ScheduledVisit
 from app.schemas_anc import (
     PatientCreate, PatientOut,
     PregnancyCreate, PregnancyOut,
@@ -110,10 +110,17 @@ def register_pregnancy(
     current_user = Depends(get_current_user)
 ):
     # Deactivate any existing active pregnancy for this patient
-    (db.query(Pregnancy)
-       .filter(Pregnancy.patient_id == data.patient_id,
-               Pregnancy.is_active == True)
-       .update({"is_active": False}))
+    old_pregnancies = (db.query(Pregnancy)
+                         .filter(Pregnancy.patient_id == data.patient_id,
+                                 Pregnancy.is_active == True)
+                         .all())
+    for old in old_pregnancies:
+        old.is_active = False
+        # Cancel all scheduled visits for the old pregnancy
+        (db.query(ScheduledVisit)
+           .filter(ScheduledVisit.pregnancy_id == old.id,
+                   ScheduledVisit.status.in_(["scheduled", "rescheduled"]))
+           .update({"status": "cancelled"}))
 
     edd = calculate_edd(data.lmp_date)
     pregnancy = Pregnancy(**data.dict(), edd_date=edd)
@@ -171,6 +178,18 @@ def record_visit(
     db.add(visit)
     db.commit()
     db.refresh(visit)
+
+    # Auto-complete matching scheduled visit for this pregnancy/visit number
+    scheduled = (db.query(ScheduledVisit)
+                   .filter(ScheduledVisit.pregnancy_id == data.pregnancy_id,
+                           ScheduledVisit.visit_number == data.visit_number,
+                           ScheduledVisit.status.in_(["scheduled", "rescheduled"]))
+                   .first())
+    if scheduled:
+        scheduled.status = "completed"
+        scheduled.anc_visit_id = visit.id
+        db.commit()
+
     return visit
 
 

@@ -11,6 +11,8 @@ class PredictRequest(BaseModel):
     body_temp:    float = Field(..., ge=95,  le=105, description="Body temperature °F")
     heart_rate:   float = Field(..., ge=40,  le=100, description="Heart rate bpm")
     patient_ref:  Optional[str] = None
+    patient_id:   Optional[int] = None
+    pregnancy_id: Optional[int] = None
 
 
 class SHAPExplanation(BaseModel):
@@ -20,14 +22,17 @@ class SHAPExplanation(BaseModel):
 
 
 class PredictResponse(BaseModel):
-    risk_level:      str
-    confidence:      float
-    prob_high:       float
-    prob_low:        float
-    prob_mid:        float
-    recommendation:  str
-    shap_values:     list[SHAPExplanation]
-    assessment_id:   int
+    risk_level:          str
+    confidence:          float
+    prob_high:           float
+    prob_low:            float
+    prob_mid:            float
+    recommendation:      str
+    shap_values:         list[SHAPExplanation]
+    assessment_id:       int
+    escalation_detected: bool = False
+    escalation_type:     Optional[str] = None
+    previous_risk_level: Optional[str] = None
 
 
 class AssessmentOut(BaseModel):
@@ -57,6 +62,11 @@ class DashboardSummary(BaseModel):
     high_risk_pct:     float
     mid_risk_pct:      float
     low_risk_pct:      float
+    total_patients:    int = 0
+    active_pregnancies: int = 0
+    pending_referrals:  int = 0
+    upcoming_visits:    int = 0
+    recent_escalations: int = 0
 
 
 class UserCreate(BaseModel):

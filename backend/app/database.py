@@ -117,6 +117,25 @@ class Referral(Base):
     created_at              = Column(DateTime, default=datetime.utcnow)
 
 
+class RiskEscalationEvent(Base):
+    __tablename__ = "risk_escalation_events"
+
+    id                     = Column(Integer, primary_key=True, index=True)
+    patient_id             = Column(Integer, ForeignKey("patients.id"), nullable=False)
+    previous_assessment_id = Column(Integer, ForeignKey("assessments.id"), nullable=True)
+    new_assessment_id      = Column(Integer, ForeignKey("assessments.id"), nullable=False)
+    previous_risk_level    = Column(String, nullable=False)
+    new_risk_level         = Column(String, nullable=False)
+    escalation_type        = Column(String, nullable=False)
+    whatsapp_sent          = Column(Boolean, default=False)
+    whatsapp_error         = Column(String, nullable=True)
+    chw_id                 = Column(Integer, ForeignKey("users.id"), nullable=True)
+    created_at             = Column(DateTime, default=datetime.utcnow)
+
+    patient = relationship("Patient")
+    chw     = relationship("User", foreign_keys=[chw_id])
+
+
 def get_db():
     db = SessionLocal()
     try:
@@ -232,6 +251,7 @@ def _migrate_columns(engine):
         ("referrals", "whatsapp_message_id", "VARCHAR"),
         ("users", "whatsapp_number", "VARCHAR"),
         ("patients", "preferred_language", "VARCHAR DEFAULT 'fr'"),
+        ("risk_escalation_events", "whatsapp_error", "VARCHAR"),
     ]
     for table, column, col_type in migrations:
         if table in inspector.get_table_names():

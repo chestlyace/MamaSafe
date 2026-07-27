@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { getDashboardSummary } from '../api/client';
+import { getDashboardSummary, getRecentEscalations } from '../api/client';
+import EscalationFeed from '../components/EscalationFeed';
 
 function DonutChart({ high, mid, low, total }) {
   const { t } = useTranslation();
@@ -71,11 +72,15 @@ function DonutChart({ high, mid, low, total }) {
 export default function DashboardPage() {
   const { t } = useTranslation();
   const [summary, setSummary] = useState(null);
+  const [escalations, setEscalations] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getDashboardSummary()
-      .then((data) => setSummary(data))
+    Promise.all([
+      getDashboardSummary(),
+      getRecentEscalations(7),
+    ])
+      .then(([s, e]) => { setSummary(s); setEscalations(e); })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
@@ -99,9 +104,20 @@ export default function DashboardPage() {
     );
   }
 
-  const { total_assessments, high_risk_count, mid_risk_count, low_risk_count } = summary;
+  const {
+    total_assessments, high_risk_count, mid_risk_count, low_risk_count,
+    total_patients, active_pregnancies, pending_referrals, upcoming_visits,
+    recent_escalations,
+  } = summary;
 
   const stats = [
+    { label: t('total_patients'), value: total_patients, icon: 'people', color: 'text-blue-500', valueColor: 'text-text-heading', sub: null },
+    { label: t('active_pregnancies'), value: active_pregnancies, icon: 'pregnant_woman', color: 'text-purple-500', valueColor: 'text-text-heading', sub: null },
+    { label: t('upcoming_visits'), value: upcoming_visits, icon: 'event', color: 'text-amber-500', valueColor: 'text-text-heading', sub: null },
+    { label: t('pending_referrals'), value: pending_referrals, icon: 'local_hospital', color: 'text-red-500', valueColor: 'text-text-heading', sub: null },
+  ];
+
+  const riskStats = [
     { label: t('total_assessments'), value: total_assessments.toLocaleString(), icon: 'assessment', color: 'text-rose-500', valueColor: 'text-text-heading', sub: null },
     { label: t('high_risk'), value: high_risk_count, dot: 'bg-red-500', color: 'text-red-500', valueColor: 'text-red-600', sub: t('requires_immediate') },
     { label: t('mid_risk'), value: mid_risk_count, dot: 'bg-amber-500', color: 'text-amber-500', valueColor: 'text-amber-600', sub: t('needs_followup') },
@@ -116,9 +132,22 @@ export default function DashboardPage() {
         <p className="text-sm text-text-muted mt-1">{t('clinical_summary')}</p>
       </header>
 
-      {/* Stat cards */}
+      {/* Overview stat cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
         {stats.map((s) => (
+          <div key={s.label} className="bg-white border border-border rounded-xl p-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[11px] font-semibold text-text-muted uppercase tracking-wider">{s.label}</span>
+              <span className={`material-symbols-outlined text-[18px] ${s.color}`}>{s.icon}</span>
+            </div>
+            <div className={`text-2xl font-bold ${s.valueColor}`}>{s.value}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Risk stat cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+        {riskStats.map((s) => (
           <div key={s.label} className="bg-white border border-border rounded-xl p-4">
             <div className="flex items-center justify-between mb-2">
               <span className="text-[11px] font-semibold text-text-muted uppercase tracking-wider">{s.label}</span>
@@ -194,11 +223,14 @@ export default function DashboardPage() {
         )}
       </div>
 
+      {/* Escalation Feed */}
+      <EscalationFeed escalations={escalations} loading={false} />
+
       {/* Critical Alerts */}
-      <div className="bg-white border border-border rounded-xl p-5">
+      <div className="bg-white border border-border rounded-xl p-5 mt-6">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-sm font-semibold text-text-heading">{t('critical_alerts')}</h3>
-          <button className="text-rose-500 text-xs font-semibold hover:underline">{t('view_all')}</button>
+          <span className="text-[11px] text-text-muted">{recent_escalations} {t('last_7_days')}</span>
         </div>
         {high_risk_count > 0 ? (
           <div className="flex items-center gap-4 p-4 bg-red-50 rounded-xl">

@@ -193,5 +193,20 @@
   "completion_rate": "Completion Rate",
   "missed_rate_label": "of visits missed",
   "todays_visits": "Today's Visits",
-  "no_visits_today": "No visits scheduled for today"
+  "no_visits_today": "No visits scheduled for today",
+  "total_patients": "Total Patients",
+  "active_pregnancies": "Active Pregnancies",
+  "upcoming_visits": "Upcoming Visits",
+  "pending_referrals": "Pending Referrals",
+  "recent_escalations": "Recent Escalations",
+  "last_7_days": "last 7 days",
+  "escalation_feed": "Risk Escalation Feed",
+  "escalation_feed_desc": "Recent risk escalations detected across your patients.",
+  "no_escalations": "No escalations in the past 7 days.",
+  "low_to_mid": "Low → Mid",
+  "mid_to_high": "Mid → High",
+  "low_to_high": "Low → High",
+  "days_ago": "{{count}} day(s) ago",
+  "yesterday": "Yesterday",
+  "today_label": "Today"
 }
