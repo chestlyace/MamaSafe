@@ -163,6 +163,7 @@ class Patient(Base):
 
     pregnancies = relationship("Pregnancy", back_populates="patient",
                                cascade="all, delete-orphan")
+    deliveries   = relationship("Delivery", back_populates="patient")
 
 
 class Pregnancy(Base):
@@ -181,6 +182,7 @@ class Pregnancy(Base):
     created_at      = Column(DateTime, default=datetime.utcnow)
 
     patient   = relationship("Patient", back_populates="pregnancies")
+    delivery  = relationship("Delivery", back_populates="pregnancy", uselist=False)
     anc_visits = relationship("ANCVisit", back_populates="pregnancy",
                               cascade="all, delete-orphan")
     scheduled_visits = relationship("ScheduledVisit", back_populates="pregnancy",
@@ -243,6 +245,117 @@ class ScheduledVisit(Base):
     pregnancy = relationship("Pregnancy", back_populates="scheduled_visits")
 
 
+class Delivery(Base):
+    __tablename__ = "deliveries"
+
+    id                 = Column(Integer, primary_key=True, index=True)
+    pregnancy_id       = Column(Integer, ForeignKey("pregnancies.id"), nullable=False)
+    patient_id         = Column(Integer, ForeignKey("patients.id"), nullable=False)
+    delivery_date      = Column(String, nullable=False)
+    delivery_location  = Column(String, nullable=True)
+    delivered_by       = Column(String, nullable=True)
+    complications      = Column(String, nullable=True)
+    notes              = Column(String, nullable=True)
+    created_at         = Column(DateTime, default=datetime.utcnow)
+
+    pregnancy = relationship("Pregnancy", back_populates="delivery")
+    patient   = relationship("Patient", back_populates="deliveries")
+    newborns  = relationship("Newborn", back_populates="delivery",
+                             cascade="all, delete-orphan")
+    pnc_visits = relationship("PostnatalVisit", back_populates="delivery",
+                              cascade="all, delete-orphan")
+    scheduled_visits = relationship("PostnatalScheduledVisit",
+                                    back_populates="delivery",
+                                    cascade="all, delete-orphan")
+
+
+class Newborn(Base):
+    __tablename__ = "newborns"
+
+    id               = Column(Integer, primary_key=True, index=True)
+    delivery_id      = Column(Integer, ForeignKey("deliveries.id"), nullable=False)
+    name             = Column(String, nullable=True)
+    sex              = Column(String, nullable=False)
+    birth_weight     = Column(Float, nullable=True)
+    apgar_score      = Column(Integer, nullable=True)
+    crying_at_birth  = Column(Boolean, default=True)
+    breastfeeding    = Column(Boolean, default=False)
+    malformations    = Column(String, nullable=True)
+    status           = Column(String, default="alive")  # alive | stillbirth | neonatal_death
+    created_at       = Column(DateTime, default=datetime.utcnow)
+
+    delivery = relationship("Delivery", back_populates="newborns")
+
+
+class PostnatalScheduledVisit(Base):
+    __tablename__ = "postnatal_scheduled_visits"
+
+    id                  = Column(Integer, primary_key=True, index=True)
+    delivery_id         = Column(Integer, ForeignKey("deliveries.id"), nullable=False)
+    visit_number        = Column(Integer, nullable=False)
+    days_after_delivery = Column(Integer, nullable=False)
+    label               = Column(String, nullable=True)
+    scheduled_date      = Column(String, nullable=False)
+    status              = Column(String, default="scheduled")
+    # scheduled | completed | missed | cancelled
+    postnatal_visit_id  = Column(Integer, ForeignKey("postnatal_visits.id"), nullable=True)
+    reminder_48h_sent   = Column(Boolean, default=False)
+    reminder_day_sent   = Column(Boolean, default=False)
+    created_at          = Column(DateTime, default=datetime.utcnow)
+
+    delivery       = relationship("Delivery", back_populates="scheduled_visits")
+    postnatal_visit = relationship("PostnatalVisit",
+                                   foreign_keys=[postnatal_visit_id],
+                                   back_populates="scheduled_visit")
+
+
+class PostnatalVisit(Base):
+    __tablename__ = "postnatal_visits"
+
+    id                = Column(Integer, primary_key=True, index=True)
+    delivery_id       = Column(Integer, ForeignKey("deliveries.id"), nullable=False)
+    visit_number      = Column(Integer, nullable=False)
+    visit_date        = Column(String, nullable=False)
+    mother_status     = Column(String, nullable=True)  # good | complications
+    uterus_firm       = Column(Boolean, default=True)
+    lochia_normal     = Column(Boolean, default=True)
+    temperature       = Column(Float, nullable=True)
+    systolic_bp       = Column(Float, nullable=True)
+    diastolic_bp      = Column(Float, nullable=True)
+    breast_exam       = Column(String, nullable=True)
+    perineal_exam     = Column(String, nullable=True)
+    hb_result         = Column(Float, nullable=True)
+    malaria_test      = Column(Boolean, default=False)
+    hiv_test          = Column(Boolean, default=False)
+    mental_health     = Column(String, nullable=True)  # normal | concern
+    notes             = Column(String, nullable=True)
+    created_at        = Column(DateTime, default=datetime.utcnow)
+
+    delivery        = relationship("Delivery", back_populates="pnc_visits")
+    scheduled_visit = relationship("PostnatalScheduledVisit",
+                                   back_populates="postnatal_visit",
+                                   uselist=False)
+    screenings      = relationship("MentalHealthScreening",
+                                   back_populates="postnatal_visit")
+
+
+class MentalHealthScreening(Base):
+    __tablename__ = "mental_health_screenings"
+
+    id                = Column(Integer, primary_key=True, index=True)
+    postnatal_visit_id = Column(Integer, ForeignKey("postnatal_visits.id"), nullable=True)
+    patient_id        = Column(Integer, ForeignKey("patients.id"), nullable=False)
+    phq2_score        = Column(Integer, nullable=False)
+    phq2_q1           = Column(Integer, nullable=True)
+    phq2_q2           = Column(Integer, nullable=True)
+    risk_level        = Column(String, nullable=False)  # low | high
+    chw_alerted       = Column(Boolean, default=False)
+    created_at        = Column(DateTime, default=datetime.utcnow)
+
+    postnatal_visit = relationship("PostnatalVisit", back_populates="screenings")
+    patient         = relationship("Patient")
+
+
 def _migrate_columns(engine):
     """Add missing columns to existing tables without data loss."""
     inspector = inspect(engine)
@@ -270,6 +383,15 @@ def _migrate_columns(engine):
                 conn.execute(text("ALTER TABLE referrals ALTER COLUMN patient_id DROP NOT NULL"))
                 conn.commit()
             print("  Migration: referrals.patient_id made nullable")
+
+    # Make mental_health_screenings.postnatal_visit_id nullable
+    if "mental_health_screenings" in inspector.get_table_names():
+        cols = {col["name"]: col for col in inspector.get_columns("mental_health_screenings")}
+        if "postnatal_visit_id" in cols and cols["postnatal_visit_id"].get("nullable") is False:
+            with engine.connect() as conn:
+                conn.execute(text("ALTER TABLE mental_health_screenings ALTER COLUMN postnatal_visit_id DROP NOT NULL"))
+                conn.commit()
+            print("  Migration: mental_health_screenings.postnatal_visit_id made nullable")
 
 
 def create_tables():

@@ -9,7 +9,7 @@ from app.schemas_anc import (
     PatientCreate, PatientOut,
     PregnancyCreate, PregnancyOut,
     ANCVisitCreate, ANCVisitOut,
-    ANCCardOut, DeliveryUpdate
+    ANCCardOut,
 )
 from app.routers.auth import get_current_user
 from app.routers.schedule import auto_schedule_visits
@@ -131,28 +131,6 @@ def register_pregnancy(
     # Auto-generate 8 scheduled visits from LMP date
     auto_schedule_visits(db, pregnancy.id, data.lmp_date)
 
-    return pregnancy
-
-
-@router.patch("/pregnancies/{pregnancy_id}/delivery",
-              response_model=PregnancyOut)
-def record_delivery(
-    pregnancy_id: int,
-    data: DeliveryUpdate,
-    db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)
-):
-    pregnancy = db.query(Pregnancy).filter(
-        Pregnancy.id == pregnancy_id).first()
-    if not pregnancy:
-        raise HTTPException(status_code=404, detail="Pregnancy not found")
-
-    pregnancy.delivery_date     = data.delivery_date
-    pregnancy.delivery_outcome  = data.delivery_outcome
-    pregnancy.delivery_location = data.delivery_location
-    pregnancy.is_active         = False
-    db.commit()
-    db.refresh(pregnancy)
     return pregnancy
 
 

@@ -1,11 +1,15 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { getPatientCard, getRiskTrend } from "../api/client";
+import { getPatientCard, getRiskTrend, getPatientDeliveries } from "../api/client";
 import VisitSchedule from "../components/VisitSchedule";
 import RiskTrendChart from "../components/RiskTrendChart";
 import FeatureTrendTable from "../components/FeatureTrendTable";
 import EscalationBadge from "../components/EscalationBadge";
+import PostnatalSchedule from "../components/PostnatalSchedule";
+import DeliveryForm from "../components/DeliveryForm";
+import PostnatalVisitForm from "../components/PostnatalVisitForm";
+import PHQ2Widget from "../components/PHQ2Widget";
 
 export default function PatientDetailPage() {
   const { t } = useTranslation();
@@ -14,6 +18,8 @@ export default function PatientDetailPage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("current");
   const [trendData, setTrendData] = useState(null);
+  const [deliveries, setDeliveries] = useState([]);
+  const [showDeliveryForm, setShowDeliveryForm] = useState(false);
 
   useEffect(() => {
     getPatientCard(id)
@@ -27,6 +33,16 @@ export default function PatientDetailPage() {
       getRiskTrend(id).then(setTrendData).catch(() => {});
     }
   }, [id]);
+
+  useEffect(() => {
+    if (id) {
+      getPatientDeliveries(id).then(setDeliveries).catch(() => {});
+    }
+  }, [id]);
+
+  const fetchDeliveries = () => {
+    getPatientDeliveries(id).then(setDeliveries).catch(() => {});
+  };
 
   if (loading) {
     return (
@@ -141,12 +157,24 @@ export default function PatientDetailPage() {
         >
           {t("past_pregnancies")}
         </button>
+        {deliveries.length > 0 && (
+          <button
+            onClick={() => setActiveTab("postnatal")}
+            className={`px-5 py-2 rounded-lg text-sm font-semibold transition-colors ${
+              activeTab === "postnatal"
+                ? "bg-white text-text-heading shadow-sm"
+                : "text-text-muted hover:text-text-body"
+            }`}
+          >
+            {t("postnatal")}
+          </button>
+        )}
       </div>
 
       {/* Tab content */}
       {activeTab === "current" ? (
         hasActivePregnancy ? (
-          <PregnancySection pregnancy={pregnancy} visits={visits} patientId={id} t={t} />
+          <PregnancySection pregnancy={pregnancy} visits={visits} patientId={id} deliveries={deliveries} onDeliveryCreated={() => { fetchDeliveries(); getPatientCard(id).then(setCard); }} t={t} />
         ) : (
           <div className="bg-white rounded-2xl border border-border p-8 text-center">
             <span className="material-symbols-outlined text-[48px] text-text-muted/40 mb-4">pregnant_woman</span>
@@ -161,13 +189,13 @@ export default function PatientDetailPage() {
             </Link>
           </div>
         )
-      ) : (
+      ) : activeTab === "past" ? (
         <div>
           {card.pregnancies && card.pregnancies.length > 0 ? (
             card.pregnancies
               .filter((p) => !p.is_active)
               .map((p) => (
-                <PregnancySection key={p.id} pregnancy={p} visits={p.visits || []} patientId={id} t={t} />
+                <PregnancySection key={p.id} pregnancy={p} visits={p.visits || []} patientId={id} deliveries={deliveries} onDeliveryCreated={fetchDeliveries} t={t} />
               ))
           ) : (
             <div className="bg-white rounded-2xl border border-border p-8 text-center">
@@ -176,13 +204,25 @@ export default function PatientDetailPage() {
             </div>
           )}
         </div>
+      ) : (
+        <PostnatalTab
+          patientId={id}
+          deliveries={deliveries}
+          showDeliveryForm={showDeliveryForm}
+          setShowDeliveryForm={setShowDeliveryForm}
+          fetchDeliveries={fetchDeliveries}
+          t={t}
+        />
       )}
     </main>
   );
 }
 
-function PregnancySection({ pregnancy, visits, patientId, t }) {
+function PregnancySection({ pregnancy, visits, patientId, deliveries = [], onDeliveryCreated, t }) {
   const [expanded, setExpanded] = useState(true);
+  const [showDeliveryForm, setShowDeliveryForm] = useState(false);
+
+  const hasDelivery = deliveries.some((d) => d.pregnancy_id === pregnancy.id);
 
   return (
     <div className="bg-white rounded-2xl border border-border p-5 mb-4">
@@ -230,18 +270,52 @@ function PregnancySection({ pregnancy, visits, patientId, t }) {
         </div>
       )}
 
+      {/* Record Delivery button for inactive pregnancies without a delivery */}
+      {!pregnancy.is_active && !hasDelivery && !showDeliveryForm && (
+        <button
+          onClick={() => setShowDeliveryForm(true)}
+          className="inline-flex items-center gap-2 bg-rose-500 text-white text-xs font-semibold rounded-lg px-4 py-2 mb-4 hover:bg-rose-600 transition-colors"
+        >
+          <span className="material-symbols-outlined text-[16px]">add</span>
+          {t("record_delivery")}
+        </button>
+      )}
+
+      {/* Delivery form */}
+      {showDeliveryForm && (
+        <div className="mb-4">
+          <DeliveryForm
+            pregnancyId={pregnancy.id}
+            onCreated={() => {
+              setShowDeliveryForm(false);
+              onDeliveryCreated?.();
+            }}
+            onCancel={() => setShowDeliveryForm(false)}
+          />
+        </div>
+      )}
+
       {/* Expanded content */}
       {expanded && (
         <div className="pt-4 border-t border-border">
           {/* Log visit button */}
           {pregnancy.is_active && (
-            <Link
-              to={`/patients/${patientId}/pregnancies/${pregnancy.id}/visits/new`}
-              className="inline-flex items-center gap-2 bg-rose-500 text-white text-xs font-semibold rounded-lg px-4 py-2 mb-6 hover:bg-rose-600 transition-colors"
-            >
-              <span className="material-symbols-outlined text-[16px]">add</span>
-              {t("log_visit")}
-            </Link>
+            <div className="flex gap-3 mb-6">
+              <Link
+                to={`/patients/${patientId}/pregnancies/${pregnancy.id}/visits/new`}
+                className="inline-flex items-center gap-2 bg-rose-500 text-white text-xs font-semibold rounded-lg px-4 py-2 hover:bg-rose-600 transition-colors"
+              >
+                <span className="material-symbols-outlined text-[16px]">add</span>
+                {t("log_visit")}
+              </Link>
+              <button
+                onClick={() => setShowDeliveryForm(true)}
+                className="inline-flex items-center gap-2 bg-white border border-border text-text-heading text-xs font-semibold rounded-lg px-4 py-2 hover:bg-surface transition-colors"
+              >
+                <span className="material-symbols-outlined text-[16px]">child_care</span>
+                {t("record_delivery")}
+              </button>
+            </div>
           )}
 
           {/* Visit schedule (auto-generated 8-visit timeline) */}
@@ -263,7 +337,7 @@ function PregnancySection({ pregnancy, visits, patientId, t }) {
               <div className="absolute left-[15px] top-0 bottom-0 w-0.5 bg-border" />
 
               <div className="space-y-0">
-                {visits.map((visit, idx) => (
+                {visits.map((visit) => (
                   <div key={visit.id} className="relative flex gap-4 pb-6 last:pb-0">
                     {/* Circle marker */}
                     <div className="relative z-10 flex-shrink-0 w-[31px] h-[31px] rounded-full bg-rose-500 border-4 border-white flex items-center justify-center">
@@ -369,6 +443,166 @@ function PregnancySection({ pregnancy, visits, patientId, t }) {
             </div>
           )}
         </div>
+      )}
+    </div>
+  );
+}
+
+function PostnatalTab({ patientId, deliveries, showDeliveryForm, setShowDeliveryForm, fetchDeliveries, t }) {
+  const [activeDelivery, setActiveDelivery] = useState(() => deliveries.length > 0 ? deliveries[0] : null);
+  const [showVisitForm, setShowVisitForm] = useState(false);
+  const [showPHQ2, setShowPHQ2] = useState(false);
+
+  if (deliveries.length === 0 && !showDeliveryForm) {
+    return (
+      <div className="bg-white rounded-2xl border border-border p-8 text-center">
+        <span className="material-symbols-outlined text-[48px] text-text-muted/40 mb-4">child_care</span>
+        <h3 className="text-lg font-semibold text-text-heading mb-1">{t("no_deliveries")}</h3>
+        <p className="text-sm text-text-muted mb-6">{t("record_delivery_desc")}</p>
+        <button
+          onClick={() => setShowDeliveryForm(true)}
+          className="bg-rose-500 text-white px-6 py-2.5 rounded-xl text-sm font-semibold hover:bg-rose-600 transition-colors inline-flex items-center gap-2"
+        >
+          <span className="material-symbols-outlined text-[18px]">add</span>
+          {t("record_delivery")}
+        </button>
+      </div>
+    );
+  }
+
+  if (showDeliveryForm) {
+    return (
+      <DeliveryForm
+        pregnancyId={activeDelivery?.pregnancy_id}
+        onCreated={() => {
+          setShowDeliveryForm(false);
+          fetchDeliveries();
+        }}
+        onCancel={() => setShowDeliveryForm(false)}
+      />
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Delivery selector */}
+      {deliveries.length > 1 && (
+        <div className="flex gap-2 overflow-x-auto pb-2">
+          {deliveries.map((d) => (
+            <button
+              key={d.id}
+              onClick={() => { setActiveDelivery(d); setShowVisitForm(false); setShowPHQ2(false); }}
+              className={`px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap border transition-colors ${
+                activeDelivery?.id === d.id
+                  ? "bg-rose-50 border-rose-300 text-rose-700"
+                  : "border-border text-text-muted hover:border-rose-200"
+              }`}
+            >
+              {t("delivery")} — {d.delivery_date}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {activeDelivery && (
+        <>
+          {/* Delivery info card */}
+          <div className="bg-white rounded-2xl border border-border p-5">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-semibold text-text-heading">{t("delivery")} — {activeDelivery.delivery_date}</h3>
+              <button
+                onClick={() => setShowDeliveryForm(true)}
+                className="text-xs text-rose-500 font-medium hover:text-rose-600 flex items-center gap-1"
+              >
+                <span className="material-symbols-outlined text-[14px]">add</span>
+                {t("new_delivery")}
+              </button>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+              {activeDelivery.delivery_location && (
+                <div>
+                  <p className="text-text-muted">{t("location")}</p>
+                  <p className="font-medium text-text-heading">{activeDelivery.delivery_location}</p>
+                </div>
+              )}
+              {activeDelivery.delivered_by && (
+                <div>
+                  <p className="text-text-muted">{t("delivered_by")}</p>
+                  <p className="font-medium text-text-heading">{activeDelivery.delivered_by}</p>
+                </div>
+              )}
+              {activeDelivery.complications && (
+                <div>
+                  <p className="text-text-muted">{t("complications")}</p>
+                  <p className="font-medium text-red-600">{activeDelivery.complications}</p>
+                </div>
+              )}
+            </div>
+
+            {/* Newborns */}
+            {activeDelivery.newborns && activeDelivery.newborns.length > 0 && (
+              <div className="mt-3 pt-3 border-t border-border">
+                <p className="text-xs font-semibold text-text-heading mb-2">{t("newborns")}</p>
+                <div className="flex flex-wrap gap-2">
+                  {activeDelivery.newborns.map((nb) => (
+                    <span key={nb.id} className="bg-blue-50 text-blue-700 text-[11px] font-medium px-2.5 py-1 rounded-full">
+                      {nb.name || t("newborn")} — {nb.sex === "female" ? t("female") : t("male")}
+                      {nb.birth_weight ? ` — ${nb.birth_weight}g` : ""}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* PNC Schedule */}
+          <div className="bg-white rounded-2xl border border-border p-5">
+            <h3 className="font-semibold text-text-heading mb-3">{t("postnatal_schedule")}</h3>
+            <PostnatalSchedule deliveryId={activeDelivery.id} />
+          </div>
+
+          {/* Action buttons */}
+          <div className="flex gap-3">
+            <button
+              onClick={() => { setShowVisitForm(!showVisitForm); setShowPHQ2(false); }}
+              className="bg-rose-500 text-white text-sm font-semibold rounded-xl px-5 py-2.5 hover:bg-rose-600 transition-colors inline-flex items-center gap-2"
+            >
+              <span className="material-symbols-outlined text-[18px]">add</span>
+              {t("log_postnatal_visit")}
+            </button>
+            <button
+              onClick={() => { setShowPHQ2(!showPHQ2); setShowVisitForm(false); }}
+              className="bg-white border border-border text-text-heading text-sm font-semibold rounded-xl px-5 py-2.5 hover:bg-surface transition-colors inline-flex items-center gap-2"
+            >
+              <span className="material-symbols-outlined text-[18px]">psychology</span>
+              {t("phq2_screening")}
+            </button>
+          </div>
+
+          {/* Visit form */}
+          {showVisitForm && (
+            <PostnatalVisitForm
+              deliveryId={activeDelivery.id}
+              nextVisitNumber={(() => {
+                const completed = activeDelivery.pnc_visits?.length || 0;
+                return completed + 1;
+              })()}
+              onCreated={() => {
+                setShowVisitForm(false);
+                fetchDeliveries();
+              }}
+              onCancel={() => setShowVisitForm(false)}
+            />
+          )}
+
+          {/* PHQ-2 */}
+          {showPHQ2 && (
+            <PHQ2Widget
+              patientId={patientId}
+              postnatalVisitId={activeDelivery.pnc_visits?.at(-1)?.id}
+            />
+          )}
+        </>
       )}
     </div>
   );

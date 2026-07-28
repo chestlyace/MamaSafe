@@ -4,12 +4,17 @@ import sys
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.database import create_tables, SessionLocal, User
-from app.routers import predict, assessments, auth, dashboard, anc, facilities, referrals, whatsapp_webhook, schedule, risk_trend
+from app.routers import predict, assessments, auth, dashboard, anc, facilities, referrals, whatsapp_webhook, schedule, risk_trend, postnatal
 from app.routers.auth import hash_password
 from app.utils.scheduler_jobs import (
     job_send_48h_reminders,
     job_send_day_reminders_and_chw_list,
     job_detect_missed_visits,
+)
+from app.utils.postnatal_jobs import (
+    job_send_pnc_48h_reminders,
+    job_send_pnc_day_reminders,
+    job_detect_missed_pnc_visits,
 )
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
@@ -99,8 +104,26 @@ def startup():
         id="missed_visits",
         replace_existing=True,
     )
+    scheduler.add_job(
+        job_send_pnc_48h_reminders,
+        CronTrigger(hour=7, minute=0),
+        id="pnc_48h_reminders",
+        replace_existing=True,
+    )
+    scheduler.add_job(
+        job_send_pnc_day_reminders,
+        CronTrigger(hour=6, minute=0),
+        id="pnc_day_reminders",
+        replace_existing=True,
+    )
+    scheduler.add_job(
+        job_detect_missed_pnc_visits,
+        CronTrigger(hour=18, minute=0),
+        id="pnc_missed_visits",
+        replace_existing=True,
+    )
     scheduler.start()
-    print("APScheduler started — 3 daily ANC reminder jobs registered")
+    print("APScheduler started — 3 daily ANC + 3 daily PNC reminder jobs registered")
 
 
 @app.on_event("shutdown")
@@ -124,6 +147,7 @@ app.include_router(referrals.router)
 app.include_router(whatsapp_webhook.router)
 app.include_router(schedule.router)
 app.include_router(risk_trend.router)
+app.include_router(postnatal.router)
 
 
 @app.get("/health")

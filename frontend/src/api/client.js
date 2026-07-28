@@ -94,8 +94,64 @@ export const registerPregnancy = async (data) => {
   return res.data;
 };
 
-export const recordDelivery = async (pregnancyId, data) => {
-  const res = await client.patch(`/api/v1/pregnancies/${pregnancyId}/delivery`, data);
+export const recordDelivery = async (data) => {
+  const res = await client.post('/api/v1/deliveries', data);
+  return res.data;
+};
+
+// ── DELIVERIES ──────────────────────────────────────────
+export const getDelivery = async (id) => {
+  const res = await client.get(`/api/v1/deliveries/${id}`);
+  return res.data;
+};
+
+export const getPatientDeliveries = async (patientId) => {
+  const res = await client.get(`/api/v1/patients/${patientId}/deliveries`);
+  return res.data;
+};
+
+// ── POSTNATAL VISITS ────────────────────────────────────
+export const recordPostnatalVisit = async (data) => {
+  const res = await client.post('/api/v1/postnatal-visits', data);
+  return res.data;
+};
+
+export const getPostnatalVisit = async (id) => {
+  const res = await client.get(`/api/v1/postnatal-visits/${id}`);
+  return res.data;
+};
+
+export const listPostnatalVisits = async (deliveryId) => {
+  const res = await client.get(`/api/v1/deliveries/${deliveryId}/visits`);
+  return res.data;
+};
+
+// ── POSTNATAL SCHEDULE ──────────────────────────────────
+export const getPostnatalSchedule = async (deliveryId) => {
+  const res = await client.get(`/api/v1/deliveries/${deliveryId}/schedule`);
+  return res.data;
+};
+
+export const updateScheduledPNCVisit = async (visitId, status) => {
+  const res = await client.patch(`/api/v1/postnatal-scheduled-visits/${visitId}/status`,
+    null, { params: { status } });
+  return res.data;
+};
+
+export const reschedulePNCVisit = async (visitId, newDate, reason = '') => {
+  const res = await client.patch(`/api/v1/postnatal-scheduled-visits/${visitId}/reschedule`,
+    null, { params: { new_date: newDate, reason } });
+  return res.data;
+};
+
+// ── MENTAL HEALTH ───────────────────────────────────────
+export const createMentalHealthScreening = async (data) => {
+  const res = await client.post('/api/v1/mental-health-screens', data);
+  return res.data;
+};
+
+export const listPatientScreenings = async (patientId) => {
+  const res = await client.get(`/api/v1/patients/${patientId}/mental-health-screens`);
   return res.data;
 };
 

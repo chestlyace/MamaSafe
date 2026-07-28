@@ -85,9 +85,3 @@ class ANCCardOut(BaseModel):
     class Config:
         from_attributes = True
 
-
-# ── DELIVERY UPDATE ───────────────────────────────────────
-class DeliveryUpdate(BaseModel):
-    delivery_date:     str
-    delivery_outcome:  str   # live_birth, stillbirth, miscarriage
-    delivery_location: Optional[str] = None
