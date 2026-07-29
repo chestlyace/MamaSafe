@@ -329,6 +329,9 @@ class PostnatalVisit(Base):
     hiv_test          = Column(Boolean, default=False)
     mental_health     = Column(String, nullable=True)  # normal | concern
     notes             = Column(String, nullable=True)
+    newborn_weight_kg = Column(Float, nullable=True)
+    newborn_id        = Column(Integer, ForeignKey("newborns.id"), nullable=True)
+    breastfeeding_status = Column(String, nullable=True)  # exclusive | mixed | not
     created_at        = Column(DateTime, default=datetime.utcnow)
 
     delivery        = relationship("Delivery", back_populates="pnc_visits")
@@ -337,6 +340,29 @@ class PostnatalVisit(Base):
                                    uselist=False)
     screenings      = relationship("MentalHealthScreening",
                                    back_populates="postnatal_visit")
+    newborn         = relationship("Newborn")
+
+
+class GrowthAlert(Base):
+    __tablename__ = "growth_alerts"
+
+    id                = Column(Integer, primary_key=True, index=True)
+    newborn_id         = Column(Integer, ForeignKey("newborns.id"), nullable=False)
+    patient_id         = Column(Integer, ForeignKey("patients.id"), nullable=False)
+    postnatal_visit_id = Column(Integer, ForeignKey("postnatal_visits.id"), nullable=True)
+    alert_type         = Column(String, nullable=False)
+    # below_3rd_percentile | growth_faltering | failed_to_regain_birth_weight
+    severity           = Column(String, default="warning")  # warning | critical
+    message_en         = Column(String, nullable=False)
+    message_fr         = Column(String, nullable=False)
+    z_score            = Column(Float, nullable=True)
+    resolved           = Column(Boolean, default=False)
+    resolved_at        = Column(DateTime, nullable=True)
+    created_at         = Column(DateTime, default=datetime.utcnow)
+
+    newborn  = relationship("Newborn")
+    patient  = relationship("Patient")
+    visit    = relationship("PostnatalVisit")
 
 
 class MentalHealthScreening(Base):
@@ -365,6 +391,9 @@ def _migrate_columns(engine):
         ("users", "whatsapp_number", "VARCHAR"),
         ("patients", "preferred_language", "VARCHAR DEFAULT 'fr'"),
         ("risk_escalation_events", "whatsapp_error", "VARCHAR"),
+        ("postnatal_visits", "newborn_weight_kg", "FLOAT"),
+        ("postnatal_visits", "newborn_id", "INTEGER REFERENCES newborns(id)"),
+        ("postnatal_visits", "breastfeeding_status", "VARCHAR"),
     ]
     for table, column, col_type in migrations:
         if table in inspector.get_table_names():

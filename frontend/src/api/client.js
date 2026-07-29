@@ -277,6 +277,32 @@ export const getPatientEscalations = async (patientId) => {
   return res.data;
 };
 
+// ── GROWTH TRACKER ──────────────────────────────────────
+export const getNewbornGrowth = async (newbornId) => {
+  const res = await client.get(`/api/v1/growth/newborns/${newbornId}`);
+  return res.data;
+};
+
+export const getNewbornGrowthSummary = async (newbornId) => {
+  const res = await client.get(`/api/v1/growth/newborns/${newbornId}/summary`);
+  return res.data;
+};
+
+export const getPatientGrowthSummaries = async (patientId) => {
+  const res = await client.get(`/api/v1/growth/patients/${patientId}/summary`);
+  return res.data;
+};
+
+export const listGrowthAlerts = async () => {
+  const res = await client.get('/api/v1/growth/alerts');
+  return res.data;
+};
+
+export const resolveGrowthAlert = async (alertId) => {
+  const res = await client.patch(`/api/v1/growth/alerts/${alertId}/resolve`);
+  return res.data;
+};
+
 export const getRecentEscalations = async (days = 7) => {
   const res = await client.get(`/api/v1/risk-escalations/recent?days=${days}`);
   return res.data;

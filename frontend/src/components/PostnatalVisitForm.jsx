@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { recordPostnatalVisit } from "../api/client";
 
-export default function PostnatalVisitForm({ deliveryId, nextVisitNumber, onCreated, onCancel }) {
+export default function PostnatalVisitForm({ deliveryId, nextVisitNumber, newborns = [], onCreated, onCancel }) {
   const { t } = useTranslation();
   const [form, setForm] = useState({
     visit_date: new Date().toISOString().split("T")[0],
@@ -19,6 +19,9 @@ export default function PostnatalVisitForm({ deliveryId, nextVisitNumber, onCrea
     hiv_test: false,
     mental_health: "normal",
     notes: "",
+    newborn_weight_kg: "",
+    newborn_id: newborns.length === 1 ? newborns[0].id : "",
+    breastfeeding_status: "",
   });
   const [saving, setSaving] = useState(false);
 
@@ -38,6 +41,9 @@ export default function PostnatalVisitForm({ deliveryId, nextVisitNumber, onCrea
         systolic_bp: form.systolic_bp ? parseFloat(form.systolic_bp) : null,
         diastolic_bp: form.diastolic_bp ? parseFloat(form.diastolic_bp) : null,
         hb_result: form.hb_result ? parseFloat(form.hb_result) : null,
+        newborn_weight_kg: form.newborn_weight_kg || null,
+        newborn_id: form.newborn_id || null,
+        breastfeeding_status: form.breastfeeding_status || null,
       });
       onCreated?.();
     } catch (err) {
@@ -73,6 +79,57 @@ export default function PostnatalVisitForm({ deliveryId, nextVisitNumber, onCrea
           >
             <option value="good">{t("good")}</option>
             <option value="complications">{t("complications")}</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Newborn growth fields */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+        <div>
+          <label className="block text-xs font-medium text-text-muted mb-1">
+            {t("newborn")} <span className="text-rose-500">*</span>
+          </label>
+          {newborns.length === 0 ? (
+            <p className="text-xs text-text-muted italic">{t("no_newborns")}</p>
+          ) : (
+            <select
+              value={form.newborn_id}
+              onChange={(e) => handleChange("newborn_id", Number(e.target.value))}
+              className="w-full text-sm border border-border rounded-lg px-3 py-2"
+            >
+              <option value="">{t("select_newborn")}</option>
+              {newborns.map((nb) => (
+                <option key={nb.id} value={nb.id}>
+                  {nb.name || t("newborn")} — {nb.sex === "female" ? t("female") : t("male")}
+                  {nb.birth_weight ? ` (${nb.birth_weight}g)` : ""}
+                </option>
+              ))}
+            </select>
+          )}
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-text-muted mb-1">{t("newborn_weight_kg")}</label>
+          <input
+            type="number"
+            step="0.01"
+            min="0"
+            value={form.newborn_weight_kg}
+            onChange={(e) => handleChange("newborn_weight_kg", e.target.value ? parseFloat(e.target.value) : "")}
+            className="w-full text-sm border border-border rounded-lg px-3 py-2"
+            placeholder="e.g. 4.5"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-text-muted mb-1">{t("breastfeeding_status")}</label>
+          <select
+            value={form.breastfeeding_status}
+            onChange={(e) => handleChange("breastfeeding_status", e.target.value)}
+            className="w-full text-sm border border-border rounded-lg px-3 py-2"
+          >
+            <option value="">{t("select")}</option>
+            <option value="exclusive">{t("exclusive")}</option>
+            <option value="mixed">{t("mixed")}</option>
+            <option value="not">{t("not_breastfeeding")}</option>
           </select>
         </div>
       </div>

@@ -17,6 +17,7 @@ from app.schemas_postnatal import (
 )
 from app.routers.auth import get_current_user
 from app.services.delivery import send_whatsapp
+from app.utils.growth_tracker import build_or_refresh_alerts
 
 router = APIRouter(prefix="/api/v1", tags=["postnatal"])
 
@@ -174,6 +175,21 @@ def record_postnatal_visit(
 
     db.commit()
     db.refresh(visit)
+
+    if data.newborn_id and data.newborn_weight_kg is not None:
+        newborn = db.query(Newborn).filter(Newborn.id == data.newborn_id).first()
+        if newborn:
+            visits_with_weights = (
+                db.query(PostnatalVisit)
+                .filter(
+                    PostnatalVisit.newborn_id == data.newborn_id,
+                    PostnatalVisit.newborn_weight_kg.isnot(None),
+                )
+                .order_by(PostnatalVisit.visit_date)
+                .all()
+            )
+            build_or_refresh_alerts(db, newborn, visits_with_weights)
+
     return visit
 
 

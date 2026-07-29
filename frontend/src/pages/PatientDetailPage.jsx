@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { getPatientCard, getRiskTrend, getPatientDeliveries } from "../api/client";
+import { getPatientCard, getRiskTrend, getPatientDeliveries, getPatientGrowthSummaries } from "../api/client";
 import VisitSchedule from "../components/VisitSchedule";
 import RiskTrendChart from "../components/RiskTrendChart";
 import FeatureTrendTable from "../components/FeatureTrendTable";
@@ -10,6 +10,7 @@ import PostnatalSchedule from "../components/PostnatalSchedule";
 import DeliveryForm from "../components/DeliveryForm";
 import PostnatalVisitForm from "../components/PostnatalVisitForm";
 import PHQ2Widget from "../components/PHQ2Widget";
+import GrowthStatus from "../components/GrowthStatus";
 
 export default function PatientDetailPage() {
   const { t } = useTranslation();
@@ -452,6 +453,13 @@ function PostnatalTab({ patientId, deliveries, showDeliveryForm, setShowDelivery
   const [activeDelivery, setActiveDelivery] = useState(() => deliveries.length > 0 ? deliveries[0] : null);
   const [showVisitForm, setShowVisitForm] = useState(false);
   const [showPHQ2, setShowPHQ2] = useState(false);
+  const [growthSummaries, setGrowthSummaries] = useState([]);
+
+  useEffect(() => {
+    if (patientId) {
+      getPatientGrowthSummaries(patientId).then(setGrowthSummaries).catch(() => setGrowthSummaries([]));
+    }
+  }, [patientId]);
 
   if (deliveries.length === 0 && !showDeliveryForm) {
     return (
@@ -553,6 +561,63 @@ function PostnatalTab({ patientId, deliveries, showDeliveryForm, setShowDelivery
                 </div>
               </div>
             )}
+
+            {/* Growth Summary */}
+            {(() => {
+              const gs = growthSummaries.filter((s) =>
+                activeDelivery.newborns?.some((nb) => nb.id === s.newborn_id)
+              );
+              return gs.length > 0 ? (
+                <div className="mt-3 pt-3 border-t border-border">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-xs font-semibold text-text-heading">{t("baby_growth")}</p>
+                    <Link
+                      to={`/patients/${patientId}/growth`}
+                      className="text-[11px] text-rose-500 font-medium hover:text-rose-600"
+                    >
+                      {t("view_all")}
+                    </Link>
+                  </div>
+                  <div className="space-y-2">
+                    {gs.map((s) => (
+                      <Link
+                        key={s.newborn_id}
+                        to={`/patients/${patientId}/growth/${s.newborn_id}`}
+                        className="block bg-surface rounded-xl p-3 hover:bg-gray-100 transition-colors"
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-xs font-semibold text-text-heading">
+                            {s.newborn_name || t("newborn")}
+                          </span>
+                          {s.latest_weight_kg != null && (
+                            <span className="text-[11px] text-text-muted">
+                              {s.latest_weight_kg}kg {t("at")} {s.latest_age_days}d
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {s.latest_classification && (
+                            <GrowthStatus
+                              classification={s.latest_classification}
+                              percentile={s.latest_percentile}
+                              zScore={s.latest_z_score}
+                            />
+                          )}
+                          {s.active_alerts && s.active_alerts.length > 0 && (
+                            <span className="text-[11px] text-red-500 font-medium">
+                              {s.active_alerts.length} {t("alert")}{s.active_alerts.length > 1 ? "s" : ""}
+                            </span>
+                          )}
+                        </div>
+                        {s.measurement_count === 0 && (
+                          <p className="text-[11px] text-text-muted mt-1">{t("record_weight_first")}</p>
+                        )}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              ) : null;
+            })()}
           </div>
 
           {/* PNC Schedule */}
@@ -587,6 +652,7 @@ function PostnatalTab({ patientId, deliveries, showDeliveryForm, setShowDelivery
                 const completed = activeDelivery.pnc_visits?.length || 0;
                 return completed + 1;
               })()}
+              newborns={activeDelivery.newborns || []}
               onCreated={() => {
                 setShowVisitForm(false);
                 fetchDeliveries();

@@ -183,6 +183,30 @@ def build_pnc_reminder(patient_name: str, visit_number: int,
     )
 
 
+def build_growth_alert(patient_name: str, newborn_name: str,
+                        alert_type: str, message: str,
+                        lang: str = "fr") -> str:
+    """Build a growth alert WhatsApp message for the CHW."""
+    alert_emoji = "\u26a0\ufe0f"
+    if lang == "en":
+        return (
+            f"{alert_emoji} *MamaSafe — Growth Alert*\n\n"
+            f"Patient: *{patient_name}*\n"
+            f"Newborn: *{newborn_name}*\n"
+            f"Alert: *{alert_type}*\n\n"
+            f"{message}\n\n"
+            f"_MamaSafe_"
+        )
+    return (
+        f"{alert_emoji} *MamaSafe — Alerte de croissance*\n\n"
+        f"Patiente : *{patient_name}*\n"
+        f"Nouveau-né : *{newborn_name}*\n"
+        f"Alerte : *{alert_type}*\n\n"
+        f"{message}\n\n"
+        f"_MamaSafe_"
+    )
+
+
 def build_pnc_day_reminder(patient_name: str, visit_number: int,
                            visit_label: str, facility: str,
                            lang: str = "fr") -> str:

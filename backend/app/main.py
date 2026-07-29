@@ -4,7 +4,7 @@ import sys
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.database import create_tables, SessionLocal, User
-from app.routers import predict, assessments, auth, dashboard, anc, facilities, referrals, whatsapp_webhook, schedule, risk_trend, postnatal
+from app.routers import predict, assessments, auth, dashboard, anc, facilities, referrals, whatsapp_webhook, schedule, risk_trend, postnatal, growth
 from app.routers.auth import hash_password
 from app.utils.scheduler_jobs import (
     job_send_48h_reminders,
@@ -148,6 +148,7 @@ app.include_router(whatsapp_webhook.router)
 app.include_router(schedule.router)
 app.include_router(risk_trend.router)
 app.include_router(postnatal.router)
+app.include_router(growth.router)
 
 
 @app.get("/health")
