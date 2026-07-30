@@ -61,8 +61,9 @@ class FacilityRepository {
           ),
         );
       }
-    } catch (_) {}
-
+    } catch (_) {
+      // Network error — return local data
+    }
 
     final query = _db.select(_db.facilities)
       ..orderBy([(t) => OrderingTerm(expression: t.name, mode: OrderingMode.asc)]);

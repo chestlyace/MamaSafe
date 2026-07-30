@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/error/app_error_widget.dart';
 import '../../../core/storage/database.dart';
 import '../../../core/theme/app_theme.dart';
 import '../growth_repository.dart';
@@ -52,7 +53,7 @@ class GrowthChartScreen extends ConsumerWidget {
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('$e')),
+        error: (e, _) => AppErrorWidget(error: e, onRetry: () => ref.invalidate(_childRecordsProvider(childRef))),
       ),
     );
   }

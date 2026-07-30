@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/error/app_error_widget.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_card.dart';
+import '../../../core/widgets/empty_state.dart';
 import '../referral_repository.dart';
 
 class ReferralListScreen extends ConsumerWidget {
@@ -28,7 +30,11 @@ class ReferralListScreen extends ConsumerWidget {
       body: referralsAsync.when(
         data: (referrals) {
           if (referrals.isEmpty) {
-            return const Center(child: Text('No referrals yet'));
+            return const EmptyState(
+              icon: Icons.local_hospital_outlined,
+              title: 'No referrals yet',
+              subtitle: 'Refer a patient to get started',
+            );
           }
           return ListView.builder(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
@@ -113,7 +119,7 @@ class ReferralListScreen extends ConsumerWidget {
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('$e')),
+        error: (e, _) => AppErrorWidget(error: e, onRetry: () => ref.invalidate(referralsProvider)),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => context.push('/referrals/new'),

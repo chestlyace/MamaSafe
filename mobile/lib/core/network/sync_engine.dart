@@ -59,7 +59,7 @@ class SyncEngine {
         await _executeOp(op);
         await _db.delete(_db.pendingOps).delete(op);
         completed++;
-      } catch (_) {
+      } catch (e) {
         failed++;
       }
       _progressController.add(SyncProgress(

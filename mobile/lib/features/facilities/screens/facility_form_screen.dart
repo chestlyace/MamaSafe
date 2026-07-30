@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/validators/validators.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_text_field.dart';
 import '../facility_repository.dart';
@@ -104,6 +105,7 @@ class _FacilityFormScreenState extends ConsumerState<FacilityFormScreen> {
                 hint: 'e.g. +237 123 456 789',
                 controller: _contactPhoneController,
                 keyboardType: TextInputType.phone,
+                validator: (v) => v == null || v.isEmpty ? null : phoneValidator(v),
               ),
               const SizedBox(height: 16),
               AppTextField(
@@ -111,6 +113,13 @@ class _FacilityFormScreenState extends ConsumerState<FacilityFormScreen> {
                 hint: 'e.g. 5.96',
                 controller: _latitudeController,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
+                validator: (v) {
+                  if (v == null || v.isEmpty) return null;
+                  if (double.tryParse(v) == null) return 'Enter a valid number';
+                  final lat = double.parse(v);
+                  if (lat < -90 || lat > 90) return 'Latitude must be between -90 and 90';
+                  return null;
+                },
               ),
               const SizedBox(height: 16),
               AppTextField(
@@ -118,6 +127,13 @@ class _FacilityFormScreenState extends ConsumerState<FacilityFormScreen> {
                 hint: 'e.g. 10.15',
                 controller: _longitudeController,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
+                validator: (v) {
+                  if (v == null || v.isEmpty) return null;
+                  if (double.tryParse(v) == null) return 'Enter a valid number';
+                  final lng = double.parse(v);
+                  if (lng < -180 || lng > 180) return 'Longitude must be between -180 and 180';
+                  return null;
+                },
               ),
               const SizedBox(height: 32),
               SizedBox(

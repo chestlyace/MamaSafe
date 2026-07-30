@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/validators/validators.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_text_field.dart';
 import '../assessment_repository.dart';
@@ -33,14 +34,6 @@ class _AssessmentFormScreenState extends ConsumerState<AssessmentFormScreen> {
     _bodyTempController.dispose();
     _heartRateController.dispose();
     super.dispose();
-  }
-
-  String? _requiredPositiveNumber(String? value, String field, {bool allowDecimal = false}) {
-    if (value == null || value.isEmpty) return '$field is required';
-    final parsed = allowDecimal ? double.tryParse(value) : int.tryParse(value);
-    if (parsed == null) return 'Enter a valid number';
-    if (parsed <= 0) return '$field must be positive';
-    return null;
   }
 
   Future<void> _submit() async {
@@ -127,7 +120,7 @@ class _AssessmentFormScreenState extends ConsumerState<AssessmentFormScreen> {
                 hint: 'e.g. 30',
                 controller: _ageController,
                 keyboardType: TextInputType.number,
-                validator: (v) => _requiredPositiveNumber(v, 'Age'),
+                validator: (v) => positiveNumberValidator(v, fieldName: 'Age'),
               ),
               const SizedBox(height: 16),
               AppTextField(
@@ -135,7 +128,7 @@ class _AssessmentFormScreenState extends ConsumerState<AssessmentFormScreen> {
                 hint: 'e.g. 120',
                 controller: _systolicBpController,
                 keyboardType: TextInputType.number,
-                validator: (v) => _requiredPositiveNumber(v, 'Systolic BP'),
+                validator: (v) => bloodPressureValidator(v),
               ),
               const SizedBox(height: 16),
               AppTextField(
@@ -143,7 +136,7 @@ class _AssessmentFormScreenState extends ConsumerState<AssessmentFormScreen> {
                 hint: 'e.g. 80',
                 controller: _diastolicBpController,
                 keyboardType: TextInputType.number,
-                validator: (v) => _requiredPositiveNumber(v, 'Diastolic BP'),
+                validator: (v) => bloodPressureValidator(v),
               ),
               const SizedBox(height: 16),
               AppTextField(
@@ -151,7 +144,7 @@ class _AssessmentFormScreenState extends ConsumerState<AssessmentFormScreen> {
                 hint: 'e.g. 100',
                 controller: _bloodSugarController,
                 keyboardType: TextInputType.number,
-                validator: (v) => _requiredPositiveNumber(v, 'Blood Sugar'),
+                validator: (v) => bloodSugarValidator(v),
               ),
               const SizedBox(height: 16),
               AppTextField(
@@ -159,8 +152,7 @@ class _AssessmentFormScreenState extends ConsumerState<AssessmentFormScreen> {
                 hint: 'e.g. 36.6',
                 controller: _bodyTempController,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                validator: (v) =>
-                    _requiredPositiveNumber(v, 'Body Temperature', allowDecimal: true),
+                validator: (v) => bodyTempValidator(v),
               ),
               const SizedBox(height: 16),
               AppTextField(
@@ -168,7 +160,7 @@ class _AssessmentFormScreenState extends ConsumerState<AssessmentFormScreen> {
                 hint: 'e.g. 72',
                 controller: _heartRateController,
                 keyboardType: TextInputType.number,
-                validator: (v) => _requiredPositiveNumber(v, 'Heart Rate'),
+                validator: (v) => heartRateValidator(v),
               ),
               const SizedBox(height: 32),
               SizedBox(

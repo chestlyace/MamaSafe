@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/validators/validators.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_text_field.dart';
 import '../growth_repository.dart';
@@ -34,14 +35,6 @@ class _GrowthFormScreenState extends ConsumerState<GrowthFormScreen> {
     _headCircumferenceController.dispose();
     _muacController.dispose();
     super.dispose();
-  }
-
-  String? _requiredPositiveNumber(String? value, String field, {bool allowDecimal = false}) {
-    if (value == null || value.isEmpty) return '$field is required';
-    final parsed = allowDecimal ? double.tryParse(value) : int.tryParse(value);
-    if (parsed == null) return 'Enter a valid number';
-    if (parsed <= 0) return '$field must be positive';
-    return null;
   }
 
   Future<void> _pickDate() async {
@@ -142,7 +135,7 @@ class _GrowthFormScreenState extends ConsumerState<GrowthFormScreen> {
                 hint: 'e.g. 24',
                 controller: _ageMonthsController,
                 keyboardType: TextInputType.number,
-                validator: (v) => _requiredPositiveNumber(v, 'Age'),
+                validator: (v) => positiveNumberValidator(v, fieldName: 'Age'),
               ),
               const SizedBox(height: 24),
               const Text(
@@ -159,7 +152,7 @@ class _GrowthFormScreenState extends ConsumerState<GrowthFormScreen> {
                 controller: _weightController,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 validator: (v) =>
-                    _requiredPositiveNumber(v, 'Weight', allowDecimal: true),
+                    positiveNumberValidator(v, fieldName: 'Weight', allowDecimal: true),
               ),
               const SizedBox(height: 16),
               AppTextField(

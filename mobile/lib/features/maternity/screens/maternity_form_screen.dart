@@ -131,6 +131,13 @@ class _MaternityFormScreenState extends ConsumerState<MaternityFormScreen> {
                       hint: '# pregnancies',
                       controller: _gravidaController,
                       keyboardType: TextInputType.number,
+                      validator: (v) {
+                        if (v == null || v.isEmpty) return null;
+                        final n = int.tryParse(v);
+                        if (n == null || n < 0) return 'Enter a valid number';
+                        if (n > 20) return 'Gravida seems too high';
+                        return null;
+                      },
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -140,6 +147,13 @@ class _MaternityFormScreenState extends ConsumerState<MaternityFormScreen> {
                       hint: '# births',
                       controller: _parityController,
                       keyboardType: TextInputType.number,
+                      validator: (v) {
+                        if (v == null || v.isEmpty) return null;
+                        final n = int.tryParse(v);
+                        if (n == null || n < 0) return 'Enter a valid number';
+                        if (n > 20) return 'Parity seems too high';
+                        return null;
+                      },
                     ),
                   ),
                 ],

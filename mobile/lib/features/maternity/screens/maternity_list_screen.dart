@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/error/app_error_widget.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_card.dart';
+import '../../../core/widgets/empty_state.dart';
 import '../maternity_repository.dart';
 
 class MaternityListScreen extends ConsumerWidget {
@@ -60,7 +62,11 @@ class MaternityListScreen extends ConsumerWidget {
       body: pregnanciesAsync.when(
         data: (pregnancies) {
           if (pregnancies.isEmpty) {
-            return const Center(child: Text('No pregnancies registered'));
+            return const EmptyState(
+              icon: Icons.pregnant_woman_outlined,
+              title: 'No pregnancies registered',
+              subtitle: 'Register a pregnancy to start tracking',
+            );
           }
           return ListView.builder(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
@@ -164,7 +170,7 @@ class MaternityListScreen extends ConsumerWidget {
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('$e')),
+        error: (e, _) => AppErrorWidget(error: e, onRetry: () => ref.invalidate(pregnanciesProvider)),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => context.push('/home/pregnancies/new'),

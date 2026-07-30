@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/error/app_error_widget.dart';
 import '../../core/network/sync_engine.dart';
 import '../../core/storage/database.dart';
 import '../../core/theme/app_theme.dart';
@@ -186,7 +187,7 @@ class _PendingOpsList extends ConsumerWidget {
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Center(child: Text('$e')),
+      error: (e, _) => AppErrorWidget(error: e, onRetry: () => ref.invalidate(pendingOpsProvider)),
     );
   }
 }

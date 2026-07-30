@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/error/app_error_widget.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_card.dart';
+import '../../../core/widgets/empty_state.dart';
 import '../approval_repository.dart';
 
 class ApprovalListScreen extends ConsumerWidget {
@@ -30,7 +32,11 @@ class ApprovalListScreen extends ConsumerWidget {
       body: approvalsAsync.when(
         data: (approvals) {
           if (approvals.isEmpty) {
-            return const Center(child: Text('No pending approvals'));
+            return const EmptyState(
+              icon: Icons.check_circle_outline,
+              title: 'No pending approvals',
+              subtitle: 'All requests have been reviewed',
+            );
           }
           return ListView.builder(
             padding: const EdgeInsets.all(16),
@@ -107,7 +113,7 @@ class ApprovalListScreen extends ConsumerWidget {
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('$e')),
+        error: (e, _) => AppErrorWidget(error: e, onRetry: () => ref.invalidate(pendingApprovalsProvider)),
       ),
     );
   }
@@ -137,17 +143,24 @@ class ApprovalListScreen extends ConsumerWidget {
     );
 
     if (confirmed == true) {
-      final repo = ref.read(approvalRepositoryProvider);
-      if (action == 'approved') {
-        await repo.approve(id, 'supervisor', commentsController.text.trim().isEmpty
-            ? null
-            : commentsController.text.trim());
-      } else {
-        await repo.reject(id, 'supervisor', commentsController.text.trim().isEmpty
-            ? null
-            : commentsController.text.trim());
+      try {
+        final repo = ref.read(approvalRepositoryProvider);
+        if (action == 'approved') {
+          await repo.approve(id, 'supervisor', commentsController.text.trim().isEmpty
+              ? null
+              : commentsController.text.trim());
+        } else {
+          await repo.reject(id, 'supervisor', commentsController.text.trim().isEmpty
+              ? null
+              : commentsController.text.trim());
+        }
+        ref.invalidate(pendingApprovalsProvider);
+      } catch (e) {
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to $action: $e'), backgroundColor: Colors.red),
+        );
       }
-      ref.invalidate(pendingApprovalsProvider);
     }
   }
 }

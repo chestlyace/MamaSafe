@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/error/app_error_widget.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/storage/database.dart';
@@ -38,7 +39,7 @@ class AssessmentDetailScreen extends ConsumerWidget {
           return _buildContent(context, assessment);
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('$e')),
+        error: (e, _) => AppErrorWidget(error: e, onRetry: () => ref.invalidate(assessmentsProvider)),
       ),
     );
   }

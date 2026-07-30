@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/error/app_error_widget.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_button.dart';
@@ -63,7 +64,7 @@ class DashboardScreen extends ConsumerWidget {
                       icon: Icons.warning_amber_rounded,
                       color: AppColors.accent,
                     ),
-                    _SummaryCard(
+                    const _SummaryCard(
                       title: 'Pending Referrals',
                       value: '0',
                       icon: Icons.local_hospital_outlined,
@@ -169,7 +170,7 @@ class DashboardScreen extends ConsumerWidget {
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('$e')),
+        error: (e, _) => AppErrorWidget(error: e, onRetry: () => ref.invalidate(assessmentsProvider)),
       ),
     );
   }

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/error/app_error_widget.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_card.dart';
+import '../../../core/widgets/empty_state.dart';
 import '../growth_repository.dart';
 
 class GrowthListScreen extends ConsumerWidget {
@@ -30,7 +32,11 @@ class GrowthListScreen extends ConsumerWidget {
       body: recordsAsync.when(
         data: (records) {
           if (records.isEmpty) {
-            return const Center(child: Text('No growth records yet'));
+            return const EmptyState(
+              icon: Icons.monitor_heart_outlined,
+              title: 'No growth records yet',
+              subtitle: 'Add a growth record to start tracking',
+            );
           }
           return ListView.builder(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
@@ -117,7 +123,7 @@ class GrowthListScreen extends ConsumerWidget {
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('$e')),
+        error: (e, _) => AppErrorWidget(error: e, onRetry: () => ref.invalidate(growthRecordsProvider)),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => context.push('/home/growth/new'),

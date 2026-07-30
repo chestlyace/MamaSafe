@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/error/app_error_widget.dart';
 import '../../../core/widgets/app_card.dart';
+import '../../../core/widgets/empty_state.dart';
 import '../facility_repository.dart';
 
 class FacilitiesScreen extends ConsumerWidget {
@@ -15,7 +17,11 @@ class FacilitiesScreen extends ConsumerWidget {
       appBar: AppBar(title: const Text('Facilities')),
       body: facilitiesAsync.when(
         data: (facilities) => facilities.isEmpty
-            ? const Center(child: Text('No facilities found'))
+            ? const EmptyState(
+                icon: Icons.local_hospital_outlined,
+                title: 'No facilities found',
+                subtitle: 'Facilities will appear here once added',
+              )
             : ListView.builder(
                 padding: const EdgeInsets.all(16),
                 itemCount: facilities.length,
@@ -50,7 +56,7 @@ class FacilitiesScreen extends ConsumerWidget {
                 },
               ),
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('$e')),
+        error: (e, _) => AppErrorWidget(error: e, onRetry: () => ref.invalidate(facilitiesProvider)),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => context.push('/facilities/new'),

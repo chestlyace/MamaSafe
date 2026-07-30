@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/validators/validators.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_text_field.dart';
 import '../referral_repository.dart';
@@ -99,11 +100,7 @@ class _ReferralFormScreenState extends ConsumerState<ReferralFormScreen> {
                 hint: 'e.g. 12345',
                 controller: _assessmentIdController,
                 keyboardType: TextInputType.number,
-                validator: (v) {
-                  if (v == null || v.isEmpty) return 'Assessment ID is required';
-                  if (int.tryParse(v) == null) return 'Enter a valid number';
-                  return null;
-                },
+                validator: (v) => numberValidator(v, fieldName: 'Assessment ID'),
               ),
               const SizedBox(height: 16),
               AppTextField(
