@@ -1,30 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-
-
-class SplashScreen extends StatelessWidget {
-  const SplashScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(child: CircularProgressIndicator()),
-    );
-  }
-}
-
-class LoginScreen extends StatelessWidget {
-  const LoginScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Login')),
-      body: const Center(child: Text('Login')),
-    );
-  }
-}
+import '../../features/auth/screens/forgot_password_screen.dart';
+import '../../features/auth/screens/login_screen.dart';
+import '../../features/auth/screens/splash_screen.dart';
+import '../../features/auth/auth_repository.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -82,11 +62,32 @@ class MainShell extends StatelessWidget {
 }
 
 final routerProvider = Provider<GoRouter>((ref) {
+  final authState = ref.watch(authStateProvider);
+
   return GoRouter(
     initialLocation: '/splash',
+    redirect: (context, state) {
+      final isAuthenticated = authState.status == AuthStatus.authenticated;
+      final isLoginRoute = state.matchedLocation == '/login' ||
+          state.matchedLocation == '/login/forgot-password';
+      final isSplash = state.matchedLocation == '/splash';
+
+      if (authState.status == AuthStatus.uninitialized) return null;
+
+      if (isSplash) {
+        return isAuthenticated ? '/home' : '/login';
+      }
+
+      if (!isAuthenticated && !isLoginRoute) return '/login';
+      if (isAuthenticated && isLoginRoute) return '/home';
+      return null;
+    },
     routes: [
       GoRoute(path: '/splash', builder: (_, __) => const SplashScreen()),
       GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
+      GoRoute(
+          path: '/login/forgot-password',
+          builder: (_, __) => const ForgotPasswordScreen()),
       StatefulShellRoute.indexedStack(
         builder: (_, __, navigationShell) => MainShell(child: navigationShell),
         branches: [
