@@ -13,6 +13,12 @@ import '../../features/facilities/screens/facilities_screen.dart';
 import '../../features/facilities/screens/facility_form_screen.dart';
 import '../../features/referrals/screens/referral_list_screen.dart';
 import '../../features/referrals/screens/referral_form_screen.dart';
+import '../../features/maternity/screens/maternity_list_screen.dart';
+import '../../features/maternity/screens/maternity_form_screen.dart';
+import '../../features/growth/screens/growth_list_screen.dart';
+import '../../features/growth/screens/growth_form_screen.dart';
+import '../../features/growth/screens/growth_chart_screen.dart';
+import '../../features/approvals/screens/approval_list_screen.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/app_card.dart';
 
@@ -205,6 +211,18 @@ final routerProvider = Provider<GoRouter>((ref) {
                   GoRoute(path: 'facilities/new', builder: (_, __) => const FacilityFormScreen()),
                   GoRoute(path: 'referrals', builder: (_, __) => const ReferralListScreen()),
                   GoRoute(path: 'referrals/new', builder: (_, __) => const ReferralFormScreen()),
+                  GoRoute(path: 'approvals', builder: (_, __) => const ApprovalListScreen()),
+                  GoRoute(path: 'pregnancies', builder: (_, __) => const MaternityListScreen()),
+                  GoRoute(path: 'pregnancies/new', builder: (_, __) => const MaternityFormScreen()),
+                  GoRoute(path: 'growth', builder: (_, __) => const GrowthListScreen()),
+                  GoRoute(path: 'growth/new', builder: (_, __) => const GrowthFormScreen()),
+                  GoRoute(
+                    path: 'growth/:childRef',
+                    builder: (_, state) {
+                      final childRef = state.pathParameters['childRef']!;
+                      return GrowthChartScreen(childRef: childRef);
+                    },
+                  ),
                 ],
               ),
             ],

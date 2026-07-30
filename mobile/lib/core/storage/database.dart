@@ -62,21 +62,82 @@ class Referrals extends Table {
   Set<Column> get primaryKey => {id};
 }
 
-@DriftDatabase(tables: [Assessments, PendingOps, Facilities, Referrals])
+class Pregnancies extends Table {
+  IntColumn get id => integer()();
+  TextColumn get patientName => text().named('patient_name')();
+  TextColumn get patientRef => text().named('patient_ref').nullable()();
+  IntColumn get age => integer()();
+  IntColumn get gravida => integer().nullable()();
+  IntColumn get parity => integer().nullable()();
+  TextColumn get lmp => text().nullable()();
+  TextColumn get edd => text().nullable()();
+  IntColumn get gestationalAgeWeeks => integer().named('gestational_age_weeks').nullable()();
+  TextColumn get status => text()();
+  TextColumn get riskLevel => text().named('risk_level').nullable()();
+  TextColumn get notes => text().nullable()();
+  DateTimeColumn get createdAt => dateTime().named('created_at')();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+class GrowthRecords extends Table {
+  IntColumn get id => integer()();
+  TextColumn get childName => text().named('child_name')();
+  TextColumn get childRef => text().named('child_ref').nullable()();
+  IntColumn get ageMonths => integer().named('age_months')();
+  RealColumn get weight => real()();
+  RealColumn get height => real().nullable()();
+  RealColumn get headCircumference => real().named('head_circumference').nullable()();
+  RealColumn get muac => real().nullable()();
+  TextColumn get nutritionalStatus => text().named('nutritional_status').nullable()();
+  DateTimeColumn get recordedAt => dateTime().named('recorded_at')();
+  DateTimeColumn get createdAt => dateTime().named('created_at')();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+class Approvals extends Table {
+  IntColumn get id => integer()();
+  TextColumn get entityType => text().named('entity_type')();
+  IntColumn get entityId => integer().named('entity_id')();
+  TextColumn get action => text()();
+  TextColumn get status => text()();
+  TextColumn get requestedBy => text().named('requested_by')();
+  TextColumn get reviewedBy => text().named('reviewed_by').nullable()();
+  TextColumn get comments => text().nullable()();
+  DateTimeColumn get createdAt => dateTime().named('created_at')();
+  DateTimeColumn get reviewedAt => dateTime().named('reviewed_at').nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+@DriftDatabase(tables: [Assessments, PendingOps, Facilities, Referrals, Pregnancies, GrowthRecords, Approvals])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 5;
 
-@override
-MigrationStrategy get migration => MigrationStrategy(
-      onUpgrade: (migrator, from, to) async {
-        if (from < 2) {
-          await migrator.createTable(facilities);
-        }
-      },
-    );
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+        onUpgrade: (migrator, from, to) async {
+          if (from < 2) {
+            await migrator.createTable(facilities);
+          }
+          if (from < 3) {
+            await migrator.createTable(pregnancies);
+          }
+          if (from < 4) {
+            await migrator.createTable(growthRecords);
+          }
+          if (from < 5) {
+            await migrator.createTable(approvals);
+          }
+        },
+      );
 }
 
 LazyDatabase _openConnection() {
