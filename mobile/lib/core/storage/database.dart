@@ -25,6 +25,20 @@ class Assessments extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+class Facilities extends Table {
+  IntColumn get id => integer()();
+  TextColumn get name => text()();
+  TextColumn get location => text()();
+  TextColumn get district => text()();
+  TextColumn get contactPhone => text().named('contact_phone').nullable()();
+  RealColumn get latitude => real().nullable()();
+  RealColumn get longitude => real().nullable()();
+  DateTimeColumn get createdAt => dateTime().named('created_at')();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 class PendingOps extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get operationType => text().named('operation_type')();
@@ -33,12 +47,36 @@ class PendingOps extends Table {
   DateTimeColumn get createdAt => dateTime().named('created_at')();
 }
 
-@DriftDatabase(tables: [Assessments, PendingOps])
+class Referrals extends Table {
+  IntColumn get id => integer()();
+  IntColumn get assessmentId => integer().named('assessment_id')();
+  TextColumn get patientRef => text().named('patient_ref').nullable()();
+  TextColumn get referredTo => text().named('referred_to')();
+  TextColumn get reason => text()();
+  TextColumn get status => text()();
+  TextColumn get notes => text().nullable()();
+  DateTimeColumn get referralDate => dateTime().named('referral_date')();
+  DateTimeColumn get createdAt => dateTime().named('created_at')();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+@DriftDatabase(tables: [Assessments, PendingOps, Facilities, Referrals])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+@override
+MigrationStrategy get migration => MigrationStrategy(
+      onUpgrade: (migrator, from, to) async {
+        if (from < 2) {
+          await migrator.createTable(facilities);
+        }
+      },
+    );
 }
 
 LazyDatabase _openConnection() {

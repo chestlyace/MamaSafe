@@ -9,6 +9,10 @@ import '../../features/assessment/screens/assessment_detail_screen.dart';
 import '../../features/assessment/screens/assessment_form_screen.dart';
 import '../../features/assessment/assessment_repository.dart';
 import '../../features/dashboard/screens/dashboard_screen.dart';
+import '../../features/facilities/screens/facilities_screen.dart';
+import '../../features/facilities/screens/facility_form_screen.dart';
+import '../../features/referrals/screens/referral_list_screen.dart';
+import '../../features/referrals/screens/referral_form_screen.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/app_card.dart';
 
@@ -190,7 +194,18 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (_, __, navigationShell) => MainShell(child: navigationShell),
         branches: [
           StatefulShellBranch(
-            routes: [GoRoute(path: '/home', builder: (_, __) => const HomeScreen())],
+            routes: [
+              GoRoute(
+                path: '/home',
+                builder: (_, __) => const HomeScreen(),
+                routes: [
+                  GoRoute(path: 'facilities', builder: (_, __) => const FacilitiesScreen()),
+                  GoRoute(path: 'facilities/new', builder: (_, __) => const FacilityFormScreen()),
+                  GoRoute(path: 'referrals', builder: (_, __) => const ReferralListScreen()),
+                  GoRoute(path: 'referrals/new', builder: (_, __) => const ReferralFormScreen()),
+                ],
+              ),
+            ],
           ),
           StatefulShellBranch(
             routes: [
