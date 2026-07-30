@@ -8,6 +8,7 @@ import '../../features/auth/auth_repository.dart';
 import '../../features/assessment/screens/assessment_detail_screen.dart';
 import '../../features/assessment/screens/assessment_form_screen.dart';
 import '../../features/assessment/assessment_repository.dart';
+import '../../features/dashboard/screens/dashboard_screen.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/app_card.dart';
 
@@ -16,10 +17,7 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Home')),
-      body: const Center(child: Text('Home')),
-    );
+    return const DashboardScreen();
   }
 }
 
