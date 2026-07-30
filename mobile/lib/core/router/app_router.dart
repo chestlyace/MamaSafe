@@ -5,8 +5,11 @@ import '../../features/auth/screens/forgot_password_screen.dart';
 import '../../features/auth/screens/login_screen.dart';
 import '../../features/auth/screens/splash_screen.dart';
 import '../../features/auth/auth_repository.dart';
+import '../../features/assessment/screens/assessment_detail_screen.dart';
 import '../../features/assessment/screens/assessment_form_screen.dart';
 import '../../features/assessment/assessment_repository.dart';
+import '../../core/theme/app_theme.dart';
+import '../../core/widgets/app_card.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -23,6 +26,19 @@ class HomeScreen extends StatelessWidget {
 class AssessmentsScreen extends ConsumerWidget {
   const AssessmentsScreen({super.key});
 
+  Color _riskColor(String riskLevel) {
+    switch (riskLevel) {
+      case 'high':
+        return AppColors.accent;
+      case 'mid':
+        return AppColors.warning;
+      case 'low':
+        return AppColors.success;
+      default:
+        return AppColors.textSecondary;
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final assessmentsAsync = ref.watch(assessmentsProvider);
@@ -35,13 +51,69 @@ class AssessmentsScreen extends ConsumerWidget {
             return const Center(child: Text('No assessments yet'));
           }
           return ListView.builder(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
             itemCount: assessments.length,
             itemBuilder: (context, index) {
               final a = assessments[index];
-              return ListTile(
-                title: Text('Assessment #${a.id}'),
-                subtitle: Text(
-                  'Risk: ${a.riskLevel.toUpperCase()} | ${a.createdAt.toString().substring(0, 10)}',
+              final riskColor = _riskColor(a.riskLevel);
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: AppCard(
+                  onTap: () => context.push('/assessments/${a.id}'),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              a.patientRef ?? 'Unknown',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              '${a.age.toStringAsFixed(0)} years',
+                              style: const TextStyle(
+                                fontSize: 14,
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              '${a.createdAt.day}/${a.createdAt.month}/${a.createdAt.year}',
+                              style: const TextStyle(
+                                fontSize: 13,
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: riskColor.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          a.riskLevel.toUpperCase(),
+                          style: TextStyle(
+                            color: riskColor,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      const Icon(Icons.chevron_right, color: AppColors.textSecondary),
+                    ],
+                  ),
                 ),
               );
             },
@@ -131,6 +203,13 @@ final routerProvider = Provider<GoRouter>((ref) {
                   GoRoute(
                     path: 'new',
                     builder: (_, __) => const AssessmentFormScreen(),
+                  ),
+                  GoRoute(
+                    path: ':id',
+                    builder: (_, state) {
+                      final id = int.parse(state.pathParameters['id']!);
+                      return AssessmentDetailScreen(assessmentId: id);
+                    },
                   ),
                 ],
               ),
