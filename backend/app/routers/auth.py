@@ -90,5 +90,8 @@ def login(
     user = db.query(User).filter(User.username == form_data.username).first()
     if not user or not verify_password(form_data.password, user.hashed_password):
         raise HTTPException(status_code=401, detail="Incorrect username or password")
-    token = create_token({"sub": user.username})
-    return {"access_token": token, "token_type": "bearer"}
+    user.last_active = datetime.utcnow()
+    db.commit()
+    token = create_token({"sub": user.username, "role": user.role, "user_id": user.id})
+    return {"access_token": token, "token_type": "bearer",
+            "role": user.role, "user_id": user.id}

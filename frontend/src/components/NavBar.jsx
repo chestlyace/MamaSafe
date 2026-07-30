@@ -1,14 +1,27 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import LanguageToggle from './LanguageToggle';
 import navLogo from '../assets/nav_logo.svg';
+
+function getRoleFromToken() {
+  const token = localStorage.getItem('token');
+  if (!token) return null;
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return payload.role;
+  } catch {
+    return null;
+  }
+}
 
 export default function NavBar() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const role = useMemo(() => getRoleFromToken(), []);
 
   const logout = () => {
     localStorage.removeItem('token');
@@ -22,11 +35,14 @@ export default function NavBar() {
     { path: '/referrals', label: t('referrals'), icon: 'local_hospital' },
     { path: '/history', label: t('history'), icon: 'history' },
     { path: '/dashboard', label: t('dashboard'), icon: 'monitoring' },
+    ...(role === 'supervisor' || role === 'admin'
+      ? [{ path: '/supervisor', label: t('supervisor'), icon: 'admin_panel_settings' }]
+      : []),
   ];
 
   const linkClass = (path) =>
     `text-sm transition-colors ${
-      path === '/patients' || path === '/schedule'
+      ['/patients', '/schedule', '/supervisor'].includes(path)
         ? location.pathname.startsWith(path)
           ? 'text-rose-500 font-semibold'
           : 'text-text-body hover:text-rose-500'
@@ -91,7 +107,7 @@ export default function NavBar() {
                   to={link.path}
                   onClick={() => setMobileOpen(false)}
                   className={`flex items-center gap-3 px-5 py-3 text-sm transition-colors ${
-                    (link.path === '/patients' || link.path === '/schedule'
+                    (['/patients', '/schedule', '/supervisor'].includes(link.path)
                       ? location.pathname.startsWith(link.path)
                       : location.pathname === link.path)
                       ? 'text-rose-500 font-semibold bg-rose-50'

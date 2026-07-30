@@ -21,7 +21,11 @@ export default function LoginPage() {
     try {
       const data = await login(username, password);
       localStorage.setItem('token', data.access_token);
-      navigate('/assess');
+      if (data.role === 'supervisor' || data.role === 'admin') {
+        navigate('/supervisor');
+      } else {
+        navigate('/assess');
+      }
     } catch (err) {
       setError(err.response?.data?.detail || t('error'));
     } finally {

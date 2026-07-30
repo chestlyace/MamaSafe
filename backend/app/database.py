@@ -42,11 +42,14 @@ class User(Base):
     id                     = Column(Integer, primary_key=True, index=True)
     username               = Column(String, unique=True, index=True)
     hashed_password        = Column(String)
-    role                   = Column(String, default="chw")  # "admin" or "chw"
+    role                   = Column(String, default="chw")  # chw | supervisor | admin
     is_active              = Column(Boolean, default=True)
     full_name              = Column(String, nullable=True)
     facility               = Column(String, nullable=True)  # health post name
+    district               = Column(String, nullable=True)
+    region                 = Column(String, nullable=True)
     whatsapp_number        = Column(String, nullable=True)
+    last_active            = Column(DateTime, nullable=True)
     created_at             = Column(DateTime, default=datetime.utcnow)
     must_change_password   = Column(Boolean, default=True)
 
@@ -382,6 +385,20 @@ class MentalHealthScreening(Base):
     patient         = relationship("Patient")
 
 
+class AuditLog(Base):
+    __tablename__ = "audit_logs"
+
+    id          = Column(Integer, primary_key=True, index=True)
+    user_id     = Column(Integer, ForeignKey("users.id"), nullable=False)
+    action      = Column(String, nullable=False)
+    target_type = Column(String, nullable=True)
+    target_id   = Column(Integer, nullable=True)
+    ip_address  = Column(String, nullable=True)
+    created_at  = Column(DateTime, default=datetime.utcnow)
+
+    user        = relationship("User")
+
+
 def _migrate_columns(engine):
     """Add missing columns to existing tables without data loss."""
     inspector = inspect(engine)
@@ -389,6 +406,9 @@ def _migrate_columns(engine):
         ("referrals", "whatsapp_sent", "BOOLEAN DEFAULT FALSE"),
         ("referrals", "whatsapp_message_id", "VARCHAR"),
         ("users", "whatsapp_number", "VARCHAR"),
+        ("users", "district", "VARCHAR"),
+        ("users", "region", "VARCHAR"),
+        ("users", "last_active", "TIMESTAMP"),
         ("patients", "preferred_language", "VARCHAR DEFAULT 'fr'"),
         ("risk_escalation_events", "whatsapp_error", "VARCHAR"),
         ("postnatal_visits", "newborn_weight_kg", "FLOAT"),

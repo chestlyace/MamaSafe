@@ -312,3 +312,68 @@ export const getEscalationAnalytics = async () => {
   const res = await client.get('/api/v1/risk-escalations/analytics');
   return res.data;
 };
+
+// ── ADMIN / SUPERVISOR ────────────────────────────────────
+export const getAdminDashboard = async () => {
+  const res = await client.get('/api/v1/admin/dashboard');
+  return res.data;
+};
+
+export const listChws = async () => {
+  const res = await client.get('/api/v1/admin/chws');
+  return res.data;
+};
+
+export const getChwStats = async (chwId) => {
+  const res = await client.get(`/api/v1/admin/chws/${chwId}/stats`);
+  return res.data;
+};
+
+export const getHighRiskPatients = async (daysSince = 7) => {
+  const res = await client.get(`/api/v1/admin/high-risk-patients?days_since_assessment=${daysSince}`);
+  return res.data;
+};
+
+export const getReferralAnalytics = async () => {
+  const res = await client.get('/api/v1/admin/referral-analytics');
+  return res.data;
+};
+
+export const getMonthlyReport = async (year, month) => {
+  const res = await client.get(`/api/v1/admin/report/monthly?year=${year}&month=${month}`);
+  return res.data;
+};
+
+export const downloadMonthlyReportCsv = async (year, month) => {
+  const res = await client.get(`/api/v1/admin/report/monthly/csv?year=${year}&month=${month}`, {
+    responseType: 'blob',
+  });
+  const url = window.URL.createObjectURL(new Blob([res.data]));
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `mamasafe-monthly-report-${year}-${String(month).padStart(2, '0')}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  window.URL.revokeObjectURL(url);
+};
+
+export const listAdminUsers = async () => {
+  const res = await client.get('/api/v1/admin/users');
+  return res.data;
+};
+
+export const createChw = async (data) => {
+  const res = await client.post('/api/v1/admin/users', data);
+  return res.data;
+};
+
+export const deactivateUser = async (userId) => {
+  const res = await client.patch(`/api/v1/admin/users/${userId}/deactivate`);
+  return res.data;
+};
+
+export const activateUser = async (userId) => {
+  const res = await client.patch(`/api/v1/admin/users/${userId}/activate`);
+  return res.data;
+};
