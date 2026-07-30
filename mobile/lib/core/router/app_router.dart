@@ -145,14 +145,16 @@ class ProfileScreen extends StatelessWidget {
 }
 
 class MainShell extends StatelessWidget {
-  final Widget child;
-  const MainShell({super.key, required this.child});
+  final StatefulNavigationShell navigationShell;
+  const MainShell({super.key, required this.navigationShell});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: child,
+      body: navigationShell,
       bottomNavigationBar: BottomNavigationBar(
+        currentIndex: navigationShell.currentIndex,
+        onTap: (index) => navigationShell.goBranch(index),
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home_outlined), label: 'Home'),
           BottomNavigationBarItem(icon: Icon(Icons.assignment_outlined), label: 'Assessments'),
@@ -191,7 +193,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           path: '/login/forgot-password',
           builder: (_, __) => const ForgotPasswordScreen()),
       StatefulShellRoute.indexedStack(
-        builder: (_, __, navigationShell) => MainShell(child: navigationShell),
+        builder: (_, __, navigationShell) => MainShell(navigationShell: navigationShell),
         branches: [
           StatefulShellBranch(
             routes: [
