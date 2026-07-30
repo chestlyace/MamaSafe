@@ -5,6 +5,8 @@ import '../../features/auth/screens/forgot_password_screen.dart';
 import '../../features/auth/screens/login_screen.dart';
 import '../../features/auth/screens/splash_screen.dart';
 import '../../features/auth/auth_repository.dart';
+import '../../features/assessment/screens/assessment_form_screen.dart';
+import '../../features/assessment/assessment_repository.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -18,14 +20,40 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
-class AssessmentsScreen extends StatelessWidget {
+class AssessmentsScreen extends ConsumerWidget {
   const AssessmentsScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final assessmentsAsync = ref.watch(assessmentsProvider);
+
     return Scaffold(
       appBar: AppBar(title: const Text('Assessments')),
-      body: const Center(child: Text('Assessments')),
+      body: assessmentsAsync.when(
+        data: (assessments) {
+          if (assessments.isEmpty) {
+            return const Center(child: Text('No assessments yet'));
+          }
+          return ListView.builder(
+            itemCount: assessments.length,
+            itemBuilder: (context, index) {
+              final a = assessments[index];
+              return ListTile(
+                title: Text('Assessment #${a.id}'),
+                subtitle: Text(
+                  'Risk: ${a.riskLevel.toUpperCase()} | ${a.createdAt.toString().substring(0, 10)}',
+                ),
+              );
+            },
+          );
+        },
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, _) => Center(child: Text('$e')),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => context.push('/assessments/new'),
+        child: const Icon(Icons.add),
+      ),
     );
   }
 }
@@ -95,7 +123,18 @@ final routerProvider = Provider<GoRouter>((ref) {
             routes: [GoRoute(path: '/home', builder: (_, __) => const HomeScreen())],
           ),
           StatefulShellBranch(
-            routes: [GoRoute(path: '/assessments', builder: (_, __) => const AssessmentsScreen())],
+            routes: [
+              GoRoute(
+                path: '/assessments',
+                builder: (_, __) => const AssessmentsScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'new',
+                    builder: (_, __) => const AssessmentFormScreen(),
+                  ),
+                ],
+              ),
+            ],
           ),
           StatefulShellBranch(
             routes: [GoRoute(path: '/profile', builder: (_, __) => const ProfileScreen())],
