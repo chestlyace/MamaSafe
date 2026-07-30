@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import '../../onboarding/onboarding_provider.dart';
 import '../auth_repository.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
@@ -15,8 +17,14 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     super.initState();
     Future.microtask(() async {
       await Future.delayed(const Duration(milliseconds: 1500));
-      final notifier = ref.read(authStateProvider.notifier);
-      await notifier.checkAuthStatus();
+      final onboardingDone = await ref.read(onboardingDoneProvider.future);
+      if (!onboardingDone && mounted) {
+        context.go('/onboarding');
+        return;
+      }
+      if (mounted) {
+        await ref.read(authStateProvider.notifier).checkAuthStatus();
+      }
     });
   }
 

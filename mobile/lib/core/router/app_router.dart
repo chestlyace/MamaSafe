@@ -19,6 +19,8 @@ import '../../features/growth/screens/growth_list_screen.dart';
 import '../../features/growth/screens/growth_form_screen.dart';
 import '../../features/growth/screens/growth_chart_screen.dart';
 import '../../features/approvals/screens/approval_list_screen.dart';
+import '../../features/onboarding/screens/onboarding_screen.dart';
+import '../../features/profile/screens/profile_screen.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/app_card.dart';
 
@@ -138,14 +140,14 @@ class AssessmentsScreen extends ConsumerWidget {
   }
 }
 
-class ProfileScreen extends StatelessWidget {
-  const ProfileScreen({super.key});
+class SyncStatusScreen extends StatelessWidget {
+  const SyncStatusScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Profile')),
-      body: const Center(child: Text('Profile')),
+      appBar: AppBar(title: const Text('Sync Queue')),
+      body: const Center(child: Text('Sync queue coming soon')),
     );
   }
 }
@@ -181,6 +183,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       final isLoginRoute = state.matchedLocation == '/login' ||
           state.matchedLocation == '/login/forgot-password';
       final isSplash = state.matchedLocation == '/splash';
+      final isOnboarding = state.matchedLocation == '/onboarding';
 
       if (authState.status == AuthStatus.uninitialized) return null;
 
@@ -188,12 +191,14 @@ final routerProvider = Provider<GoRouter>((ref) {
         return isAuthenticated ? '/home' : '/login';
       }
 
-      if (!isAuthenticated && !isLoginRoute) return '/login';
+      if (!isAuthenticated && !isLoginRoute && !isOnboarding) return '/login';
       if (isAuthenticated && isLoginRoute) return '/home';
+      if (isAuthenticated && isOnboarding) return '/home';
       return null;
     },
     routes: [
       GoRoute(path: '/splash', builder: (_, __) => const SplashScreen()),
+      GoRoute(path: '/onboarding', builder: (_, __) => const OnboardingScreen()),
       GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
       GoRoute(
           path: '/login/forgot-password',
@@ -207,6 +212,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                 path: '/home',
                 builder: (_, __) => const HomeScreen(),
                 routes: [
+                  GoRoute(path: 'sync', builder: (_, __) => const SyncStatusScreen()),
                   GoRoute(path: 'facilities', builder: (_, __) => const FacilitiesScreen()),
                   GoRoute(path: 'facilities/new', builder: (_, __) => const FacilityFormScreen()),
                   GoRoute(path: 'referrals', builder: (_, __) => const ReferralListScreen()),

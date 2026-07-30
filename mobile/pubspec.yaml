@@ -19,12 +19,12 @@ dependencies:
   path: ^1.9.1
   freezed_annotation: ^2.4.4
   json_annotation: ^4.9.0
-  slang: ^4.4.0
-  slang_flutter: ^4.4.0
+
   flutter_dotenv: ^5.2.1
   flutter_secure_storage: ^9.2.4
   connectivity_plus: ^6.1.1
   intl: ^0.20.2
+  shared_preferences: ^2.3.4
 
 dev_dependencies:
   flutter_test:
@@ -36,7 +36,6 @@ dev_dependencies:
   freezed: ^2.5.7
   json_serializable: ^6.9.0
   riverpod_generator: ^2.6.3
-  slang_build_runner: ^4.4.0
   mocktail: ^1.0.4
   flutter_lints: ^5.0.0
 
