@@ -1,30 +1,33 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { recordVisit } from "../api/client";
+import { getPatientCard, recordVisit } from "../api/client";
+import DateField from "../components/DateField";
+import FieldHelp from "../components/FieldHelp";
+import useComputedValue from "../hooks/useComputedValue";
+import { gestationalAge, nextVisitDate } from "../utils/dateCalc";
 
 const CLINICAL_FIELDS = [
-  { key: "visit_number", type: "number", required: true, min: 1, max: 8, icon: "tag" },
-  { key: "visit_date", type: "date", required: true, icon: "calendar_today" },
-  { key: "gestational_age", type: "number", min: 4, max: 42, icon: "schedule" },
-  { key: "weight", type: "number", step: "0.1", icon: "monitor_weight" },
-  { key: "systolic_bp", type: "number", icon: "monitor_heart" },
-  { key: "diastolic_bp", type: "number", icon: "favorite" },
-  { key: "fundal_height", type: "number", step: "0.1", icon: "straighten" },
-  { key: "foetal_hr", type: "number", icon: "ecg" },
+  { key: "visit_number", type: "number", required: true, min: 1, max: 8, icon: "tag", help: "visit_number_help" },
+  { key: "gestational_age", type: "number", min: 4, max: 42, icon: "schedule", help: "gestational_age_help" },
+  { key: "weight", type: "number", step: "0.1", icon: "monitor_weight", placeholder: "weight_kg_placeholder", help: "weight_kg_help" },
+  { key: "systolic_bp", type: "number", icon: "monitor_heart", placeholder: "systolic_bp_placeholder", help: "systolic_bp_help" },
+  { key: "diastolic_bp", type: "number", icon: "favorite", placeholder: "diastolic_bp_placeholder", help: "diastolic_bp_help" },
+  { key: "fundal_height", type: "number", step: "0.1", icon: "straighten", placeholder: "fundal_height_cm_placeholder", help: "fundal_height_cm_help" },
+  { key: "foetal_hr", type: "number", icon: "ecg", placeholder: "foetal_hr_placeholder", help: "foetal_hr_help" },
 ];
 
 const SELECT_FIELDS = [
-  { key: "presentation", options: ["cephalic", "breech", "transverse"] },
-  { key: "urinalysis_protein", options: ["negative", "trace", "+1", "+2", "+3"] },
-  { key: "urinalysis_glucose", options: ["negative", "trace", "+1", "+2", "+3"] },
+  { key: "presentation", options: ["cephalic", "breech", "transverse"], help: "presentation_help" },
+  { key: "urinalysis_protein", options: ["negative", "trace", "+1", "+2", "+3"], help: "urinalysis_protein_help" },
+  { key: "urinalysis_glucose", options: ["negative", "trace", "+1", "+2", "+3"], help: "urinalysis_glucose_help" },
 ];
 
 const CHECKBOX_FIELDS = [
-  { key: "oedema", icon: "swelling" },
-  { key: "tt_vaccine", icon: "vaccines" },
-  { key: "malaria_prophylaxis", icon: "mosquito" },
-  { key: "iron_supplements", icon: "medication" },
+  { key: "oedema", icon: "swelling", help: "oedema_help" },
+  { key: "tt_vaccine", icon: "vaccines", help: "tt_vaccine_help" },
+  { key: "malaria_prophylaxis", icon: "mosquito", help: "malaria_prophylaxis_help" },
+  { key: "iron_supplements", icon: "medication", help: "iron_supplements_help" },
 ];
 
 export default function VisitLogPage() {
@@ -34,8 +37,40 @@ export default function VisitLogPage() {
   const [form, setForm] = useState({ visit_date: new Date().toISOString().slice(0, 10) });
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [lmp, setLmp] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const card = await getPatientCard(id);
+        const preg = (card.pregnancies || []).find(
+          (p) => String(p.id) === String(pregnancyId)
+        );
+        if (!cancelled && preg?.lmp_date) setLmp(preg.lmp_date);
+      } catch {
+        /* ignore — form works without auto-fill */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [id, pregnancyId]);
 
   const set = (key, val) => setForm((f) => ({ ...f, [key]: val }));
+
+  const visitDate = form.visit_date || new Date().toISOString().slice(0, 10);
+  const suggestedGa = lmp ? gestationalAge(lmp, visitDate) : null;
+  const effectiveGa = form.gestational_age ?? suggestedGa;
+  const suggestedNextVisit = lmp && effectiveGa ? nextVisitDate(lmp, effectiveGa) : null;
+
+  const {
+    handleChange: handleGaChange,
+    showRevert: showGaRevert,
+    revert: revertGa,
+  } = useComputedValue(form.gestational_age ?? "", suggestedGa, (v) =>
+    set("gestational_age", v === "" ? null : Number(v))
+  );
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -80,10 +115,20 @@ export default function VisitLogPage() {
         <div className="bg-white rounded-2xl border border-border p-5 sm:p-6 mb-6">
           <h2 className="text-sm font-semibold text-text-heading mb-5">{t("enter_patient_data")}</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <DateField
+              label={t("visit_date")}
+              value={form.visit_date || ""}
+              onChange={(v) => set("visit_date", v)}
+              required
+              help={t("visit_date_help")}
+              inputClass={inputClass}
+            />
+
             {CLINICAL_FIELDS.map((f) => (
               <div key={f.key}>
                 <label className="block text-xs font-medium text-text-muted mb-1.5">
                   {t(f.key)} {f.required && <span className="text-red-500">*</span>}
+                  <FieldHelp text={t(f.help)} />
                 </label>
                 <div className="relative">
                   <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-[18px]">
@@ -96,18 +141,34 @@ export default function VisitLogPage() {
                     step={f.step}
                     value={form[f.key] ?? ""}
                     onChange={(e) =>
-                      set(f.key, f.type === "number" ? (e.target.value === "" ? null : Number(e.target.value)) : e.target.value)
+                      f.key === "gestational_age"
+                        ? handleGaChange(e.target.value === "" ? "" : Number(e.target.value))
+                        : set(f.key, f.type === "number" ? (e.target.value === "" ? null : Number(e.target.value)) : e.target.value)
                     }
                     required={f.required}
+                    placeholder={f.placeholder ? t(f.placeholder) : undefined}
                     className={`${inputClass} pl-10`}
                   />
                 </div>
+                {f.key === "gestational_age" && showGaRevert && (
+                  <button
+                    type="button"
+                    onClick={revertGa}
+                    className="mt-1.5 text-xs text-rose-500 font-medium hover:underline flex items-center gap-1"
+                  >
+                    <span className="material-symbols-outlined text-[14px]">undo</span>
+                    {t("revert_to_suggested")}
+                  </button>
+                )}
               </div>
             ))}
 
             {SELECT_FIELDS.map((f) => (
               <div key={f.key}>
-                <label className="block text-xs font-medium text-text-muted mb-1.5">{t(f.key)}</label>
+                <label className="block text-xs font-medium text-text-muted mb-1.5">
+                  {t(f.key)}
+                  <FieldHelp text={t(f.help)} />
+                </label>
                 <select
                   value={form[f.key] || ""}
                   onChange={(e) => set(f.key, e.target.value)}
@@ -135,7 +196,10 @@ export default function VisitLogPage() {
                   onChange={(e) => set(f.key, e.target.checked)}
                   className="w-4 h-4 rounded border-border text-rose-500 focus:ring-rose-primary"
                 />
-                {t(f.key)}
+                <span className="inline-flex items-center gap-1">
+                  {t(f.key)}
+                  <FieldHelp text={t(f.help)} />
+                </span>
               </label>
             ))}
           </div>
@@ -145,27 +209,28 @@ export default function VisitLogPage() {
         <div className="bg-white rounded-2xl border border-border p-5 sm:p-6 mb-6">
           <div className="space-y-4">
             <div>
-              <label className="block text-xs font-medium text-text-muted mb-1.5">{t("notes")}</label>
+              <label className="block text-xs font-medium text-text-muted mb-1.5">
+                {t("notes")}
+                <FieldHelp text={t("notes_help")} />
+              </label>
               <textarea
                 value={form.notes || ""}
                 onChange={(e) => set("notes", e.target.value)}
                 rows={3}
+                placeholder={t("notes_placeholder")}
                 className={`${inputClass} resize-none`}
               />
             </div>
-            <div>
-              <label className="block text-xs font-medium text-text-muted mb-1.5">{t("next_visit_date")}</label>
-              <div className="relative">
-                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-[18px]">
-                  event
-                </span>
-                <input
-                  type="date"
-                  value={form.next_visit_date || ""}
-                  onChange={(e) => set("next_visit_date", e.target.value)}
-                  className={`${inputClass} pl-10`}
-                />
-              </div>
+            <div className="sm:col-span-2">
+              <DateField
+                label={t("next_visit_date")}
+                value={form.next_visit_date || ""}
+                onChange={(v) => set("next_visit_date", v)}
+                computed={suggestedNextVisit}
+                help={t("next_visit_date_help")}
+                icon="event"
+                inputClass={inputClass}
+              />
             </div>
           </div>
         </div>
