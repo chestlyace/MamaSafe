@@ -1,8 +1,11 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { recordPostnatalVisit } from "../api/client";
+import DateField from "./DateField";
+import FieldHelp from "./FieldHelp";
+import { pncVisitDate } from "../utils/dateCalc";
 
-export default function PostnatalVisitForm({ deliveryId, nextVisitNumber, newborns = [], onCreated, onCancel }) {
+export default function PostnatalVisitForm({ deliveryId, deliveryDate, nextVisitNumber, newborns = [], onCreated, onCancel }) {
   const { t } = useTranslation();
   const [form, setForm] = useState({
     visit_date: new Date().toISOString().split("T")[0],
@@ -24,6 +27,12 @@ export default function PostnatalVisitForm({ deliveryId, nextVisitNumber, newbor
     breastfeeding_status: "",
   });
   const [saving, setSaving] = useState(false);
+
+  const suggestedVisitDate =
+    deliveryDate && nextVisitNumber ? pncVisitDate(deliveryDate, nextVisitNumber) : null;
+
+  const inputClass =
+    "w-full text-sm border border-border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-rose-primary/30 focus:border-rose-primary transition-all";
 
   const handleChange = (field, value) => {
     setForm({ ...form, [field]: value });
@@ -60,18 +69,21 @@ export default function PostnatalVisitForm({ deliveryId, nextVisitNumber, newbor
       </h3>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+        <DateField
+          label={t("visit_date")}
+          value={form.visit_date}
+          onChange={(v) => handleChange("visit_date", v)}
+          computed={suggestedVisitDate}
+          min={deliveryDate}
+          required
+          help={t("visit_date_help")}
+          inputClass={inputClass}
+        />
         <div>
-          <label className="block text-xs font-medium text-text-muted mb-1">{t("visit_date")} *</label>
-          <input
-            type="date"
-            required
-            value={form.visit_date}
-            onChange={(e) => handleChange("visit_date", e.target.value)}
-            className="w-full text-sm border border-border rounded-lg px-3 py-2"
-          />
-        </div>
-        <div>
-          <label className="block text-xs font-medium text-text-muted mb-1">{t("mother_status")}</label>
+          <label className="block text-xs font-medium text-text-muted mb-1">
+            {t("mother_status")}
+            <FieldHelp text={t("mother_status_help")} />
+          </label>
           <select
             value={form.mother_status}
             onChange={(e) => handleChange("mother_status", e.target.value)}
@@ -88,6 +100,7 @@ export default function PostnatalVisitForm({ deliveryId, nextVisitNumber, newbor
         <div>
           <label className="block text-xs font-medium text-text-muted mb-1">
             {t("newborn")} <span className="text-rose-500">*</span>
+            <FieldHelp text={t("newborn_id_help")} />
           </label>
           {newborns.length === 0 ? (
             <p className="text-xs text-text-muted italic">{t("no_newborns")}</p>
@@ -108,7 +121,10 @@ export default function PostnatalVisitForm({ deliveryId, nextVisitNumber, newbor
           )}
         </div>
         <div>
-          <label className="block text-xs font-medium text-text-muted mb-1">{t("newborn_weight_kg")}</label>
+          <label className="block text-xs font-medium text-text-muted mb-1">
+            {t("newborn_weight_kg")}
+            <FieldHelp text={t("newborn_weight_kg_help")} />
+          </label>
           <input
             type="number"
             step="0.01"
@@ -120,7 +136,10 @@ export default function PostnatalVisitForm({ deliveryId, nextVisitNumber, newbor
           />
         </div>
         <div>
-          <label className="block text-xs font-medium text-text-muted mb-1">{t("breastfeeding_status")}</label>
+          <label className="block text-xs font-medium text-text-muted mb-1">
+            {t("breastfeeding_status")}
+            <FieldHelp text={t("breastfeeding_status_help")} />
+          </label>
           <select
             value={form.breastfeeding_status}
             onChange={(e) => handleChange("breastfeeding_status", e.target.value)}
@@ -140,18 +159,30 @@ export default function PostnatalVisitForm({ deliveryId, nextVisitNumber, newbor
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <label className="flex items-center gap-2 text-xs text-text-muted">
             <input type="checkbox" checked={form.uterus_firm} onChange={(e) => handleChange("uterus_firm", e.target.checked)} className="rounded border-border" />
-            {t("uterus_firm")}
+            <span className="inline-flex items-center gap-1">
+              {t("uterus_firm")}
+              <FieldHelp text={t("uterus_firm_help")} />
+            </span>
           </label>
           <label className="flex items-center gap-2 text-xs text-text-muted">
             <input type="checkbox" checked={form.lochia_normal} onChange={(e) => handleChange("lochia_normal", e.target.checked)} className="rounded border-border" />
-            {t("lochia_normal")}
+            <span className="inline-flex items-center gap-1">
+              {t("lochia_normal")}
+              <FieldHelp text={t("lochia_normal_help")} />
+            </span>
           </label>
           <div>
-            <label className="block text-[11px] text-text-muted mb-0.5">{t("temperature")}</label>
+            <label className="block text-[11px] text-text-muted mb-0.5">
+              {t("temperature")}
+              <FieldHelp text={t("temperature_help")} />
+            </label>
             <input type="number" step="0.1" value={form.temperature} onChange={(e) => handleChange("temperature", e.target.value)} className="w-full text-xs border border-border rounded-lg px-2 py-1.5" />
           </div>
           <div className="col-span-2 sm:col-span-1">
-            <label className="block text-[11px] text-text-muted mb-0.5">BP (sys/dia)</label>
+            <label className="block text-[11px] text-text-muted mb-0.5">
+              BP (sys/dia)
+              <FieldHelp text={`${t("systolic_bp_help")} / ${t("diastolic_bp_help")}`} />
+            </label>
             <div className="flex gap-1">
               <input type="number" value={form.systolic_bp} onChange={(e) => handleChange("systolic_bp", e.target.value)} className="w-1/2 text-xs border border-border rounded-lg px-2 py-1.5" placeholder="sys" />
               <input type="number" value={form.diastolic_bp} onChange={(e) => handleChange("diastolic_bp", e.target.value)} className="w-1/2 text-xs border border-border rounded-lg px-2 py-1.5" placeholder="dia" />
@@ -165,19 +196,31 @@ export default function PostnatalVisitForm({ deliveryId, nextVisitNumber, newbor
         <h4 className="text-xs font-semibold text-text-heading uppercase tracking-wider mb-2">{t("labs_tests")}</h4>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <div>
-            <label className="block text-[11px] text-text-muted mb-0.5">{t("haemoglobin")}</label>
+            <label className="block text-[11px] text-text-muted mb-0.5">
+              {t("haemoglobin")}
+              <FieldHelp text={t("haemoglobin_help")} />
+            </label>
             <input type="number" step="0.1" value={form.hb_result} onChange={(e) => handleChange("hb_result", e.target.value)} className="w-full text-xs border border-border rounded-lg px-2 py-1.5" />
           </div>
           <label className="flex items-center gap-2 text-xs text-text-muted">
             <input type="checkbox" checked={form.malaria_test} onChange={(e) => handleChange("malaria_test", e.target.checked)} className="rounded border-border" />
-            {t("malaria_test")}
+            <span className="inline-flex items-center gap-1">
+              {t("malaria_test")}
+              <FieldHelp text={t("malaria_test_help")} />
+            </span>
           </label>
           <label className="flex items-center gap-2 text-xs text-text-muted">
             <input type="checkbox" checked={form.hiv_test} onChange={(e) => handleChange("hiv_test", e.target.checked)} className="rounded border-border" />
-            {t("hiv_test")}
+            <span className="inline-flex items-center gap-1">
+              {t("hiv_test")}
+              <FieldHelp text={t("hiv_test_help")} />
+            </span>
           </label>
           <div>
-            <label className="block text-[11px] text-text-muted mb-0.5">{t("mental_health")}</label>
+            <label className="block text-[11px] text-text-muted mb-0.5">
+              {t("mental_health")}
+              <FieldHelp text={t("mental_health_help")} />
+            </label>
             <select value={form.mental_health} onChange={(e) => handleChange("mental_health", e.target.value)} className="w-full text-xs border border-border rounded-lg px-2 py-1.5">
               <option value="normal">{t("normal")}</option>
               <option value="concern">{t("concern")}</option>
@@ -189,18 +232,27 @@ export default function PostnatalVisitForm({ deliveryId, nextVisitNumber, newbor
       {/* Exam notes */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
         <div>
-          <label className="block text-xs font-medium text-text-muted mb-1">{t("breast_exam")}</label>
+          <label className="block text-xs font-medium text-text-muted mb-1">
+            {t("breast_exam")}
+            <FieldHelp text={t("breast_exam_help")} />
+          </label>
           <input type="text" value={form.breast_exam} onChange={(e) => handleChange("breast_exam", e.target.value)} className="w-full text-sm border border-border rounded-lg px-3 py-2" />
         </div>
         <div>
-          <label className="block text-xs font-medium text-text-muted mb-1">{t("perineal_exam")}</label>
+          <label className="block text-xs font-medium text-text-muted mb-1">
+            {t("perineal_exam")}
+            <FieldHelp text={t("perineal_exam_help")} />
+          </label>
           <input type="text" value={form.perineal_exam} onChange={(e) => handleChange("perineal_exam", e.target.value)} className="w-full text-sm border border-border rounded-lg px-3 py-2" />
         </div>
       </div>
 
       <div className="mb-4">
-        <label className="block text-xs font-medium text-text-muted mb-1">{t("notes")}</label>
-        <textarea value={form.notes} onChange={(e) => handleChange("notes", e.target.value)} className="w-full text-sm border border-border rounded-lg px-3 py-2" rows={2} />
+        <label className="block text-xs font-medium text-text-muted mb-1">
+          {t("notes")}
+          <FieldHelp text={t("notes_help")} />
+        </label>
+        <textarea value={form.notes} onChange={(e) => handleChange("notes", e.target.value)} placeholder={t("notes_placeholder")} className="w-full text-sm border border-border rounded-lg px-3 py-2" rows={2} />
       </div>
 
       <div className="flex items-center gap-3">
