@@ -2,16 +2,21 @@ import { useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { registerPregnancy } from "../api/client";
+import DateField from "../components/DateField";
+import FieldHelp from "../components/FieldHelp";
+import { eddFromLmp } from "../utils/dateCalc";
 
 export default function PregnancyRegisterPage() {
   const { t } = useTranslation();
   const { id } = useParams();
   const navigate = useNavigate();
-  const [form, setForm] = useState({ lmp_date: "", gravida: 1, parity: 0 });
+  const [form, setForm] = useState({ lmp_date: "", edd_date: "", gravida: 1, parity: 0 });
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   const set = (key, val) => setForm((f) => ({ ...f, [key]: val }));
+
+  const computedEdd = form.lmp_date ? eddFromLmp(form.lmp_date) : null;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -50,42 +55,51 @@ export default function PregnancyRegisterPage() {
       <form onSubmit={handleSubmit}>
         <div className="bg-white rounded-2xl border border-border p-5 sm:p-6 mb-6">
           <div className="space-y-4">
-            <div>
-              <label className="block text-xs font-medium text-text-muted mb-1.5">
-                {t("lmp_date")} <span className="text-red-500">*</span>
-              </label>
-              <div className="relative">
-                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-[18px]">
-                  calendar_today
-                </span>
-                <input
-                  type="date"
-                  value={form.lmp_date}
-                  onChange={(e) => set("lmp_date", e.target.value)}
-                  required
-                  className={`${inputClass} pl-10`}
-                />
-              </div>
-            </div>
+            <DateField
+              label={t("lmp_date")}
+              value={form.lmp_date}
+              onChange={(v) => set("lmp_date", v)}
+              required
+              help={t("lmp_date_help")}
+              inputClass={inputClass}
+            />
+
+            <DateField
+              label={t("edd_date")}
+              value={form.edd_date}
+              onChange={(v) => set("edd_date", v)}
+              computed={computedEdd}
+              help={t("edd_date_help")}
+              icon="event_available"
+              inputClass={inputClass}
+            />
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-medium text-text-muted mb-1.5">{t("gravida")}</label>
+                <label className="block text-xs font-medium text-text-muted mb-1.5">
+                  {t("gravida")}
+                  <FieldHelp text={t("gravida_help")} />
+                </label>
                 <input
                   type="number"
                   min="1"
                   value={form.gravida}
                   onChange={(e) => set("gravida", parseInt(e.target.value) || 1)}
+                  placeholder={t("gravida_placeholder")}
                   className={inputClass}
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-text-muted mb-1.5">{t("parity")}</label>
+                <label className="block text-xs font-medium text-text-muted mb-1.5">
+                  {t("parity")}
+                  <FieldHelp text={t("parity_help")} />
+                </label>
                 <input
                   type="number"
                   min="0"
                   value={form.parity}
                   onChange={(e) => set("parity", parseInt(e.target.value) || 0)}
+                  placeholder={t("parity_placeholder")}
                   className={inputClass}
                 />
               </div>
