@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { createPatient } from "../api/client";
+import FieldHelp from "../components/FieldHelp";
 
 const BLOOD_GROUPS = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 
@@ -46,14 +47,14 @@ export default function PatientRegisterPage() {
     "w-full bg-surface border border-border rounded-xl px-4 py-2.5 text-sm text-text-heading placeholder:text-text-muted/50 focus:outline-none focus:ring-2 focus:ring-rose-primary/30 focus:border-rose-primary transition-all";
 
   const fields = [
-    { key: "full_name", type: "text", required: true, icon: "badge" },
-    { key: "date_of_birth", type: "date", required: true, icon: "cake" },
-    { key: "phone", type: "tel", icon: "phone" },
-    { key: "address", type: "text", icon: "home" },
-    { key: "facility", type: "text", icon: "local_hospital" },
-    { key: "allergies", type: "text", icon: "warning" },
-    { key: "emergency_contact_name", type: "text", icon: "person" },
-    { key: "emergency_contact_phone", type: "tel", icon: "phone_in_talk" },
+    { key: "full_name", type: "text", required: true, icon: "badge", placeholder: "full_name_placeholder", help: "full_name_help" },
+    { key: "date_of_birth", type: "date", required: true, icon: "cake", help: "date_of_birth_help" },
+    { key: "phone", type: "tel", icon: "phone", placeholder: "phone_placeholder", help: "phone_help" },
+    { key: "address", type: "text", icon: "home", placeholder: "address_placeholder", help: "address_help" },
+    { key: "facility", type: "text", icon: "local_hospital", placeholder: "facility_placeholder", help: "facility_help" },
+    { key: "allergies", type: "text", icon: "warning", placeholder: "allergies_placeholder", help: "allergies_help" },
+    { key: "emergency_contact_name", type: "text", icon: "person", placeholder: "emergency_contact_name_placeholder", help: "emergency_contact_name_help" },
+    { key: "emergency_contact_phone", type: "tel", icon: "phone_in_talk", placeholder: "emergency_contact_phone_placeholder", help: "emergency_contact_phone_help" },
   ];
 
   return (
@@ -81,6 +82,7 @@ export default function PatientRegisterPage() {
               <div key={f.key} className={f.key === "full_name" || f.key === "date_of_birth" ? "sm:col-span-2" : ""}>
                 <label className="block text-xs font-medium text-text-muted mb-1.5">
                   {t(f.key)} {f.required && <span className="text-red-500">*</span>}
+                  <FieldHelp text={t(f.help)} />
                 </label>
                 <div className="relative">
                   <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-[18px]">
@@ -91,6 +93,7 @@ export default function PatientRegisterPage() {
                     value={form[f.key]}
                     onChange={(e) => set(f.key, e.target.value)}
                     required={f.required}
+                    placeholder={f.placeholder ? t(f.placeholder) : undefined}
                     className={`${inputClass} pl-10`}
                   />
                 </div>
@@ -99,7 +102,10 @@ export default function PatientRegisterPage() {
 
             {/* Blood group select */}
             <div className="sm:col-span-2">
-              <label className="block text-xs font-medium text-text-muted mb-1.5">{t("blood_group")}</label>
+              <label className="block text-xs font-medium text-text-muted mb-1.5">
+                {t("blood_group")}
+                <FieldHelp text={t("blood_group_help")} />
+              </label>
               <div className="relative">
                 <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-[18px]">
                   bloodtype
