@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { quickReferral } from '../api/client';
 import FacilityPicker from './FacilityPicker';
 import { useTranslation } from 'react-i18next';
+import FieldHelp from './FieldHelp';
 
 const COMPLICATION_OPTIONS = [
   { value: 'hypertension', label: 'Hypertension' },
@@ -78,12 +79,18 @@ export default function ReferralModal({ patientId, patientName, assessmentId, on
         )}
 
         <div className="space-y-1">
-          <label className="text-xs font-medium text-gray-500 uppercase">{t('select_facility')}</label>
+          <label className="text-xs font-medium text-gray-500 uppercase inline-flex items-center gap-1">
+            {t('select_facility')}
+            <FieldHelp text={t('select_facility_help')} />
+          </label>
           <FacilityPicker value={facilityId} onChange={setFacilityId} />
         </div>
 
         <div className="space-y-1">
-          <label className="text-xs font-medium text-gray-500 uppercase">{t('complication_type')}</label>
+          <label className="text-xs font-medium text-gray-500 uppercase inline-flex items-center gap-1">
+            {t('complication_type')}
+            <FieldHelp text={t('complication_type_help')} />
+          </label>
           <select
             value={complicationType}
             onChange={(e) => setComplicationType(e.target.value)}
@@ -97,7 +104,10 @@ export default function ReferralModal({ patientId, patientName, assessmentId, on
         </div>
 
         <div className="space-y-1">
-          <label className="text-xs font-medium text-gray-500 uppercase">{t('chw_notes')}</label>
+          <label className="text-xs font-medium text-gray-500 uppercase inline-flex items-center gap-1">
+            {t('chw_notes')}
+            <FieldHelp text={t('chw_notes_help')} />
+          </label>
           <textarea
             rows={3}
             value={chwNotes}
