@@ -224,6 +224,7 @@
   "add_newborn": "Ajouter un Nouveau-né",
   "newborn": "Nouveau-né",
   "name": "Nom",
+  "sex": "Sexe",
   "female": "Fille",
   "male": "Garçon",
   "birth_weight_g": "Poids à la Naissance (g)",

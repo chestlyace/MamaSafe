@@ -224,6 +224,7 @@
   "add_newborn": "Add Newborn",
   "newborn": "Newborn",
   "name": "Name",
+  "sex": "Sex",
   "female": "Female",
   "male": "Male",
   "birth_weight_g": "Birth Weight (g)",

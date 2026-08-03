@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { recordDelivery } from "../api/client";
+import DateField from "./DateField";
+import FieldHelp from "./FieldHelp";
 
 export default function DeliveryForm({ pregnancyId, onCreated, onCancel }) {
   const { t } = useTranslation();
@@ -57,50 +59,64 @@ export default function DeliveryForm({ pregnancyId, onCreated, onCancel }) {
       <h3 className="text-base font-semibold text-text-heading mb-4">{t("record_delivery")}</h3>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+        <DateField
+          label={t("delivery_date")}
+          value={form.delivery_date}
+          onChange={(v) => setForm({ ...form, delivery_date: v })}
+          required
+          help={t("delivery_date_help")}
+          inputClass="w-full text-sm border border-border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-rose-primary/30 focus:border-rose-primary transition-all"
+        />
         <div>
-          <label className="block text-xs font-medium text-text-muted mb-1">{t("delivery_date")} *</label>
-          <input
-            type="date"
-            required
-            value={form.delivery_date}
-            onChange={(e) => setForm({ ...form, delivery_date: e.target.value })}
-            className="w-full text-sm border border-border rounded-lg px-3 py-2"
-          />
-        </div>
-        <div>
-          <label className="block text-xs font-medium text-text-muted mb-1">{t("delivery_location")}</label>
+          <label className="block text-xs font-medium text-text-muted mb-1">
+            {t("delivery_location")}
+            <FieldHelp text={t("delivery_location_help")} />
+          </label>
           <input
             type="text"
             value={form.delivery_location}
             onChange={(e) => setForm({ ...form, delivery_location: e.target.value })}
+            placeholder={t("delivery_location_placeholder")}
             className="w-full text-sm border border-border rounded-lg px-3 py-2"
           />
         </div>
         <div>
-          <label className="block text-xs font-medium text-text-muted mb-1">{t("delivered_by")}</label>
+          <label className="block text-xs font-medium text-text-muted mb-1">
+            {t("delivered_by")}
+            <FieldHelp text={t("delivered_by_help")} />
+          </label>
           <input
             type="text"
             value={form.delivered_by}
             onChange={(e) => setForm({ ...form, delivered_by: e.target.value })}
+            placeholder={t("delivered_by_placeholder")}
             className="w-full text-sm border border-border rounded-lg px-3 py-2"
           />
         </div>
         <div>
-          <label className="block text-xs font-medium text-text-muted mb-1">{t("complications")}</label>
+          <label className="block text-xs font-medium text-text-muted mb-1">
+            {t("complications")}
+            <FieldHelp text={t("complications_help")} />
+          </label>
           <input
             type="text"
             value={form.complications}
             onChange={(e) => setForm({ ...form, complications: e.target.value })}
+            placeholder={t("complications_placeholder")}
             className="w-full text-sm border border-border rounded-lg px-3 py-2"
           />
         </div>
       </div>
 
       <div className="mb-4">
-        <label className="block text-xs font-medium text-text-muted mb-1">{t("notes")}</label>
+        <label className="block text-xs font-medium text-text-muted mb-1">
+          {t("notes")}
+          <FieldHelp text={t("notes_help")} />
+        </label>
         <textarea
           value={form.notes}
           onChange={(e) => setForm({ ...form, notes: e.target.value })}
+          placeholder={t("notes_placeholder")}
           className="w-full text-sm border border-border rounded-lg px-3 py-2"
           rows={2}
         />
@@ -127,37 +143,61 @@ export default function DeliveryForm({ pregnancyId, onCreated, onCancel }) {
               )}
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-              <input
-                type="text"
-                placeholder={t("name")}
-                value={nb.name}
-                onChange={(e) => updateNewborn(idx, "name", e.target.value)}
-                className="text-xs border border-border rounded-lg px-2 py-1.5"
-              />
-              <select
-                value={nb.sex}
-                onChange={(e) => updateNewborn(idx, "sex", e.target.value)}
-                className="text-xs border border-border rounded-lg px-2 py-1.5"
-              >
-                <option value="female">{t("female")}</option>
-                <option value="male">{t("male")}</option>
-              </select>
-              <input
-                type="number"
-                placeholder={t("birth_weight_g")}
-                value={nb.birth_weight}
-                onChange={(e) => updateNewborn(idx, "birth_weight", e.target.value)}
-                className="text-xs border border-border rounded-lg px-2 py-1.5"
-              />
-              <input
-                type="number"
-                placeholder={t("apgar_score")}
-                min="0"
-                max="10"
-                value={nb.apgar_score}
-                onChange={(e) => updateNewborn(idx, "apgar_score", e.target.value)}
-                className="text-xs border border-border rounded-lg px-2 py-1.5"
-              />
+              <div>
+                <label className="block text-[11px] text-text-muted mb-0.5">
+                  {t("name")}
+                  <FieldHelp text={t("name_help")} />
+                </label>
+                <input
+                  type="text"
+                  placeholder={t("name")}
+                  value={nb.name}
+                  onChange={(e) => updateNewborn(idx, "name", e.target.value)}
+                  className="text-xs border border-border rounded-lg px-2 py-1.5 w-full"
+                />
+              </div>
+              <div>
+                <label className="block text-[11px] text-text-muted mb-0.5">
+                  {t("sex")}
+                  <FieldHelp text={t("sex_help")} />
+                </label>
+                <select
+                  value={nb.sex}
+                  onChange={(e) => updateNewborn(idx, "sex", e.target.value)}
+                  className="text-xs border border-border rounded-lg px-2 py-1.5 w-full"
+                >
+                  <option value="female">{t("female")}</option>
+                  <option value="male">{t("male")}</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-[11px] text-text-muted mb-0.5">
+                  {t("birth_weight_g")}
+                  <FieldHelp text={t("birth_weight_g_help")} />
+                </label>
+                <input
+                  type="number"
+                  placeholder={t("birth_weight_g")}
+                  value={nb.birth_weight}
+                  onChange={(e) => updateNewborn(idx, "birth_weight", e.target.value)}
+                  className="text-xs border border-border rounded-lg px-2 py-1.5 w-full"
+                />
+              </div>
+              <div>
+                <label className="block text-[11px] text-text-muted mb-0.5">
+                  {t("apgar_score")}
+                  <FieldHelp text={t("apgar_score_help")} />
+                </label>
+                <input
+                  type="number"
+                  placeholder={t("apgar_score")}
+                  min="0"
+                  max="10"
+                  value={nb.apgar_score}
+                  onChange={(e) => updateNewborn(idx, "apgar_score", e.target.value)}
+                  className="text-xs border border-border rounded-lg px-2 py-1.5 w-full"
+                />
+              </div>
             </div>
             <div className="flex items-center gap-4 mt-2">
               <label className="flex items-center gap-1.5 text-xs text-text-muted">
@@ -167,7 +207,10 @@ export default function DeliveryForm({ pregnancyId, onCreated, onCancel }) {
                   onChange={(e) => updateNewborn(idx, "crying_at_birth", e.target.checked)}
                   className="rounded border-border"
                 />
-                {t("crying_at_birth")}
+                <span className="inline-flex items-center gap-1">
+                  {t("crying_at_birth")}
+                  <FieldHelp text={t("crying_at_birth_help")} />
+                </span>
               </label>
               <label className="flex items-center gap-1.5 text-xs text-text-muted">
                 <input
@@ -176,17 +219,26 @@ export default function DeliveryForm({ pregnancyId, onCreated, onCancel }) {
                   onChange={(e) => updateNewborn(idx, "breastfeeding", e.target.checked)}
                   className="rounded border-border"
                 />
-                {t("breastfeeding")}
+                <span className="inline-flex items-center gap-1">
+                  {t("breastfeeding")}
+                  <FieldHelp text={t("breastfeeding_help")} />
+                </span>
               </label>
-              <select
-                value={nb.status}
-                onChange={(e) => updateNewborn(idx, "status", e.target.value)}
-                className="text-xs border border-border rounded-lg px-2 py-1"
-              >
-                <option value="alive">{t("alive")}</option>
-                <option value="stillbirth">{t("stillbirth")}</option>
-                <option value="neonatal_death">{t("neonatal_death")}</option>
-              </select>
+              <div className="ml-auto">
+                <label className="block text-[11px] text-text-muted mb-0.5">
+                  {t("status")}
+                  <FieldHelp text={t("status_help")} />
+                </label>
+                <select
+                  value={nb.status}
+                  onChange={(e) => updateNewborn(idx, "status", e.target.value)}
+                  className="text-xs border border-border rounded-lg px-2 py-1 w-full"
+                >
+                  <option value="alive">{t("alive")}</option>
+                  <option value="stillbirth">{t("stillbirth")}</option>
+                  <option value="neonatal_death">{t("neonatal_death")}</option>
+                </select>
+              </div>
             </div>
           </div>
         ))}
