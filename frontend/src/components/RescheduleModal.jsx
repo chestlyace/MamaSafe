@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { rescheduleVisit } from '../api/client';
+import FieldHelp from './FieldHelp';
 
 export default function RescheduleModal({ visit, onClose, onRescheduled }) {
   const { t } = useTranslation();
-  const [newDate, setNewDate] = useState('');
+  const [newDate, setNewDate] = useState((visit?.scheduled_date || "").slice(0, 10));
   const [reason, setReason] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -55,6 +56,7 @@ export default function RescheduleModal({ visit, onClose, onRescheduled }) {
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1">
               {t('new_date')}
+              <FieldHelp text={t('new_date_help')} />
             </label>
             <input
               type="date"
@@ -68,6 +70,7 @@ export default function RescheduleModal({ visit, onClose, onRescheduled }) {
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1">
               {t('reason_optional')}
+              <FieldHelp text={t('reason_optional_help')} />
             </label>
             <input
               type="text"

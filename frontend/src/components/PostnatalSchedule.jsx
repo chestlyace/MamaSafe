@@ -5,6 +5,7 @@ import {
   updateScheduledPNCVisit,
   reschedulePNCVisit,
 } from "../api/client";
+import FieldHelp from "./FieldHelp";
 
 export default function PostnatalSchedule({ deliveryId }) {
   const { t } = useTranslation();
@@ -109,17 +110,21 @@ export default function PostnatalSchedule({ deliveryId }) {
             {sv.status === "scheduled" && (
               <div className="flex items-center gap-2 mt-3">
                 {rescheduleId === sv.id ? (
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="date"
-                      value={newDate}
-                      onChange={(e) => setNewDate(e.target.value)}
-                      className="text-xs border border-border rounded-lg px-2 py-1.5"
-                    />
-                    <button
-                      onClick={() => handleReschedule(sv.id)}
-                      className="text-xs bg-amber-500 text-white px-3 py-1.5 rounded-lg font-medium hover:bg-amber-600"
-                    >
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1">
+                        <input
+                          type="date"
+                          value={newDate}
+                          min={new Date().toISOString().split("T")[0]}
+                          onChange={(e) => setNewDate(e.target.value)}
+                          className="text-xs border border-border rounded-lg px-2 py-1.5"
+                        />
+                        <FieldHelp text={t("new_date_help")} />
+                      </div>
+                      <button
+                        onClick={() => handleReschedule(sv.id)}
+                        className="text-xs bg-amber-500 text-white px-3 py-1.5 rounded-lg font-medium hover:bg-amber-600"
+                      >
                       {t("save")}
                     </button>
                     <button
@@ -132,10 +137,12 @@ export default function PostnatalSchedule({ deliveryId }) {
                 ) : (
                   <>
                     <button
-                      onClick={() => setRescheduleId(sv.id)}
+                      onClick={() => {
+                        setRescheduleId(sv.id);
+                        setNewDate(sv.scheduled_date?.slice(0, 10) || "");
+                      }}
                       className="text-xs text-amber-600 hover:text-amber-700 font-medium"
-                    >
-                      {t("reschedule")}
+                    >                      {t("reschedule")}
                     </button>
                     <span className="text-border">·</span>
                     <button
