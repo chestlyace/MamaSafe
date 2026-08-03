@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { predict, getPatients } from '../api/client';
+import FieldHelp from '../components/FieldHelp';
 
 export default function AssessmentPage() {
   const { t } = useTranslation();
@@ -68,12 +69,12 @@ export default function AssessmentPage() {
   };
 
   const fields = [
-    { key: 'age', min: 10, max: 60, step: 'any', placeholder: '25', icon: 'cake' },
-    { key: 'systolic_bp', min: 70, max: 200, step: 'any', placeholder: '120', icon: 'monitor_heart' },
-    { key: 'diastolic_bp', min: 40, max: 120, step: 'any', placeholder: '80', icon: 'favorite' },
-    { key: 'blood_sugar', min: 4, max: 25, step: 0.1, placeholder: '7.0', icon: 'water_drop' },
-    { key: 'body_temp', min: 95, max: 105, step: 0.1, placeholder: '98.6', icon: 'thermostat' },
-    { key: 'heart_rate', min: 40, max: 100, step: 'any', placeholder: '72', icon: 'ecg' },
+    { key: 'age', min: 10, max: 60, step: 'any', placeholder: '25', icon: 'cake', help: 'age_help' },
+    { key: 'systolic_bp', min: 70, max: 200, step: 'any', placeholder: '120', icon: 'monitor_heart', help: 'systolic_bp_help' },
+    { key: 'diastolic_bp', min: 40, max: 120, step: 'any', placeholder: '80', icon: 'favorite', help: 'diastolic_bp_help' },
+    { key: 'blood_sugar', min: 4, max: 25, step: 0.1, placeholder: '7.0', icon: 'water_drop', help: 'blood_sugar_help' },
+    { key: 'body_temp', min: 95, max: 105, step: 0.1, placeholder: '98.6', icon: 'thermostat', help: 'body_temp_help' },
+    { key: 'heart_rate', min: 40, max: 100, step: 'any', placeholder: '72', icon: 'ecg', help: 'heart_rate_help' },
   ];
 
   const inputClass =
@@ -99,6 +100,7 @@ export default function AssessmentPage() {
         <div className="mb-6">
           <label className="block text-xs font-semibold text-text-muted uppercase tracking-wider mb-1.5">
             {t("select_patient")}
+            <FieldHelp text={t("select_patient_help")} />
           </label>
           <div className="relative">
             <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted text-[20px]">
@@ -143,6 +145,7 @@ export default function AssessmentPage() {
         <div className="mb-6">
           <label htmlFor="patient_ref" className="block text-xs font-semibold text-text-muted uppercase tracking-wider mb-1.5">
             {t('patient_ref')}
+            <FieldHelp text={t('patient_ref_help')} />
           </label>
           <div className="relative">
             <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted text-[20px]">
@@ -167,6 +170,7 @@ export default function AssessmentPage() {
               <div key={f.key}>
                 <label className="block text-xs font-medium text-text-muted mb-1.5">
                   {t(f.key)}
+                  <FieldHelp text={t(f.help)} />
                 </label>
                 <div className="relative">
                   <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-[18px]">
