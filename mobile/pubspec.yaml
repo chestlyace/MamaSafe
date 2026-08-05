@@ -21,10 +21,17 @@ dependencies:
   json_annotation: ^4.9.0
 
   flutter_dotenv: ^5.2.1
+  flutter_localizations:
+    sdk: flutter
   flutter_secure_storage: ^9.2.4
   connectivity_plus: ^6.1.1
   intl: ^0.20.2
   shared_preferences: ^2.3.4
+  fl_chart: ^0.70.2
+  google_fonts: ^6.1.0
+  flutter_svg: ^2.0.10+1
+  webview_flutter: ^4.10.0
+  flutter_speed_dial: ^7.0.0
 
 dev_dependencies:
   flutter_test:
@@ -43,3 +50,5 @@ flutter:
   uses-material-design: true
   assets:
     - .env
+    - lib/l10n/
+    - assets/images/logo.svg

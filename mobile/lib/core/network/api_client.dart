@@ -3,6 +3,8 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'api_interceptors.dart';
 
+const String apiPrefix = '/api/v1';
+
 Dio _createDio() {
   final dio = Dio(BaseOptions(
     baseUrl: dotenv.env['API_BASE_URL'] ?? 'http://10.0.2.2:8000',

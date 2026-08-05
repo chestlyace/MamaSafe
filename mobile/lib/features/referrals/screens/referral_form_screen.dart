@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import '../../../core/validators/validators.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_text_field.dart';
+import '../../../core/widgets/date_field.dart';
+import '../../../l10n/tr.dart';
 import '../referral_repository.dart';
 
 class ReferralFormScreen extends ConsumerStatefulWidget {
@@ -32,18 +34,6 @@ class _ReferralFormScreenState extends ConsumerState<ReferralFormScreen> {
     super.dispose();
   }
 
-  Future<void> _pickDate() async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _referralDate,
-      firstDate: DateTime(2020),
-      lastDate: DateTime(2030),
-    );
-    if (picked != null) {
-      setState(() => _referralDate = picked);
-    }
-  }
-
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -64,8 +54,8 @@ class _ReferralFormScreenState extends ConsumerState<ReferralFormScreen> {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Referral created successfully'),
+        SnackBar(
+          content: Text(tr(ref, 'referral.created')),
           backgroundColor: Colors.green,
         ),
       );
@@ -87,7 +77,7 @@ class _ReferralFormScreenState extends ConsumerState<ReferralFormScreen> {
     final isLoading = createState is AsyncLoading;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('New Referral')),
+      appBar: AppBar(title: Text(tr(ref, 'referral.new'))),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Form(
@@ -95,65 +85,64 @@ class _ReferralFormScreenState extends ConsumerState<ReferralFormScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              AppTextField(
-                label: 'Assessment ID',
-                hint: 'e.g. 12345',
-                controller: _assessmentIdController,
-                keyboardType: TextInputType.number,
-                validator: (v) => numberValidator(v, fieldName: 'Assessment ID'),
-              ),
-              const SizedBox(height: 16),
-              AppTextField(
-                label: 'Patient Reference (optional)',
-                hint: 'e.g. MRN-12345',
-                controller: _patientRefController,
-              ),
-              const SizedBox(height: 16),
-              AppTextField(
-                label: 'Referred To',
-                hint: 'e.g. Yaoundé Central Hospital',
-                controller: _referredToController,
-                validator: (v) =>
-                    v == null || v.isEmpty ? 'Referred To is required' : null,
-              ),
-              const SizedBox(height: 16),
-              AppTextField(
-                label: 'Reason',
-                hint: 'Reason for referral',
-                controller: _reasonController,
-                maxLines: 3,
-                validator: (v) =>
-                    v == null || v.isEmpty ? 'Reason is required' : null,
-              ),
-              const SizedBox(height: 16),
-              AppTextField(
-                label: 'Notes (optional)',
-                hint: 'Additional notes',
-                controller: _notesController,
-                maxLines: 3,
-              ),
-              const SizedBox(height: 16),
-              InkWell(
-                onTap: _pickDate,
-                child: InputDecorator(
-                  decoration: InputDecoration(
-                    label: const Text('Referral Date'),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    suffixIcon: const Icon(Icons.calendar_today),
-                  ),
-                  child: Text(
-                    '${_referralDate.day}/${_referralDate.month}/${_referralDate.year}',
-                    style: const TextStyle(fontSize: 16),
-                  ),
-                ),
-              ),
+AppTextField(
+                 label: tr(ref, 'referral.assessmentId'),
+                 help: tr(ref, 'referral.assessmentIdHelp'),
+                 hint: tr(ref, 'referral.assessmentIdHint'),
+                 controller: _assessmentIdController,
+                 keyboardType: TextInputType.number,
+                 validator: (v) => numberValidator(v, fieldName: tr(ref, 'referral.assessmentId'), ref: ref),
+               ),
+               const SizedBox(height: 16),
+               AppTextField(
+                 label: tr(ref, 'referral.patientRefOptional'),
+                 help: tr(ref, 'referral.patientRefHelp'),
+                 hint: tr(ref, 'referral.patientRefHint'),
+                 controller: _patientRefController,
+               ),
+               const SizedBox(height: 16),
+               AppTextField(
+                 label: tr(ref, 'referral.facility'),
+                 help: tr(ref, 'referral.facilityHelp'),
+                 hint: tr(ref, 'referral.facilityHint'),
+                 controller: _referredToController,
+                 validator: (v) =>
+                     v == null || v.isEmpty ? tr(ref, 'referral.referredToRequired') : null,
+               ),
+               const SizedBox(height: 16),
+               AppTextField(
+                 label: tr(ref, 'referral.reason'),
+                 help: tr(ref, 'referral.reasonHelp'),
+                 hint: tr(ref, 'referral.reasonHint'),
+                 controller: _reasonController,
+                 maxLines: 3,
+                 validator: (v) =>
+                     v == null || v.isEmpty ? tr(ref, 'referral.reasonRequired') : null,
+               ),
+               const SizedBox(height: 16),
+               AppTextField(
+                 label: tr(ref, 'referral.notesOptional'),
+                 help: tr(ref, 'referral.notesHelp'),
+                 hint: tr(ref, 'referral.notesHint'),
+                 controller: _notesController,
+                 maxLines: 3,
+               ),
+               const SizedBox(height: 16),
+               DateField(
+                 label: tr(ref, 'referral.referralDate'),
+                 help: tr(ref, 'referral.referralDateHelp'),
+                 hint: tr(ref, 'referral.referralDateHint'),
+                 value: _referralDate,
+                 onChanged: (dt) => setState(() {
+                   if (dt != null) _referralDate = dt;
+                 }),
+                 icon: Icons.calendar_today,
+               ),
               const SizedBox(height: 32),
               SizedBox(
                 width: double.infinity,
                 child: AppButton.primary(
-                  'Create Referral',
+                  tr(ref, 'referral.submit'),
                   loading: isLoading,
                   onPressed: _submit,
                 ),

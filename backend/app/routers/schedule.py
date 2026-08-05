@@ -13,6 +13,20 @@ from app.utils.whatsapp import build_reschedule_confirmation, build_48h_reminder
 
 router = APIRouter(prefix="/api/v1/schedule", tags=["schedule"])
 
+
+def _accessible_patient_ids(db: Session, current_user) -> list[int]:
+    """Return patient IDs the current user is allowed to see."""
+    if current_user.role == "admin":
+        return [p.id for p in db.query(Patient.id).all()]
+    if current_user.role == "supervisor":
+        chw_ids = [u.id for u in db.query(User.id)
+                   .filter(User.role == "chw",
+                           User.district == current_user.district).all()]
+        return [p.id for p in db.query(Patient.id)
+                .filter(Patient.chw_id.in_(chw_ids)).all()]
+    return [p.id for p in db.query(Patient.id)
+            .filter(Patient.chw_id == current_user.id).all()]
+
 VISIT_SCHEDULE = [
     {"visit_number": 1, "gestational_week": 8,  "label": "Booking visit"},
     {"visit_number": 2, "gestational_week": 16, "label": "Second trimester check"},
@@ -70,8 +84,9 @@ def get_todays_visits(
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
-    """Get all visits scheduled for today across the CHW's patients."""
+    """Get all visits scheduled for today across the user's patients."""
     today = str(date.today())
+    accessible_patient_ids = _accessible_patient_ids(db, current_user)
     visits = (db.query(ScheduledVisit)
                 .filter(ScheduledVisit.scheduled_date == today,
                         ScheduledVisit.status.in_(["scheduled", "rescheduled"]))
@@ -83,9 +98,9 @@ def get_todays_visits(
             Pregnancy.is_active == True).first()
         if not preg:
             continue
-        patient = db.query(Patient).filter(
-            Patient.id == preg.patient_id,
-            Patient.chw_id == current_user.id).first()
+        if preg.patient_id not in accessible_patient_ids:
+            continue
+        patient = db.query(Patient).filter(Patient.id == preg.patient_id).first()
         if not patient:
             continue
         result.append({
@@ -106,9 +121,10 @@ def get_upcoming_visits(
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
-    """Get the next N days of scheduled visits for the CHW's patients."""
+    """Get the next N days of scheduled visits for the user's patients."""
     today = date.today()
     end   = today + timedelta(days=days)
+    accessible_patient_ids = _accessible_patient_ids(db, current_user)
     visits = (db.query(ScheduledVisit)
                 .filter(ScheduledVisit.scheduled_date >= str(today),
                         ScheduledVisit.scheduled_date <= str(end),
@@ -122,9 +138,9 @@ def get_upcoming_visits(
             Pregnancy.is_active == True).first()
         if not preg:
             continue
-        patient = db.query(Patient).filter(
-            Patient.id == preg.patient_id,
-            Patient.chw_id == current_user.id).first()
+        if preg.patient_id not in accessible_patient_ids:
+            continue
+        patient = db.query(Patient).filter(Patient.id == preg.patient_id).first()
         if not patient:
             continue
         result.append({
@@ -261,11 +277,8 @@ def schedule_analytics(
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
-    """Summary statistics for the CHW's visit schedule."""
-    patient_ids = [
-        p.id for p in db.query(Patient).filter(
-            Patient.chw_id == current_user.id).all()
-    ]
+    """Summary statistics for the user's visit schedule."""
+    patient_ids = _accessible_patient_ids(db, current_user)
     pregnancy_ids = [
         pr.id for pr in db.query(Pregnancy).filter(
             Pregnancy.patient_id.in_(patient_ids)).all()

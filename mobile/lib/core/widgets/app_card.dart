@@ -32,43 +32,37 @@ class AppCard extends StatelessWidget {
 
     switch (variant) {
       case AppCardVariant.elevated:
-        elevation = 6;
+        elevation = 2;
         borderColor = Colors.transparent;
       case AppCardVariant.outlined:
         elevation = 0;
-        borderColor = AppColors.divider;
+        borderColor = AppColors.border;
       case AppCardVariant.normal:
-        elevation = 2;
-        borderColor = Colors.transparent;
+        elevation = 0;
+        borderColor = AppColors.border;
     }
 
     final card = Material(
       color: AppColors.surface,
       elevation: elevation,
       borderRadius: BorderRadius.circular(16),
-      shadowColor: Colors.black.withValues(alpha: 0.08),
-      child: Container(
-        width: width,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: borderColor,
-            width: variant == AppCardVariant.outlined ? 1.0 : 0.0,
-          ),
+      shadowColor: Colors.black.withValues(alpha: 0.06),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          minWidth: width ?? 0,
+          minHeight: 0,
         ),
-        child: IntrinsicHeight(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              if (header != null) header!,
-              Padding(
-                padding: padding,
-                child: child,
-              ),
-              if (footer != null) footer!,
-            ],
-          ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (header != null) header!,
+            Padding(
+              padding: padding,
+              child: child,
+            ),
+            if (footer != null) footer!,
+          ],
         ),
       ),
     );

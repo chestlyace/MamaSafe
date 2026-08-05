@@ -77,6 +77,54 @@ class UserCreate(BaseModel):
     facility:  Optional[str] = None
 
 
+class SupervisorSignup(BaseModel):
+    full_name:        str
+    username:         str
+    password:         str
+    district:         str
+    region:           Optional[str] = None
+    whatsapp_number:  Optional[str] = None
+
+
+class ChwSignup(BaseModel):
+    full_name:        str
+    username:         str
+    password:         str
+    facility:         Optional[str] = None
+    whatsapp_number:  Optional[str] = None
+    invite_code:      str
+
+
 class Token(BaseModel):
     access_token: str
     token_type:   str
+
+
+class UserProfileOut(BaseModel):
+    id:              int
+    username:        str
+    full_name:       Optional[str] = None
+    role:            str
+    facility:        Optional[str] = None
+    district:        Optional[str] = None
+    region:          Optional[str] = None
+    whatsapp_number: Optional[str] = None
+    is_active:       bool
+    last_active:     Optional[datetime] = None
+    created_at:      Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+
+class UserProfileUpdate(BaseModel):
+    full_name:       Optional[str] = None
+    whatsapp_number: Optional[str] = None
+    facility:        Optional[str] = None
+    district:        Optional[str] = None
+    region:          Optional[str] = None
+
+
+class PasswordChange(BaseModel):
+    current_password: str
+    new_password:     str = Field(..., min_length=8)

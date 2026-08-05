@@ -1,0 +1,37 @@
+.reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+.heartbeat-path {
+  stroke-dasharray: 620;
+  stroke-dashoffset: 620;
+  animation: heartbeat-draw 2.8s ease-in-out infinite;
+}
+@keyframes heartbeat-draw {
+  0%   { stroke-dashoffset: 620; opacity: 0.35; }
+  45%  { stroke-dashoffset: 0;   opacity: 1; }
+  75%  { stroke-dashoffset: 0;   opacity: 1; }
+  100% { stroke-dashoffset: -620; opacity: 0.35; }
+}
+
+.float-slow { animation: float-y 6s ease-in-out infinite; }
+@keyframes float-y {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.landing-range { accent-color: var(--color-rose-primary); }
+.landing-range::-webkit-slider-thumb { cursor: pointer; }
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal { opacity: 1; transform: none; transition: none; }
+  .heartbeat-path { animation: none; stroke-dashoffset: 0; }
+  .float-slow { animation: none; }
+  html { scroll-behavior: auto; }
+}

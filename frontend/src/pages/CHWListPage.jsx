@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { listChws, createChw } from '../api/client';
+import { listChws } from '../api/client';
+import ManualChwModal from '../components/ManualChwModal';
 
 function StatusBadge({ status }) {
   const { t } = useTranslation();
@@ -19,9 +20,9 @@ export default function CHWListPage() {
   const { t } = useTranslation();
   const [chws, setChws] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ username: '', password: '', full_name: '', facility: '', district: '', whatsapp_number: '' });
-  const [saving, setSaving] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [showManualModal, setShowManualModal] = useState(false);
+  const dropdownRef = useRef(null);
 
   const load = () => {
     setLoading(true);
@@ -30,16 +31,15 @@ export default function CHWListPage() {
 
   useEffect(() => { load(); }, []);
 
-  const handleCreate = async (e) => {
-    e.preventDefault();
-    setSaving(true);
-    try {
-      await createChw(form);
-      setShowForm(false);
-      setForm({ username: '', password: '', full_name: '', facility: '', district: '', whatsapp_number: '' });
-      load();
-    } catch { } finally { setSaving(false); }
-  };
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, []);
 
   if (loading) {
     return (
@@ -59,41 +59,35 @@ export default function CHWListPage() {
           <h1 className="text-2xl font-bold text-text-heading tracking-tight">{t('community_health_workers')}</h1>
           <p className="text-sm text-text-muted mt-1">{chws.length} {t('workers_registered')}</p>
         </div>
-        <button
-          onClick={() => setShowForm(!showForm)}
-          className="bg-rose-500 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-rose-600 transition-colors flex items-center gap-1.5"
-        >
-          <span className="material-symbols-outlined text-[18px]">person_add</span>
-          {t('add_chw')}
-        </button>
+        <div className="relative" ref={dropdownRef}>
+          <button
+            onClick={() => setDropdownOpen(!dropdownOpen)}
+            className="bg-rose-500 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-rose-600 transition-colors flex items-center gap-1.5"
+          >
+            {t('add_chw')}
+            <span className="material-symbols-outlined text-[18px]">expand_more</span>
+          </button>
+          {dropdownOpen && (
+            <div className="absolute right-0 mt-2 bg-white rounded-xl shadow-lg border border-border z-20 min-w-[180px] overflow-hidden">
+              <Link
+                to="/supervisor/invites"
+                onClick={() => setDropdownOpen(false)}
+                className="flex items-center gap-2.5 px-4 py-2.5 hover:bg-surface text-sm text-text-heading transition-colors"
+              >
+                <span className="material-symbols-outlined text-[18px]">vpn_key</span>
+                {t('add_chw_via_code')}
+              </Link>
+              <button
+                onClick={() => { setDropdownOpen(false); setShowManualModal(true); }}
+                className="w-full flex items-center gap-2.5 px-4 py-2.5 hover:bg-surface text-sm text-text-heading transition-colors"
+              >
+                <span className="material-symbols-outlined text-[18px]">person_add</span>
+                {t('add_chw_manually')}
+              </button>
+            </div>
+          )}
+        </div>
       </header>
-
-      {showForm && (
-        <form onSubmit={handleCreate} className="bg-white border border-border rounded-xl p-5 mb-6 space-y-3">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <input placeholder={t('username')} value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} required
-              className="px-3 py-2 bg-surface border border-border rounded-lg text-sm text-text-heading" />
-            <input type="password" placeholder={t('password')} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} required
-              className="px-3 py-2 bg-surface border border-border rounded-lg text-sm text-text-heading" />
-            <input placeholder={t('full_name')} value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })}
-              className="px-3 py-2 bg-surface border border-border rounded-lg text-sm text-text-heading" />
-            <input placeholder={t('facility')} value={form.facility} onChange={(e) => setForm({ ...form, facility: e.target.value })}
-              className="px-3 py-2 bg-surface border border-border rounded-lg text-sm text-text-heading" />
-            <input placeholder={t('district')} value={form.district} onChange={(e) => setForm({ ...form, district: e.target.value })}
-              className="px-3 py-2 bg-surface border border-border rounded-lg text-sm text-text-heading" />
-            <input placeholder={t('whatsapp_number')} value={form.whatsapp_number} onChange={(e) => setForm({ ...form, whatsapp_number: e.target.value })}
-              className="px-3 py-2 bg-surface border border-border rounded-lg text-sm text-text-heading" />
-          </div>
-          <div className="flex gap-2">
-            <button type="submit" disabled={saving}
-              className="bg-rose-500 text-white px-4 py-1.5 rounded-lg text-sm font-semibold hover:bg-rose-600 disabled:opacity-50">
-              {saving ? t('saving') : t('create')}
-            </button>
-            <button type="button" onClick={() => setShowForm(false)}
-              className="text-text-muted px-4 py-1.5 text-sm">{t('cancel')}</button>
-          </div>
-        </form>
-      )}
 
       <div className="bg-white border border-border rounded-xl overflow-hidden">
         <table className="w-full text-sm">
@@ -138,6 +132,12 @@ export default function CHWListPage() {
           </tbody>
         </table>
       </div>
+
+      <ManualChwModal
+        open={showManualModal}
+        onClose={() => setShowManualModal(false)}
+        onSuccess={() => { setShowManualModal(false); load(); }}
+      />
     </main>
   );
 }

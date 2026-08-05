@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/validators/validators.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_text_field.dart';
+import '../../../l10n/tr.dart';
 import '../auth_repository.dart';
 
 class ForgotPasswordScreen extends ConsumerStatefulWidget {
@@ -17,14 +19,14 @@ class ForgotPasswordScreen extends ConsumerStatefulWidget {
 
 class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
+  final _usernameController = TextEditingController();
   bool _loading = false;
   bool _sent = false;
   String? _error;
 
   @override
   void dispose() {
-    _emailController.dispose();
+    _usernameController.dispose();
     super.dispose();
   }
 
@@ -38,14 +40,14 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
 
     try {
       await ref.read(authRepositoryProvider).forgotPassword(
-            _emailController.text.trim(),
+            _usernameController.text.trim(),
           );
       setState(() => _sent = true);
     } on DioException catch (e) {
       final detail = e.response?.data is Map
           ? e.response?.data['detail']?.toString()
           : null;
-      setState(() => _error = detail ?? e.message ?? 'Failed to send reset link');
+      setState(() => _error = detail ?? e.message ?? tr(ref, 'auth.failedToSendResetLink'));
     } catch (e) {
       setState(() => _error = e.toString());
     } finally {
@@ -57,7 +59,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Forgot Password'),
+        title: Text(tr(ref, 'auth.forgotPasswordTitle')),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -73,7 +75,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
               ),
               const SizedBox(height: 16),
               Text(
-                'Reset your password',
+                tr(ref, 'auth.resetPassword'),
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                       color: AppColors.textPrimary,
                     ),
@@ -81,7 +83,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Enter your email address and we\'ll send you a link to reset your password.',
+                tr(ref, 'auth.resetPasswordDescription'),
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                       color: AppColors.textSecondary,
                     ),
@@ -95,14 +97,14 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                     color: AppColors.success.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Row(
+                  child: Row(
                     children: [
-                      Icon(Icons.check_circle, color: AppColors.success),
-                      SizedBox(width: 12),
+                      const Icon(Icons.check_circle, color: AppColors.success),
+                      const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          'Reset link sent! Check your email inbox.',
-                          style: TextStyle(color: AppColors.success),
+                          tr(ref, 'auth.resetLinkSent'),
+                          style: const TextStyle(color: AppColors.success),
                         ),
                       ),
                     ],
@@ -112,20 +114,12 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                 Form(
                   key: _formKey,
                   child: AppTextField(
-                    label: 'Email',
-                    hint: 'Enter your email address',
-                    controller: _emailController,
-                    keyboardType: TextInputType.emailAddress,
-                    prefixIcon: Icons.email_outlined,
-                    validator: (v) {
-                      if (v == null || v.trim().isEmpty) {
-                        return 'Email is required';
-                      }
-                      if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(v.trim())) {
-                        return 'Enter a valid email';
-                      }
-                      return null;
-                    },
+                    label: tr(ref, 'auth.username'),
+                    hint: tr(ref, 'auth.usernameHint'),
+                    controller: _usernameController,
+                    prefixIcon: Icons.person_outlined,
+                    validator: (v) =>
+                        requiredValidator(v, fieldName: tr(ref, 'auth.username'), ref: ref),
                   ),
                 ),
                 if (_error != null) ...[
@@ -157,7 +151,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                 ],
                 const SizedBox(height: 24),
                 AppButton.primary(
-                  'Send Reset Link',
+                  tr(ref, 'auth.sendResetLink'),
                   loading: _loading,
                   onPressed: _sendResetLink,
                 ),
@@ -165,9 +159,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
               const SizedBox(height: 24),
               TextButton(
                 onPressed: () => context.pop(),
-                child: const Text(
-                  'Back to Login',
-                  style: TextStyle(color: AppColors.primary),
+                child: Text(
+                  tr(ref, 'auth.backToLogin'),
+                  style: const TextStyle(color: AppColors.primary),
                 ),
               ),
               const SizedBox(height: 32),

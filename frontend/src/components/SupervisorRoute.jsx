@@ -14,6 +14,7 @@ function getRoleFromToken() {
 export default function SupervisorRoute({ children }) {
   const role = getRoleFromToken();
   if (!role) return <Navigate to="/login" replace />;
-  if (role !== 'supervisor' && role !== 'admin') return <Navigate to="/assess" replace />;
+  if (role === 'admin') return <Navigate to="/admin" replace />;
+  if (role !== 'supervisor') return <Navigate to="/assess" replace />;
   return children;
 }

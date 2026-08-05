@@ -5,6 +5,7 @@ import '../../../core/error/app_error_widget.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/empty_state.dart';
+import '../../../l10n/tr.dart';
 import '../growth_repository.dart';
 
 class GrowthListScreen extends ConsumerWidget {
@@ -17,9 +18,22 @@ class GrowthListScreen extends ConsumerWidget {
       case 'moderate':
         return AppColors.warning;
       case 'severe':
-        return AppColors.accent;
+        return AppColors.error;
       default:
         return AppColors.textSecondary;
+    }
+  }
+
+  String _statusLabel(WidgetRef ref, String? status) {
+    switch (status) {
+      case 'normal':
+        return tr(ref, 'growth.normal');
+      case 'moderate':
+        return tr(ref, 'growth.moderate');
+      case 'severe':
+        return tr(ref, 'growth.severe');
+      default:
+        return tr(ref, 'common.unknown');
     }
   }
 
@@ -28,14 +42,14 @@ class GrowthListScreen extends ConsumerWidget {
     final recordsAsync = ref.watch(growthRecordsProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Growth Records')),
+      appBar: AppBar(title: Text(tr(ref, 'growth.title'))),
       body: recordsAsync.when(
         data: (records) {
           if (records.isEmpty) {
-            return const EmptyState(
+            return EmptyState(
               icon: Icons.monitor_heart_outlined,
-              title: 'No growth records yet',
-              subtitle: 'Add a growth record to start tracking',
+              title: tr(ref, 'growth.emptyTitle'),
+              subtitle: tr(ref, 'growth.emptySubtitle'),
             );
           }
           return ListView.builder(
@@ -67,7 +81,10 @@ class GrowthListScreen extends ConsumerWidget {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              '${r.ageMonths} months, ${r.weight.toStringAsFixed(1)} kg',
+                              tr(ref, 'growth.monthsWeight', {
+                                'months': '${r.ageMonths}',
+                                'weight': r.weight.toStringAsFixed(1),
+                              }),
                               style: const TextStyle(
                                 fontSize: 14,
                                 color: AppColors.textSecondary,
@@ -76,7 +93,7 @@ class GrowthListScreen extends ConsumerWidget {
                             if (r.muac != null) ...[
                               const SizedBox(height: 2),
                               Text(
-                                'MUAC: ${r.muac!.toStringAsFixed(1)} cm',
+                                tr(ref, 'growth.muacValue', {'value': r.muac!.toStringAsFixed(1)}),
                                 style: const TextStyle(
                                   fontSize: 13,
                                   color: AppColors.textSecondary,
@@ -105,7 +122,7 @@ class GrowthListScreen extends ConsumerWidget {
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
-                            r.nutritionalStatus!.toUpperCase(),
+                            _statusLabel(ref, r.nutritionalStatus).toUpperCase(),
                             style: TextStyle(
                               color: statusColor,
                               fontWeight: FontWeight.w700,

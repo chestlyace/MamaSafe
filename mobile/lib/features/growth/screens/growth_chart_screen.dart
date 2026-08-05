@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/error/app_error_widget.dart';
 import '../../../core/storage/database.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../l10n/tr.dart';
 import '../growth_repository.dart';
 
 final _childRecordsProvider = FutureProvider.family<List<GrowthRecord>, String>(
@@ -22,12 +23,12 @@ class GrowthChartScreen extends ConsumerWidget {
     final recordsAsync = ref.watch(_childRecordsProvider(childRef));
 
     return Scaffold(
-      appBar: AppBar(title: Text('Growth Chart: $childRef')),
+      appBar: AppBar(title: Text(tr(ref, 'growth.chartFor', {'child': childRef}))),
       body: recordsAsync.when(
         data: (records) {
           if (records.length < 2) {
-            return const Center(
-              child: Text('At least 2 records needed for a chart'),
+            return Center(
+              child: Text(tr(ref, 'growth.needTwoRecords')),
             );
           }
           return SingleChildScrollView(
@@ -35,9 +36,9 @@ class GrowthChartScreen extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Weight-for-Age Trend',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                Text(
+                  tr(ref, 'growth.weightForAgeTrend'),
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 12),
                 SizedBox(
@@ -105,7 +106,7 @@ class _LineChartPainter extends CustomPainter {
     final ageRange = maxAge - minAge;
 
     final gridPaint = Paint()
-      ..color = AppColors.divider
+      ..color = AppColors.border
       ..strokeWidth = 0.5;
 
     final linePaint = Paint()

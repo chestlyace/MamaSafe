@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { login } from '../api/client';
 import LanguageToggle from '../components/LanguageToggle';
@@ -21,7 +21,9 @@ export default function LoginPage() {
     try {
       const data = await login(username, password);
       localStorage.setItem('token', data.access_token);
-      if (data.role === 'supervisor' || data.role === 'admin') {
+      if (data.role === 'admin') {
+        navigate('/admin');
+      } else if (data.role === 'supervisor') {
         navigate('/supervisor');
       } else {
         navigate('/assess');
@@ -120,6 +122,19 @@ export default function LoginPage() {
                 )}
               </button>
             </form>
+          </div>
+
+          {/* Signup links */}
+          <div className="mt-4 bg-white rounded-2xl border border-border p-4 space-y-2">
+            <p className="text-xs font-semibold text-text-muted uppercase tracking-wider">
+              {t('no_account')}
+            </p>
+            <Link to="/signup" className="block text-sm font-medium text-rose-500 hover:text-rose-600">
+              {t('supervisor_signup_cta')}
+            </Link>
+            <Link to="/chw-signup" className="block text-sm font-medium text-rose-500 hover:text-rose-600">
+              {t('chw_signup_cta')}
+            </Link>
           </div>
 
           {/* Footer */}

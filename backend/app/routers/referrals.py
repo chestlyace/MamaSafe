@@ -4,13 +4,24 @@ from sqlalchemy import func
 from typing import List, Optional
 from datetime import datetime
 
-from app.database import get_db, Patient, Pregnancy, Assessment, Facility, Referral
+from app.database import get_db, Patient, Pregnancy, Assessment, Facility, Referral, User
 from app.schemas_referral import (
     ReferralCreate, ReferralQuickCreate, ReferralOut, ReferralStatusUpdate, ReferralStats
 )
 from app.routers.auth import get_current_user
 
 router = APIRouter(prefix="/api/v1", tags=["referrals"])
+
+
+def _accessible_chw_ids(db: Session, current_user) -> list[int]:
+    """Return CHW IDs the current user is allowed to see referrals for."""
+    if current_user.role == "admin":
+        return [u.id for u in db.query(User.id).filter(User.role == "chw").all()]
+    if current_user.role == "supervisor":
+        return [u.id for u in db.query(User.id)
+                .filter(User.role == "chw",
+                        User.district == current_user.district).all()]
+    return [current_user.id]
 
 
 def _deliver_whatsapp(referral, facility, db):
@@ -153,7 +164,7 @@ def list_referrals(
 ):
     q = db.query(Referral)
     if current_user.role != "admin":
-        q = q.filter(Referral.chw_id == current_user.id)
+        q = q.filter(Referral.chw_id.in_(_accessible_chw_ids(db, current_user)))
     if status:
         q = q.filter(Referral.status == status.upper())
     if facility_id:
@@ -170,7 +181,7 @@ def get_referral_stats(
 ):
     q = db.query(Referral)
     if current_user.role != "admin":
-        q = q.filter(Referral.chw_id == current_user.id)
+        q = q.filter(Referral.chw_id.in_(_accessible_chw_ids(db, current_user)))
 
     total_sent = q.filter(Referral.status == "SENT").count()
     total_received = q.filter(Referral.status == "RECEIVED").count()

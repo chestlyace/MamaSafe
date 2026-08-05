@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/network/api_client.dart';
 import '../../core/storage/database.dart';
 import '../../core/storage/database_provider.dart';
+import '../../core/utils/date_calc.dart';
 
 class CreatePregnancyData {
   final String patientName;
@@ -13,6 +14,7 @@ class CreatePregnancyData {
   final int? gravida;
   final int? parity;
   final String? lmp;
+  final String? edd;
   final String? notes;
 
   CreatePregnancyData({
@@ -22,6 +24,7 @@ class CreatePregnancyData {
     this.gravida,
     this.parity,
     this.lmp,
+    this.edd,
     this.notes,
   });
 }
@@ -47,8 +50,8 @@ class MaternityRepository {
     if (data.lmp != null) {
       final lmpDate = DateTime.tryParse(data.lmp!);
       if (lmpDate != null) {
-        edd = _calculateEdd(lmpDate);
-        gestationalAgeWeeks = _calculateGestationalAge(lmpDate, now);
+        edd = data.edd ?? formatDate(eddFromLmp(lmpDate));
+        gestationalAgeWeeks = gestationalAge(lmpDate, now);
       }
     }
 
@@ -100,16 +103,6 @@ class MaternityRepository {
 
     return (_db.select(_db.pregnancies)..where((t) => t.id.equals(id)))
         .getSingle();
-  }
-
-  String _calculateEdd(DateTime lmp) {
-    final edd = lmp.add(const Duration(days: 280));
-    return '${edd.year}-${edd.month.toString().padLeft(2, '0')}-${edd.day.toString().padLeft(2, '0')}';
-  }
-
-  int _calculateGestationalAge(DateTime lmp, DateTime now) {
-    final diff = now.difference(lmp).inDays;
-    return (diff / 7).floor();
   }
 }
 

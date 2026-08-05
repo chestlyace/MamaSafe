@@ -34,6 +34,7 @@ class Assessment(Base):
     shap_age        = Column(Float, nullable=True)
     created_at      = Column(DateTime, default=datetime.utcnow)
     patient_id      = Column(Integer, ForeignKey("patients.id"), nullable=True)
+    created_by      = Column(Integer, ForeignKey("users.id"), nullable=True)
 
 
 class User(Base):
@@ -60,6 +61,7 @@ class Facility(Base):
     id              = Column(Integer, primary_key=True, index=True)
     name            = Column(String, nullable=False)
     level           = Column(String, nullable=False)  # health_post, health_center, district_hospital, regional_hospital, central_hospital
+    district        = Column(String, nullable=True)
     phone           = Column(String, nullable=True)
     whatsapp        = Column(String, nullable=True)
     address         = Column(String, nullable=True)
@@ -68,6 +70,24 @@ class Facility(Base):
     suggested_by    = Column(Integer, ForeignKey("users.id"), nullable=True)
     approved        = Column(Boolean, default=False)
     created_at      = Column(DateTime, default=datetime.utcnow)
+
+
+class DistrictInvite(Base):
+    __tablename__ = "district_invites"
+
+    id               = Column(Integer, primary_key=True, index=True)
+    code             = Column(String, unique=True, index=True, nullable=False)
+    supervisor_id    = Column(Integer, ForeignKey("users.id"), nullable=False)
+    district         = Column(String, nullable=True)
+    note             = Column(String, nullable=True)
+    expires_at       = Column(DateTime, nullable=True)
+    status           = Column(String, default="pending")  # pending | used | revoked | expired
+    used_by_user_id  = Column(Integer, ForeignKey("users.id"), nullable=True)
+    used_at          = Column(DateTime, nullable=True)
+    created_at       = Column(DateTime, default=datetime.utcnow)
+
+    supervisor = relationship("User", foreign_keys=[supervisor_id])
+    used_by    = relationship("User", foreign_keys=[used_by_user_id])
 
 
 class Referral(Base):
@@ -410,10 +430,12 @@ def _migrate_columns(engine):
         ("users", "region", "VARCHAR"),
         ("users", "last_active", "TIMESTAMP"),
         ("patients", "preferred_language", "VARCHAR DEFAULT 'fr'"),
+        ("facilities", "district", "VARCHAR"),
         ("risk_escalation_events", "whatsapp_error", "VARCHAR"),
         ("postnatal_visits", "newborn_weight_kg", "FLOAT"),
         ("postnatal_visits", "newborn_id", "INTEGER REFERENCES newborns(id)"),
         ("postnatal_visits", "breastfeeding_status", "VARCHAR"),
+        ("assessments", "created_by", "INTEGER REFERENCES users(id)"),
     ]
     for table, column, col_type in migrations:
         if table in inspector.get_table_names():
@@ -423,6 +445,21 @@ def _migrate_columns(engine):
                     conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {column} {col_type}"))
                     conn.commit()
                 print(f"  Migration: added {table}.{column}")
+
+    # Backfill assessments.created_by from the owning patient's CHW for legacy rows
+    if "assessments" in inspector.get_table_names():
+        cols = {col["name"] for col in inspector.get_columns("assessments")}
+        if {"created_by", "patient_id"} <= cols:
+            with engine.connect() as conn:
+                conn.execute(text(
+                    "UPDATE assessments SET created_by = patients.chw_id "
+                    "FROM patients "
+                    "WHERE assessments.patient_id = patients.id "
+                    "AND assessments.created_by IS NULL "
+                    "AND patients.chw_id IS NOT NULL"
+                ))
+                conn.commit()
+            print("  Migration: backfilled assessments.created_by from patient CHW ownership")
 
     # Make referrals.patient_id nullable (was NOT NULL, now optional for assessment-only referrals)
     if "referrals" in inspector.get_table_names():

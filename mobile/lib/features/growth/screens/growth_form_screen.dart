@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import '../../../core/validators/validators.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_text_field.dart';
+import '../../../core/widgets/date_field.dart';
+import '../../../l10n/tr.dart';
 import '../growth_repository.dart';
 
 class GrowthFormScreen extends ConsumerStatefulWidget {
@@ -37,18 +39,6 @@ class _GrowthFormScreenState extends ConsumerState<GrowthFormScreen> {
     super.dispose();
   }
 
-  Future<void> _pickDate() async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _recordedAt,
-      firstDate: DateTime(2000),
-      lastDate: DateTime.now(),
-    );
-    if (picked != null) {
-      setState(() => _recordedAt = picked);
-    }
-  }
-
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -78,8 +68,8 @@ class _GrowthFormScreenState extends ConsumerState<GrowthFormScreen> {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Growth record saved'),
+        SnackBar(
+          content: Text(tr(ref, 'growth.saved')),
           backgroundColor: Colors.green,
         ),
       );
@@ -101,7 +91,7 @@ class _GrowthFormScreenState extends ConsumerState<GrowthFormScreen> {
     final isLoading = createState is AsyncLoading;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('New Growth Record')),
+      appBar: AppBar(title: Text(tr(ref, 'growth.new'))),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Form(
@@ -109,112 +99,110 @@ class _GrowthFormScreenState extends ConsumerState<GrowthFormScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Child Information',
-                style: TextStyle(
+              Text(
+                tr(ref, 'growth.childInfo'),
+                style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
                 ),
               ),
               const SizedBox(height: 12),
-              AppTextField(
-                label: 'Child Name',
-                hint: 'e.g. Baby John',
-                controller: _childNameController,
-                validator: (v) => v == null || v.isEmpty ? 'Child name is required' : null,
-              ),
-              const SizedBox(height: 16),
-              AppTextField(
-                label: 'Child Reference (optional)',
-                hint: 'e.g. MRN-67890',
-                controller: _childRefController,
-              ),
-              const SizedBox(height: 16),
-              AppTextField(
-                label: 'Age (months)',
-                hint: 'e.g. 24',
-                controller: _ageMonthsController,
-                keyboardType: TextInputType.number,
-                validator: (v) => positiveNumberValidator(v, fieldName: 'Age'),
-              ),
-              const SizedBox(height: 24),
-              const Text(
-                'Anthropometry',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(height: 12),
-              AppTextField(
-                label: 'Weight (kg)',
-                hint: 'e.g. 12.5',
-                controller: _weightController,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                validator: (v) =>
-                    positiveNumberValidator(v, fieldName: 'Weight', allowDecimal: true),
-              ),
-              const SizedBox(height: 16),
-              AppTextField(
-                label: 'Height (cm) optional',
-                hint: 'e.g. 85',
-                controller: _heightController,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              ),
-              const SizedBox(height: 16),
-              AppTextField(
-                label: 'Head Circumference (cm) optional',
-                hint: 'e.g. 48',
-                controller: _headCircumferenceController,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              ),
-              const SizedBox(height: 16),
-              AppTextField(
-                label: 'MUAC (cm) optional',
-                hint: 'e.g. 14.5',
-                controller: _muacController,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              ),
+AppTextField(
+                 label: tr(ref, 'growth.childName'),
+                 help: tr(ref, 'growth.childNameHelp'),
+                 hint: tr(ref, 'growth.childNameHint'),
+                 controller: _childNameController,
+                 validator: (v) => v == null || v.isEmpty ? tr(ref, 'growth.childNameRequired') : null,
+               ),
+               const SizedBox(height: 16),
+               AppTextField(
+                 label: tr(ref, 'growth.childRefOptional'),
+                 help: tr(ref, 'growth.childRefHelp'),
+                 hint: tr(ref, 'growth.childRefHint'),
+                 controller: _childRefController,
+               ),
+               const SizedBox(height: 16),
+               AppTextField(
+                 label: tr(ref, 'growth.ageMonths'),
+                 help: tr(ref, 'growth.ageMonthsHelp'),
+                 hint: tr(ref, 'growth.ageMonthsHint'),
+                 controller: _ageMonthsController,
+                 keyboardType: TextInputType.number,
+                 validator: (v) => positiveNumberValidator(v, fieldName: tr(ref, 'growth.ageMonths'), ref: ref),
+               ),
+               const SizedBox(height: 24),
+               Text(
+                 tr(ref, 'growth.anthropometry'),
+                 style: const TextStyle(
+                   fontSize: 18,
+                   fontWeight: FontWeight.w700,
+                 ),
+               ),
+               const SizedBox(height: 12),
+               AppTextField(
+                 label: tr(ref, 'growth.weightKg'),
+                 help: tr(ref, 'growth.weightHelp'),
+                 hint: tr(ref, 'growth.weightHint'),
+                 controller: _weightController,
+                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                 validator: (v) =>
+                     positiveNumberValidator(v, fieldName: tr(ref, 'growth.weight'), allowDecimal: true, ref: ref),
+               ),
+               const SizedBox(height: 16),
+               AppTextField(
+                 label: tr(ref, 'growth.heightOptional'),
+                 help: tr(ref, 'growth.heightHelp'),
+                 hint: tr(ref, 'growth.heightHint'),
+                 controller: _heightController,
+                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
+               ),
+               const SizedBox(height: 16),
+               AppTextField(
+                 label: tr(ref, 'growth.headCircumferenceOptional'),
+                 help: tr(ref, 'growth.headCircumferenceHelp'),
+                 hint: tr(ref, 'growth.headCircumferenceHint'),
+                 controller: _headCircumferenceController,
+                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
+               ),
+               const SizedBox(height: 16),
+               AppTextField(
+                 label: tr(ref, 'growth.muacOptional'),
+                 help: tr(ref, 'growth.muacHelp'),
+                 hint: tr(ref, 'growth.muacHint'),
+                 controller: _muacController,
+                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
+               ),
               const SizedBox(height: 24),
               DropdownButtonFormField<String>(
                 initialValue: _nutritionalStatus,
-                decoration: const InputDecoration(
-                  labelText: 'Nutritional Status (optional)',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: tr(ref, 'growth.nutritionalStatusOptional'),
+                  border: const OutlineInputBorder(),
                 ),
-                items: const [
-                  DropdownMenuItem(value: 'normal', child: Text('Normal')),
-                  DropdownMenuItem(value: 'moderate', child: Text('Moderate Malnutrition')),
-                  DropdownMenuItem(value: 'severe', child: Text('Severe Malnutrition')),
+                items: [
+                  DropdownMenuItem(value: 'normal', child: Text(tr(ref, 'growth.normal'))),
+                  DropdownMenuItem(value: 'moderate', child: Text(tr(ref, 'growth.moderateMalnutrition'))),
+                  DropdownMenuItem(value: 'severe', child: Text(tr(ref, 'growth.severeMalnutrition'))),
                 ],
                 onChanged: (v) => setState(() => _nutritionalStatus = v),
               ),
               const SizedBox(height: 24),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: InkWell(
-                  onTap: _pickDate,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Recorded At: ${_recordedAt.day}/${_recordedAt.month}/${_recordedAt.year}',
-                        style: const TextStyle(fontSize: 16),
-                      ),
-                      const Icon(Icons.calendar_today),
-                    ],
-                  ),
-                ),
+              DateField(
+                label: tr(ref, 'growth.recordedAtLabel'),
+                hint: tr(ref, 'growth.recordedAtHint'),
+                value: _recordedAt,
+                onChanged: (dt) => setState(() {
+                  if (dt != null) _recordedAt = dt;
+                }),
+                firstDate: DateTime(2000),
+                lastDate: DateTime.now(),
+                icon: Icons.calendar_today,
               ),
               const SizedBox(height: 32),
               SizedBox(
                 width: double.infinity,
                 child: AppButton.primary(
-                  'Save Growth Record',
+                  tr(ref, 'growth.save'),
                   loading: isLoading,
                   onPressed: _submit,
                 ),

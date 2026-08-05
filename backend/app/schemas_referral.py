@@ -7,6 +7,7 @@ from datetime import datetime
 class FacilityCreate(BaseModel):
     name:       str
     level:      str   # health_post, health_center, district_hospital, regional_hospital, central_hospital
+    district:   Optional[str] = None
     phone:      Optional[str] = None
     whatsapp:   Optional[str] = None
     address:    Optional[str] = None
@@ -16,13 +17,15 @@ class FacilityOut(BaseModel):
     id:          int
     name:        str
     level:       str
-    phone:       Optional[str]
-    whatsapp:    Optional[str]
-    address:     Optional[str]
-    region:      Optional[str]
+    district:    Optional[str] = None
+    phone:       Optional[str] = None
+    whatsapp:    Optional[str] = None
+    address:     Optional[str] = None
+    region:      Optional[str] = None
     is_active:   bool
     approved:    bool
     suggested_by: Optional[int]
+    suggested_by_name: Optional[str] = None
     created_at:  datetime
     class Config:
         from_attributes = True

@@ -30,6 +30,9 @@ class EmptyState extends StatelessWidget {
             Text(
               title,
               textAlign: TextAlign.center,
+              maxLines: 2,
+              softWrap: true,
+              overflow: TextOverflow.ellipsis,
               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
             ),
             if (subtitle != null) ...[
@@ -37,6 +40,9 @@ class EmptyState extends StatelessWidget {
               Text(
                 subtitle!,
                 textAlign: TextAlign.center,
+                maxLines: 4,
+                softWrap: true,
+                overflow: TextOverflow.ellipsis,
                 style: const TextStyle(fontSize: 14, color: AppColors.textSecondary),
               ),
             ],

@@ -93,7 +93,8 @@ class _AppTextFieldState extends State<AppTextField> {
   }
 
   bool get _isPassword =>
-      widget.obscureText || widget.keyboardType == TextInputType.visiblePassword;
+      widget.obscureText ||
+      widget.keyboardType == TextInputType.visiblePassword;
 
   @override
   Widget build(BuildContext context) {
@@ -125,15 +126,20 @@ class _AppTextFieldState extends State<AppTextField> {
         if (widget.label != null) ...[
           widget.help != null
               ? Row(
-                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      widget.label!,
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textSecondary,
-                        letterSpacing: 0.5,
+                    Expanded(
+                      child: Text(
+                        widget.label!,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        softWrap: true,
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textSecondary,
+                          letterSpacing: 0.5,
+                        ),
                       ),
                     ),
                     const SizedBox(width: 4),
@@ -142,6 +148,9 @@ class _AppTextFieldState extends State<AppTextField> {
                 )
               : Text(
                   widget.label!,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  softWrap: true,
                   style: GoogleFonts.inter(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
@@ -174,11 +183,13 @@ class _AppTextFieldState extends State<AppTextField> {
             hintText: widget.hint,
             errorText: widget.errorText,
             prefixIcon: widget.prefixIcon != null
-                ? Icon(widget.prefixIcon, size: 20, color: AppColors.textSecondary)
+                ? Icon(widget.prefixIcon,
+                    size: 20, color: AppColors.textSecondary)
                 : null,
             suffixIcon: suffixWidget,
             filled: true,
-            fillColor: widget.enabled ? AppColors.surfaceAlt : AppColors.surface,
+            fillColor:
+                widget.enabled ? AppColors.surfaceAlt : AppColors.surface,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(color: AppColors.border),
@@ -201,9 +212,11 @@ class _AppTextFieldState extends State<AppTextField> {
             ),
             disabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: AppColors.border.withValues(alpha: 0.5)),
+              borderSide:
+                  BorderSide(color: AppColors.border.withValues(alpha: 0.5)),
             ),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           ),
         ),
       ],

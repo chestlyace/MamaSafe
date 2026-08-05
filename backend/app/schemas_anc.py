@@ -28,6 +28,7 @@ class PatientOut(PatientCreate):
 class PregnancyCreate(BaseModel):
     patient_id:  int
     lmp_date:    str              # YYYY-MM-DD
+    edd_date:    Optional[str] = None   # Optional client override; server computes from LMP if omitted
     gravida:     int = 1
     parity:      int = 0
 

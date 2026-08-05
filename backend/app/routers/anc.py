@@ -4,7 +4,7 @@ from typing import List
 from datetime import datetime, date
 from dateutil.relativedelta import relativedelta
 
-from app.database import get_db, Patient, Pregnancy, ANCVisit, ScheduledVisit
+from app.database import get_db, Patient, Pregnancy, ANCVisit, ScheduledVisit, User
 from app.schemas_anc import (
     PatientCreate, PatientOut,
     PregnancyCreate, PregnancyOut,
@@ -22,6 +22,17 @@ def calculate_edd(lmp_date_str: str) -> str:
     lmp = datetime.strptime(lmp_date_str, "%Y-%m-%d").date()
     edd = lmp + relativedelta(months=9, days=7)
     return str(edd)
+
+
+def _accessible_chw_ids(db: Session, current_user) -> List[int]:
+    if current_user.role == "admin":
+        return [u.id for u in db.query(User.id).filter(User.role == "chw").all()]
+    if current_user.role == "supervisor":
+        return [u.id for u in db.query(User.id).filter(
+            User.role == "chw",
+            User.district == current_user.district,
+        ).all()]
+    return [current_user.id]
 
 
 # ── PATIENTS ──────────────────────────────────────────────
@@ -45,11 +56,10 @@ def list_patients(
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
-    # CHWs see only their own patients; admins see all
-    if current_user.role == "admin":
-        return db.query(Patient).offset(skip).limit(limit).all()
+    # CHWs see only their own patients; supervisors see their district's patients; admins see all
+    chw_ids = _accessible_chw_ids(db, current_user)
     return (db.query(Patient)
-              .filter(Patient.chw_id == current_user.id)
+              .filter(Patient.chw_id.in_(chw_ids))
               .offset(skip).limit(limit).all())
 
 
@@ -122,8 +132,8 @@ def register_pregnancy(
                    ScheduledVisit.status.in_(["scheduled", "rescheduled"]))
            .update({"status": "cancelled"}))
 
-    edd = calculate_edd(data.lmp_date)
-    pregnancy = Pregnancy(**data.dict(), edd_date=edd)
+    edd = data.edd_date or calculate_edd(data.lmp_date)
+    pregnancy = Pregnancy(**data.dict(exclude={"edd_date"}), edd_date=edd)
     db.add(pregnancy)
     db.commit()
     db.refresh(pregnancy)

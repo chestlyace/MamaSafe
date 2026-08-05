@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_theme.dart';
 
 class AppButton extends StatelessWidget {
@@ -20,7 +21,7 @@ class AppButton extends StatelessWidget {
     this.iconLeft,
     this.iconRight,
     this.width,
-    this.height = 48,
+    this.height = 44,
     required Color foregroundColor,
     required Color backgroundColor,
     required Color? borderColor,
@@ -41,7 +42,7 @@ class AppButton extends StatelessWidget {
     IconData? iconLeft,
     IconData? iconRight,
     double? width,
-    double height = 48,
+    double height = 44,
   }) {
     return AppButton._(
       label,
@@ -68,7 +69,7 @@ class AppButton extends StatelessWidget {
     IconData? iconLeft,
     IconData? iconRight,
     double? width,
-    double height = 48,
+    double height = 44,
   }) {
     return AppButton._(
       label,
@@ -95,7 +96,7 @@ class AppButton extends StatelessWidget {
     IconData? iconLeft,
     IconData? iconRight,
     double? width,
-    double height = 48,
+    double height = 44,
   }) {
     return AppButton._(
       label,
@@ -107,9 +108,9 @@ class AppButton extends StatelessWidget {
       iconRight: iconRight,
       width: width,
       height: height,
-      foregroundColor: AppColors.primary,
+      foregroundColor: AppColors.textPrimary,
       backgroundColor: Colors.transparent,
-      borderColor: AppColors.primary,
+      borderColor: AppColors.border,
     );
   }
 
@@ -122,7 +123,7 @@ class AppButton extends StatelessWidget {
     IconData? iconLeft,
     IconData? iconRight,
     double? width,
-    double height = 48,
+    double height = 44,
   }) {
     return AppButton._(
       label,
@@ -165,10 +166,10 @@ class AppButton extends StatelessWidget {
             decoration: _borderColor != null
                 ? BoxDecoration(
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: foreground, width: 1.5),
+                    border: Border.all(color: _borderColor, width: 1.5),
                   )
                 : null,
-            padding: const EdgeInsets.symmetric(horizontal: 24),
+            padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.center,
@@ -177,20 +178,23 @@ class AppButton extends StatelessWidget {
                   _LoadingIndicator(color: foreground)
                 else ...[
                   if (iconLeft != null) ...[
-                    Icon(iconLeft, size: 20, color: foreground),
-                    const SizedBox(width: 8),
+                    Icon(iconLeft, size: 18, color: foreground),
+                    const SizedBox(width: 6),
                   ],
                   Text(
                     label,
-                    style: TextStyle(
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    softWrap: false,
+                    style: GoogleFonts.inter(
                       color: foreground,
-                      fontSize: 16,
+                      fontSize: 14,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                   if (iconRight != null) ...[
-                    const SizedBox(width: 8),
-                    Icon(iconRight, size: 20, color: foreground),
+                    const SizedBox(width: 6),
+                    Icon(iconRight, size: 18, color: foreground),
                   ],
                 ],
               ],
@@ -210,8 +214,8 @@ class _LoadingIndicator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 24,
-      height: 24,
+      width: 20,
+      height: 20,
       child: CircularProgressIndicator(
         strokeWidth: 2.5,
         valueColor: AlwaysStoppedAnimation<Color>(color),

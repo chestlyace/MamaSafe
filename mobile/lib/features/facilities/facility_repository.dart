@@ -25,11 +25,10 @@ class CreateFacilityData {
 
   Map<String, dynamic> toJson() => {
         'name': name,
-        'location': location,
+        'level': 'health_center',
         'district': district,
-        if (contactPhone != null) 'contact_phone': contactPhone,
-        if (latitude != null) 'latitude': latitude,
-        if (longitude != null) 'longitude': longitude,
+        'address': location,
+        if (contactPhone != null) 'phone': contactPhone,
       };
 }
 

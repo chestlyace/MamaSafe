@@ -5,6 +5,7 @@ import '../../../core/error/app_error_widget.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/empty_state.dart';
+import '../../../l10n/tr.dart';
 import '../maternity_repository.dart';
 
 class MaternityListScreen extends ConsumerWidget {
@@ -28,13 +29,13 @@ class MaternityListScreen extends ConsumerWidget {
   String _statusLabel(String status) {
     switch (status) {
       case 'active':
-        return 'Active';
+        return 'maternity.statusActive';
       case 'delivered':
-        return 'Delivered';
+        return 'maternity.statusDelivered';
       case 'transferred':
-        return 'Transferred';
+        return 'maternity.statusTransferred';
       case 'lost':
-        return 'Lost';
+        return 'maternity.statusLost';
       default:
         return status;
     }
@@ -43,7 +44,7 @@ class MaternityListScreen extends ConsumerWidget {
   Color _riskColor(String? riskLevel) {
     switch (riskLevel) {
       case 'high':
-        return AppColors.accent;
+        return AppColors.error;
       case 'mid':
         return AppColors.warning;
       case 'low':
@@ -58,14 +59,14 @@ class MaternityListScreen extends ConsumerWidget {
     final pregnanciesAsync = ref.watch(pregnanciesProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Maternity')),
+      appBar: AppBar(title: Text(tr(ref, 'maternity.title'))),
       body: pregnanciesAsync.when(
         data: (pregnancies) {
           if (pregnancies.isEmpty) {
-            return const EmptyState(
+            return EmptyState(
               icon: Icons.pregnant_woman_outlined,
-              title: 'No pregnancies registered',
-              subtitle: 'Register a pregnancy to start tracking',
+              title: tr(ref, 'maternity.emptyTitle'),
+              subtitle: tr(ref, 'maternity.emptySubtitle'),
             );
           }
           return ListView.builder(
@@ -101,7 +102,7 @@ class MaternityListScreen extends ConsumerWidget {
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
-                              _statusLabel(p.status),
+                              tr(ref, _statusLabel(p.status)),
                               style: TextStyle(
                                 color: statusColor,
                                 fontWeight: FontWeight.w700,
@@ -119,7 +120,7 @@ class MaternityListScreen extends ConsumerWidget {
                                 size: 14, color: AppColors.textSecondary),
                             const SizedBox(width: 4),
                             Text(
-                              'EDD: ${p.edd}',
+                              tr(ref, 'maternity.edd', {'date': p.edd!}),
                               style: const TextStyle(
                                 fontSize: 14,
                                 color: AppColors.textSecondary,
@@ -153,7 +154,7 @@ class MaternityListScreen extends ConsumerWidget {
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
-                            p.riskLevel!.toUpperCase(),
+                            tr(ref, 'risk.${p.riskLevel!}').toUpperCase(),
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w700,

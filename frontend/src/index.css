@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "./components/landing/landing.css";
 
 @theme {
   --color-rose-primary: #E8637A;
@@ -17,6 +18,21 @@
   --color-text-heading: #3D3847;
   --color-text-body: #5C5566;
   --color-text-muted: #8E8696;
+
+  --color-cream: #FBF6EF;
+  --color-sand: #F3E7D7;
+  --color-terracotta: #C4552B;
+  --color-terracotta-deep: #A03F1C;
+  --color-teal-deep: #155E56;
+  --color-teal-soft: #DCEDEA;
+  --color-gold: #D9A03F;
+  --color-ink: #2E2430;
+  --color-plum-soft: #4A3E4C;
+  --color-risk-low: #2F9E6E;
+  --color-risk-mid: #E8A93F;
+  --color-risk-high: #E8637A;
+
+  --font-display: 'Fraunces', Georgia, serif;
 }
 
 body {
@@ -28,7 +44,6 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Material Symbols */
 .material-symbols-outlined {
   font-family: 'Material Symbols Outlined';
   font-weight: normal;
@@ -46,23 +61,19 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Focus ring utility */
 .focus-ring:focus {
   outline: none;
   box-shadow: 0 0 0 2px var(--color-canvas), 0 0 0 4px var(--color-rose-primary);
 }
 
-/* Smooth scroll */
-html {
-  scroll-behavior: smooth;
-}
+html { scroll-behavior: smooth; }
 
-/* Number input spinner hide */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
 input[type=number]::-webkit-inner-spin-button,
 input[type=number]::-webkit-outer-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
-input[type=number] {
-  -moz-appearance: textfield;
-}
+input[type=number] { -moz-appearance: textfield; }

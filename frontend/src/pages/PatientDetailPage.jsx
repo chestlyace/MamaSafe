@@ -648,6 +648,7 @@ function PostnatalTab({ patientId, deliveries, showDeliveryForm, setShowDelivery
           {showVisitForm && (
             <PostnatalVisitForm
               deliveryId={activeDelivery.id}
+              deliveryDate={activeDelivery.delivery_date}
               nextVisitNumber={(() => {
                 const completed = activeDelivery.pnc_visits?.length || 0;
                 return completed + 1;

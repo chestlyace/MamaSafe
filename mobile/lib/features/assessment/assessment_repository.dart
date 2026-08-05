@@ -48,10 +48,10 @@ class AssessmentRepository {
     final id = DateTime.now().millisecondsSinceEpoch;
 
     try {
-      final response = await _dio.post('/assessments', data: jsonData);
+      final response = await _dio.post('/api/v1/assessments', data: jsonData);
       final body = response.data as Map<String, dynamic>;
 
-      final riskLevel = body['risk_level'] as String? ?? 'unknown';
+      final riskLevel = _normalizeRisk(body['risk_level'] as String? ?? 'unknown');
       final probHigh = (body['prob_high'] as num?)?.toDouble() ?? 0.0;
       final probLow = (body['prob_low'] as num?)?.toDouble() ?? 0.0;
       final probMid = (body['prob_mid'] as num?)?.toDouble() ?? 0.0;
@@ -100,7 +100,7 @@ class AssessmentRepository {
       await _db.into(_db.pendingOps).insert(
         PendingOpsCompanion.insert(
           operationType: 'create_assessment',
-          endpoint: '/assessments',
+          endpoint: '/api/v1/assessments',
           payload: jsonEncode(jsonData),
           createdAt: now,
         ),
@@ -112,9 +112,72 @@ class AssessmentRepository {
   }
 
   Future<List<Assessment>> getAssessments() async {
+    await syncFromServer();
     final query = _db.select(_db.assessments)
       ..orderBy([(t) => OrderingTerm(expression: t.createdAt, mode: OrderingMode.desc)]);
     return query.get();
+  }
+
+  /// Fetches assessments from the server and replaces the local table.
+  /// Returns `true` when the sync succeeded, `false` when offline
+  /// (existing local data is kept).
+  Future<bool> syncFromServer() async {
+    try {
+      final response = await _dio.get(
+        '/api/v1/assessments',
+        queryParameters: {'skip': 0, 'limit': 100},
+      );
+      final list = response.data as List<dynamic>;
+
+      // The server now scopes records by the authenticated user's role/district,
+      // so we replace the local table to avoid showing stale/wrong-district data.
+      await _db.delete(_db.assessments).go();
+
+      for (final item in list) {
+        final map = item as Map<String, dynamic>;
+        final id = map['id'] as int;
+        final createdAt =
+            DateTime.tryParse(map['created_at'] as String? ?? '') ??
+                DateTime.now();
+
+        await _db.into(_db.assessments).insert(
+          AssessmentsCompanion.insert(
+            id: Value(id),
+            patientRef: Value(map['patient_ref'] as String?),
+            age: (map['age'] as num?)?.toDouble() ?? 0.0,
+            systolicBp: (map['systolic_bp'] as num?)?.toDouble() ?? 0.0,
+            diastolicBp: (map['diastolic_bp'] as num?)?.toDouble() ?? 0.0,
+            bloodSugar: (map['blood_sugar'] as num?)?.toDouble() ?? 0.0,
+            bodyTemp: (map['body_temp'] as num?)?.toDouble() ?? 0.0,
+            heartRate: (map['heart_rate'] as num?)?.toDouble() ?? 0.0,
+            riskLevel:
+                _normalizeRisk(map['risk_level'] as String? ?? 'unknown'),
+            probHigh: (map['prob_high'] as num?)?.toDouble() ?? 0.0,
+            probLow: (map['prob_low'] as num?)?.toDouble() ?? 0.0,
+            probMid: (map['prob_mid'] as num?)?.toDouble() ?? 0.0,
+            recommendation: Value(map['recommendation'] as String?),
+            createdAt: createdAt,
+          ),
+        );
+      }
+      return true;
+    } catch (_) {
+      // Network error — fall back to local data
+      return false;
+    }
+  }
+
+  static String _normalizeRisk(String riskLevel) {
+    switch (riskLevel) {
+      case 'high risk':
+        return 'high';
+      case 'mid risk':
+        return 'mid';
+      case 'low risk':
+        return 'low';
+      default:
+        return riskLevel;
+    }
   }
 }
 

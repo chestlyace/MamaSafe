@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_button.dart';
+import '../../../l10n/tr.dart';
 import '../onboarding_provider.dart';
 
 class OnboardingScreen extends ConsumerStatefulWidget {
@@ -16,35 +17,29 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   final _pageController = PageController();
   int _currentPage = 0;
 
-  final _pages = const [
-    _OnboardingPageData(
-      icon: Icons.favorite_rounded,
-      title: 'Welcome to MamaSafe',
-      description:
-          'AI-powered maternal health support for community health workers. '
-          'Identify risks early and improve pregnancy outcomes.',
-    ),
-    _OnboardingPageData(
-      icon: Icons.health_and_safety_rounded,
-      title: 'Track Health',
-      description:
-          'Perform maternal health assessments with intelligent risk '
-          'prediction. Monitor vitals, track trends, and get real-time alerts.',
-    ),
-    _OnboardingPageData(
-      icon: Icons.people_rounded,
-      title: 'Stay Connected',
-      description:
-          'Refer high-risk patients, coordinate with supervisors, and '
-          'manage approvals — all in one place.',
-    ),
-  ];
-
   @override
   void dispose() {
     _pageController.dispose();
     super.dispose();
   }
+
+  List<_OnboardingPageData> get _pages => [
+        _OnboardingPageData(
+          icon: Icons.favorite_rounded,
+          title: tr(ref, 'onboarding.page1Title'),
+          description: tr(ref, 'onboarding.page1Subtitle'),
+        ),
+        _OnboardingPageData(
+          icon: Icons.health_and_safety_rounded,
+          title: tr(ref, 'onboarding.page2Title'),
+          description: tr(ref, 'onboarding.page2Subtitle'),
+        ),
+        _OnboardingPageData(
+          icon: Icons.people_rounded,
+          title: tr(ref, 'onboarding.page3Title'),
+          description: tr(ref, 'onboarding.page3Subtitle'),
+        ),
+      ];
 
   bool get _isLastPage => _currentPage == _pages.length - 1;
 
@@ -72,13 +67,13 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 right: 16,
                 child: TextButton(
                   onPressed: _completeOnboarding,
-                  child: const Text(
-                    'Skip',
-                    style: TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 16,
-                    ),
+                child: Text(
+                  tr(ref, 'onboarding.skip'),
+                  style: const TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 16,
                   ),
+                ),
                 ),
               ),
             Positioned(
@@ -93,11 +88,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 24),
                     child: _isLastPage
                         ? AppButton.primary(
-                            'Get Started',
+                            tr(ref, 'onboarding.getStarted'),
                             onPressed: _completeOnboarding,
                           )
                         : AppButton.primary(
-                            'Next',
+                            tr(ref, 'onboarding.next'),
                             onPressed: () {
                               _pageController.nextPage(
                                 duration: const Duration(milliseconds: 400),
@@ -135,7 +130,7 @@ class _DotIndicator extends StatelessWidget {
           width: isActive ? 24 : 8,
           height: 8,
           decoration: BoxDecoration(
-            color: isActive ? AppColors.primary : AppColors.divider,
+            color: isActive ? AppColors.primary : AppColors.border,
             borderRadius: BorderRadius.circular(4),
           ),
         );

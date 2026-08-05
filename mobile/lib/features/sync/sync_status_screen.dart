@@ -5,6 +5,7 @@ import '../../core/network/sync_engine.dart';
 import '../../core/storage/database.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/app_card.dart';
+import '../../l10n/tr.dart';
 
 class SyncStatusScreen extends ConsumerWidget {
   const SyncStatusScreen({super.key});
@@ -17,7 +18,7 @@ class SyncStatusScreen extends ConsumerWidget {
     final lastSync = engine.lastSyncTime;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Sync Status')),
+      appBar: AppBar(title: Text(tr(ref, 'sync.title'))),
       body: RefreshIndicator(
         onRefresh: () => ref.refresh(pendingOpsProvider.future),
         child: ListView(
@@ -61,9 +62,9 @@ class _SyncSummaryCard extends ConsumerWidget {
             children: [
               const Icon(Icons.sync, color: AppColors.primary),
               const SizedBox(width: 12),
-              const Text(
-                'Sync Queue',
-                style: TextStyle(
+              Text(
+                tr(ref, 'sync.queue'),
+                style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
                 ),
@@ -78,7 +79,7 @@ class _SyncSummaryCard extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
-                  '$totalOps pending',
+                  tr(ref, 'sync.pendingCount', {'count': '$totalOps'}),
                   style: TextStyle(
                     color: totalOps > 0 ? AppColors.warning : AppColors.success,
                     fontWeight: FontWeight.w600,
@@ -91,7 +92,7 @@ class _SyncSummaryCard extends ConsumerWidget {
           const SizedBox(height: 16),
           if (isRunning) ...[
             const LinearProgressIndicator(
-              backgroundColor: AppColors.divider,
+              backgroundColor: AppColors.border,
               valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
             ),
             const SizedBox(height: 8),
@@ -104,7 +105,7 @@ class _SyncSummaryCard extends ConsumerWidget {
           if (lastSync != null) ...[
             const SizedBox(height: 4),
             Text(
-              'Last sync: ${_formatDateTime(lastSync!)}',
+              tr(ref, 'sync.lastSync', {'time': _formatDateTime(ref, lastSync!)}),
               style: const TextStyle(
                 color: AppColors.textSecondary,
                 fontSize: 13,
@@ -125,7 +126,7 @@ class _SyncSummaryCard extends ConsumerWidget {
                 isRunning ? Icons.hourglass_top : Icons.sync,
                 size: 18,
               ),
-              label: Text(isRunning ? 'Syncing...' : 'Sync Now'),
+              label: Text(isRunning ? tr(ref, 'sync.syncing') : tr(ref, 'sync.now')),
             ),
           ),
         ],
@@ -133,12 +134,12 @@ class _SyncSummaryCard extends ConsumerWidget {
     );
   }
 
-  String _formatDateTime(DateTime dt) {
+  String _formatDateTime(WidgetRef ref, DateTime dt) {
     final now = DateTime.now();
     final diff = now.difference(dt);
-    if (diff.inMinutes < 1) return 'Just now';
-    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
-    if (diff.inHours < 24) return '${diff.inHours}h ago';
+    if (diff.inMinutes < 1) return tr(ref, 'sync.justNow');
+    if (diff.inMinutes < 60) return tr(ref, 'sync.minutesAgo', {'count': '${diff.inMinutes}'});
+    if (diff.inHours < 24) return tr(ref, 'sync.hoursAgo', {'count': '${diff.inHours}'});
     return '${dt.day}/${dt.month}/${dt.year} ${dt.hour}:${dt.minute.toString().padLeft(2, '0')}';
   }
 }
@@ -153,14 +154,14 @@ class _PendingOpsList extends ConsumerWidget {
     return pendingOpsAsync.when(
       data: (ops) {
         if (ops.isEmpty) {
-          return const AppCard(
+          return AppCard(
             variant: AppCardVariant.outlined,
             child: Center(
               child: Padding(
-                padding: EdgeInsets.symmetric(vertical: 24),
+                padding: const EdgeInsets.symmetric(vertical: 24),
                 child: Text(
-                  'No pending operations',
-                  style: TextStyle(color: AppColors.textSecondary),
+                  tr(ref, 'sync.noPending'),
+                  style: const TextStyle(color: AppColors.textSecondary),
                 ),
               ),
             ),
@@ -169,11 +170,11 @@ class _PendingOpsList extends ConsumerWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Padding(
-              padding: EdgeInsets.only(bottom: 8),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
               child: Text(
-                'Pending Operations',
-                style: TextStyle(
+                tr(ref, 'sync.pendingOperations'),
+                style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                 ),

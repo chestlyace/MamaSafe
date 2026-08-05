@@ -224,3 +224,6 @@ __marimo__/
 .buildlog
 *.iml
 .metadata
+
+# Visual companion mockups
+.superpowers/

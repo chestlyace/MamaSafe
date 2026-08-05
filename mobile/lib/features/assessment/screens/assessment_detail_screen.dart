@@ -1,20 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/error/app_error_widget.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_card.dart';
-import '../../../core/storage/database.dart';
+import '../../../core/widgets/shap_decoration.dart';
+import '../../../l10n/tr.dart';
+import '../../referrals/referral_repository.dart';
 import '../assessment_repository.dart';
-
 class AssessmentDetailScreen extends ConsumerWidget {
   final int assessmentId;
 
   const AssessmentDetailScreen({super.key, required this.assessmentId});
 
-  Color _riskColor(String riskLevel) {
+  Color _riskColor(String? riskLevel) {
     switch (riskLevel) {
       case 'high':
-        return AppColors.accent;
+        return AppColors.error;
       case 'mid':
         return AppColors.warning;
       case 'low':
@@ -24,182 +27,205 @@ class AssessmentDetailScreen extends ConsumerWidget {
     }
   }
 
+  String _riskLabel(WidgetRef ref, String? riskLevel) {
+    switch (riskLevel) {
+      case 'high':
+        return tr(ref, 'risk.high');
+      case 'mid':
+        return tr(ref, 'risk.mid');
+      case 'low':
+        return tr(ref, 'risk.low');
+      default:
+        return tr(ref, 'common.unknown');
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final assessmentsAsync = ref.watch(assessmentsProvider);
+    final referralsAsync = ref.watch(referralsProvider);
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Assessment Details')),
-      body: assessmentsAsync.when(
-        data: (assessments) {
-          final assessment = assessments.where((a) => a.id == assessmentId).firstOrNull;
-          if (assessment == null) {
-            return const Center(child: Text('Assessment not found'));
-          }
-          return _buildContent(context, assessment);
-        },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => AppErrorWidget(error: e, onRetry: () => ref.invalidate(assessmentsProvider)),
-      ),
-    );
-  }
+    return assessmentsAsync.when(
+      data: (assessments) {
+        final assessment = assessments.where((a) => a.id == assessmentId).firstOrNull;
+        if (assessment == null) {
+          return Scaffold(
+            appBar: AppBar(title: Text(tr(ref, 'assessment.title'))),
+            body: Center(child: Text(tr(ref, 'assessment.notFound'), style: const TextStyle(color: AppColors.textSecondary))),
+          );
+        }
 
-  Widget _buildContent(BuildContext context, Assessment assessment) {
-    final riskColor = _riskColor(assessment.riskLevel);
+        final patientName = assessment.patientRef ?? tr(ref, 'common.unknown');
+        final riskColor = _riskColor(assessment.riskLevel);
+        final existingReferral = referralsAsync.valueOrNull?.where((r) => r.patientRef == assessment.patientRef).firstOrNull;
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          AppCard(
+        return Scaffold(
+          appBar: AppBar(title: Text(tr(ref, 'assessment.titleWithId', {'id': '${assessment.id}'}))),
+          body: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _label('Patient Reference'),
-                _value(assessment.patientRef ?? 'Unknown'),
-                const SizedBox(height: 12),
-                _label('Age'),
-                _value('${assessment.age.toStringAsFixed(0)} years'),
-                const SizedBox(height: 12),
-                _label('Assessment ID'),
-                _value('#${assessment.id}'),
-                const SizedBox(height: 12),
-                _label('Date & Time'),
-                _value(
-                  '${assessment.createdAt.day}/${assessment.createdAt.month}/${assessment.createdAt.year} '
-                  '${assessment.createdAt.hour.toString().padLeft(2, '0')}:'
-                  '${assessment.createdAt.minute.toString().padLeft(2, '0')}',
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          AppCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Vital Signs',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
-                ),
-                const SizedBox(height: 16),
-                _vitalRow('Systolic BP', '${assessment.systolicBp.toStringAsFixed(0)} mmHg'),
-                const Divider(height: 24),
-                _vitalRow('Diastolic BP', '${assessment.diastolicBp.toStringAsFixed(0)} mmHg'),
-                const Divider(height: 24),
-                _vitalRow('Blood Sugar', '${assessment.bloodSugar.toStringAsFixed(0)} mg/dL'),
-                const Divider(height: 24),
-                _vitalRow('Body Temperature', '${assessment.bodyTemp.toStringAsFixed(1)} °C'),
-                const Divider(height: 24),
-                _vitalRow('Heart Rate', '${assessment.heartRate.toStringAsFixed(0)} bpm'),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          AppCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Risk Assessment',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                AppCard(
+                  variant: AppCardVariant.elevated,
+                  child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          CircleAvatar(backgroundColor: AppColors.primary.withValues(alpha: 0.15), child: const Icon(Icons.person, color: AppColors.primary)),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(patientName, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+                                Text(tr(ref, 'assessment.ageYrs', {'age': assessment.age.toStringAsFixed(0)}), style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+                              ],
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: riskColor.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              _riskLabel(ref, assessment.riskLevel),
+                              style: TextStyle(color: riskColor, fontWeight: FontWeight.w700, fontSize: 14),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 16),
+                Text(tr(ref, 'assessment.vitals'), style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16, color: AppColors.textPrimary)),
+                const SizedBox(height: 8),
+                AppCard(
+                  child: Column(
+                    children: [
+                      _VitalRow(label: tr(ref, 'assessment.bloodPressure'), value: '${assessment.systolicBp.toStringAsFixed(0)}/${assessment.diastolicBp.toStringAsFixed(0)}', icon: Icons.favorite),
+                      const Divider(height: 20),
+                      _VitalRow(label: tr(ref, 'assessment.heartRate'), value: '${assessment.heartRate.toStringAsFixed(0)} bpm', icon: Icons.monitor_heart),
+                      const Divider(height: 20),
+                      _VitalRow(label: tr(ref, 'assessment.temperature'), value: '${assessment.bodyTemp.toStringAsFixed(1)}°C', icon: Icons.thermostat),
+                      const Divider(height: 20),
+                      _VitalRow(label: tr(ref, 'assessment.bloodSugar'), value: '${assessment.bloodSugar.toStringAsFixed(0)} mg/dL', icon: Icons.bloodtype),
+                      const Divider(height: 20),
+                      _VitalRow(label: tr(ref, 'assessment.age'), value: '${assessment.age.toStringAsFixed(0)} yrs', icon: Icons.calendar_today),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(tr(ref, 'assessment.riskAssessment'), style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16, color: AppColors.textPrimary)),
+                const SizedBox(height: 8),
+                ShapDecoration(
+                  color: riskColor,
+                  strokeWidth: 2.0,
+                  alignment: Alignment.center,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      children: [
+                        Icon(Icons.warning_amber_rounded, color: riskColor, size: 40),
+                        const SizedBox(height: 8),
+                        Text(
+                          tr(ref, 'assessment.riskBanner', {'level': _riskLabel(ref, assessment.riskLevel)}).toUpperCase(),
+                          style: TextStyle(
+                            color: riskColor,
+                            fontSize: 20,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 1.5,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          tr(ref, 'assessment.riskProbabilities', {
+                            'high': (assessment.probHigh * 100).toStringAsFixed(0),
+                            'mid': (assessment.probMid * 100).toStringAsFixed(0),
+                            'low': (assessment.probLow * 100).toStringAsFixed(0),
+                          }),
+                          style: const TextStyle(color: AppColors.textSecondary, fontSize: 14),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(tr(ref, 'assessment.recommendation'), style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16, color: AppColors.textPrimary)),
+                const SizedBox(height: 8),
+                AppCard(
+                  child: Text(
+                    assessment.recommendation ?? tr(ref, 'assessment.noRecommendation'),
+                    style: const TextStyle(color: AppColors.textPrimary, fontSize: 14),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(tr(ref, 'assessment.actions'), style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16, color: AppColors.textPrimary)),
+                const SizedBox(height: 8),
                 Row(
                   children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: riskColor.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        assessment.riskLevel.toUpperCase(),
-                        style: TextStyle(
-                          color: riskColor,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 16,
+                    if (existingReferral == null)
+                      Expanded(
+                        child: AppButton.primary(
+                          tr(ref, 'assessment.createReferral'),
+                          iconLeft: Icons.local_hospital,
+                          onPressed: () => context.push('/home/referrals/new'),
                         ),
+                      )
+                    else
+                      Expanded(
+                        child: AppButton.outline(
+                          tr(ref, 'assessment.viewReferrals'),
+                          iconLeft: Icons.local_hospital,
+                          onPressed: () => context.push('/home/referrals/${existingReferral.id}'),
+                        ),
+                      ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: AppButton.outline(
+                        tr(ref, 'common.edit'),
+                        iconLeft: Icons.edit,
+                        onPressed: () => context.push('/assessments/${assessment.id}/edit'),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 20),
-                _probBar('Low Risk', assessment.probLow, AppColors.success),
-                const SizedBox(height: 12),
-                _probBar('Mid Risk', assessment.probMid, AppColors.warning),
-                const SizedBox(height: 12),
-                _probBar('High Risk', assessment.probHigh, AppColors.accent),
               ],
             ),
           ),
+        );
+      },
+      loading: () => Scaffold(
+        appBar: AppBar(title: Text(tr(ref, 'assessment.title'))),
+        body: const Center(child: CircularProgressIndicator()),
+      ),
+      error: (e, _) => AppErrorWidget(error: e, onRetry: () => ref.invalidate(assessmentsProvider)),
+    );
+  }
+
+}
+
+class _VitalRow extends StatelessWidget {
+  final String label;
+  final String value;
+  final IconData icon;
+
+  const _VitalRow({required this.label, required this.value, required this.icon});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: AppColors.primary),
+          const SizedBox(width: 8),
+          Expanded(child: Text(label, style: const TextStyle(color: AppColors.textPrimary, fontSize: 14))),
+          Text(value, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: AppColors.textPrimary)),
         ],
       ),
-    );
-  }
-
-  Widget _label(String text) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
-      child: Text(
-        text,
-        style: const TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-          color: AppColors.textSecondary,
-        ),
-      ),
-    );
-  }
-
-  Widget _value(String text) {
-    return Text(
-      text,
-      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-    );
-  }
-
-  Widget _vitalRow(String label, String value) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(label, style: const TextStyle(fontSize: 15, color: AppColors.textPrimary)),
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _probBar(String label, double probability, Color color) {
-    final pct = (probability * 100).toStringAsFixed(1);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(label, style: const TextStyle(fontSize: 14)),
-            Text('$pct%', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-          ],
-        ),
-        const SizedBox(height: 6),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(4),
-          child: LinearProgressIndicator(
-            value: probability,
-            backgroundColor: color.withValues(alpha: 0.15),
-            valueColor: AlwaysStoppedAnimation(color),
-            minHeight: 8,
-          ),
-        ),
-      ],
     );
   }
 }

@@ -4,8 +4,8 @@ from sqlalchemy.orm import Session
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
-from app.database import get_db, User
-from app.schemas import Token, UserCreate
+from app.database import get_db, User, DistrictInvite, AuditLog
+from app.schemas import UserCreate, SupervisorSignup, ChwSignup
 import os
 from dotenv import load_dotenv
 
@@ -82,7 +82,91 @@ def register(
     return {"message": "User created successfully"}
 
 
-@router.post("/login", response_model=Token)
+@router.post("/supervisor-signup")
+def supervisor_signup(
+    user: SupervisorSignup,
+    db: Session = Depends(get_db),
+):
+    existing = db.query(User).filter(User.username == user.username).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Username already exists")
+    db_user = User(
+        username        = user.username,
+        hashed_password = hash_password(user.password),
+        role            = "supervisor",
+        full_name       = user.full_name,
+        district        = user.district,
+        region          = user.region,
+        whatsapp_number = user.whatsapp_number,
+        is_active       = True,
+        must_change_password = False,
+    )
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
+
+    log = AuditLog(user_id=db_user.id, action="supervisor_registered",
+                   target_type="user", target_id=db_user.id)
+    db.add(log)
+    db.commit()
+
+    return {"message": "Supervisor account created. You can log in now."}
+
+
+@router.post("/chw-signup")
+def chw_signup(
+    user: ChwSignup,
+    db: Session = Depends(get_db),
+):
+    existing = db.query(User).filter(User.username == user.username).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Username already exists")
+
+    invite = db.query(DistrictInvite).filter(
+        DistrictInvite.code == user.invite_code.strip().upper()
+    ).first()
+    if not invite:
+        raise HTTPException(status_code=400,
+                            detail="Invalid registration code")
+    if invite.status != "pending":
+        raise HTTPException(status_code=400,
+                            detail="This registration code has already been used")
+    if invite.expires_at and invite.expires_at < datetime.utcnow():
+        invite.status = "expired"
+        db.commit()
+        raise HTTPException(status_code=400,
+                            detail="This registration code has expired")
+
+    supervisor = db.query(User).filter(User.id == invite.supervisor_id).first()
+
+    db_user = User(
+        username        = user.username,
+        hashed_password = hash_password(user.password),
+        role            = "chw",
+        full_name       = user.full_name,
+        facility        = user.facility,
+        district        = invite.district or (supervisor.district if supervisor else None),
+        region          = supervisor.region if supervisor else None,
+        whatsapp_number = user.whatsapp_number,
+        is_active       = True,
+        must_change_password = False,
+    )
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
+
+    invite.status = "used"
+    invite.used_by_user_id = db_user.id
+    invite.used_at = datetime.utcnow()
+    log = AuditLog(user_id=db_user.id, action="chw_registered",
+                   target_type="user", target_id=db_user.id)
+    db.add(log)
+    db.commit()
+
+    return {"message": "CHW account created. You can log in now."}
+
+
+@router.post("/login")
 def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db)
@@ -93,5 +177,15 @@ def login(
     user.last_active = datetime.utcnow()
     db.commit()
     token = create_token({"sub": user.username, "role": user.role, "user_id": user.id})
-    return {"access_token": token, "token_type": "bearer",
-            "role": user.role, "user_id": user.id}
+    return {
+        "access_token": token,
+        "token_type": "bearer",
+        "user": {
+            "id": user.id,
+            "username": user.username,
+            "name": user.full_name,
+            "role": user.role,
+            "facility": user.facility,
+            "created_at": user.created_at.isoformat() if user.created_at else None,
+        },
+    }

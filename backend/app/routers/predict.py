@@ -20,6 +20,7 @@ def predict_risk(
     record = Assessment(
         patient_ref   = request.patient_ref,
         patient_id    = request.patient_id,
+        created_by    = current_user.id,
         age           = request.age,
         systolic_bp   = request.systolic_bp,
         diastolic_bp  = request.diastolic_bp,

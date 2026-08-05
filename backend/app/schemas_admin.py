@@ -59,6 +59,83 @@ class UserUpdate(BaseModel):
     is_active:        Optional[bool] = None
 
 
+class InviteCodeCreate(BaseModel):
+    note:             Optional[str] = None
+    expires_in_days:  Optional[int] = 7
+
+
+class InviteCodeOut(BaseModel):
+    id:                  int
+    code:                str
+    district:            Optional[str] = None
+    note:                Optional[str] = None
+    status:              str
+    expires_at:          Optional[datetime] = None
+    created_at:          datetime
+    used_by_username:    Optional[str] = None
+    supervisor_username: Optional[str] = None
+
+
+class PatientTransferRequest(BaseModel):
+    new_chw_id:  int
+    reason:      Optional[str] = None
+
+
+class ChwPatientOut(BaseModel):
+    id:                  int
+    full_name:           str
+    date_of_birth:       Optional[str] = None
+    phone:               Optional[str] = None
+    facility:            Optional[str] = None
+    risk_level:          Optional[str] = None
+    last_assessment:     Optional[str] = None
+    chw_id:              Optional[int] = None
+
+
+class AdminPatientOut(BaseModel):
+    id:                  int
+    full_name:           str
+    date_of_birth:       Optional[str] = None
+    phone:               Optional[str] = None
+    facility:            Optional[str] = None
+    district:            Optional[str] = None
+    chw_id:              Optional[int] = None
+    chw_name:            Optional[str] = None
+    risk_level:          Optional[str] = None
+    last_assessment:     Optional[str] = None
+
+
+class SupervisorOut(BaseModel):
+    id:            int
+    full_name:     Optional[str]
+    username:      str
+    district:      Optional[str]
+    region:        Optional[str]
+    is_active:     Optional[bool]
+    last_active:   Optional[datetime]
+    chw_count:     int = 0
+    patient_count: int = 0
+
+
+class DistrictSummary(BaseModel):
+    district:            str
+    region:              Optional[str] = None
+    supervisor_count:    int = 0
+    chw_count:           int = 0
+    patient_count:       int = 0
+
+
+class ChwRosterOut(BaseModel):
+    id:            int
+    full_name:     Optional[str] = None
+    username:      str
+    facility:      Optional[str] = None
+    district:      Optional[str] = None
+    is_active:     bool
+    last_active:   Optional[datetime] = None
+    patient_count: int = 0
+
+
 class MonthlyReport(BaseModel):
     district:                     str
     region:                       Optional[str]

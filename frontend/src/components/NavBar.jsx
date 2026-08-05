@@ -28,21 +28,37 @@ export default function NavBar() {
     navigate('/login');
   };
 
+  const isAdmin = role === 'admin';
+  const isSup = !isAdmin && role === 'supervisor';
+
   const navLinks = [
-    { path: '/assess', label: t('new_assessment'), icon: 'assessment' },
-    { path: '/patients', label: t('patients'), icon: 'people' },
-    { path: '/schedule', label: t('schedule'), icon: 'calendar_month' },
-    { path: '/referrals', label: t('referrals'), icon: 'local_hospital' },
-    { path: '/history', label: t('history'), icon: 'history' },
-    { path: '/dashboard', label: t('dashboard'), icon: 'monitoring' },
-    ...(role === 'supervisor' || role === 'admin'
-      ? [{ path: '/supervisor', label: t('supervisor'), icon: 'admin_panel_settings' }]
-      : []),
+    ...(isAdmin
+      ? [{ path: '/admin', label: t('admin'), icon: 'shield_person' }]
+      : [
+        { path: '/assess', label: t('new_assessment'), icon: 'assessment' },
+        { path: '/patients', label: t('patients'), icon: 'people' },
+        { path: '/schedule', label: t('schedule'), icon: 'calendar_month' },
+        { path: '/referrals', label: t('referrals'), icon: 'local_hospital' },
+        { path: '/history', label: t('history'), icon: 'history' },
+        { path: '/dashboard', label: t('dashboard'), icon: 'monitoring' },
+        ...(isSup
+          ? [{ path: '/supervisor', label: t('supervisor'), icon: 'admin_panel_settings' }]
+          : []),
+        ...(isSup
+          ? [{ path: '/supervisor/invites', label: t('invite_codes'), icon: 'vpn_key' }]
+          : []),
+        ...(isSup
+          ? [{ path: '/supervisor/facilities', label: t('facilities'), icon: 'local_hospital' }]
+          : []),
+      ]),
+    { path: '/profile', label: t('profile'), icon: 'person' },
   ];
 
+  const activePrefixes = ['/patients', '/schedule', '/supervisor', '/admin'];
+
   const linkClass = (path) =>
-    `text-sm transition-colors ${
-      ['/patients', '/schedule', '/supervisor'].includes(path)
+    `text-sm whitespace-nowrap transition-colors ${
+      activePrefixes.some((p) => path.startsWith(p))
         ? location.pathname.startsWith(path)
           ? 'text-rose-500 font-semibold'
           : 'text-text-body hover:text-rose-500'
@@ -57,11 +73,11 @@ export default function NavBar() {
         <div className="max-w-[1200px] mx-auto px-5 h-14 flex items-center justify-between">
           {/* Brand */}
           <Link to="/assess" className="flex items-center">
-            <img src={navLogo} alt="MamaSafe" className="h-16 w-auto" />
+            <img src={navLogo} alt="MamaSafe" className="h-12 w-auto" />
           </Link>
 
-          {/* Desktop nav */}
-          <div className="hidden md:flex items-center gap-8">
+          {/* Desktop nav — evenly distributed across available width */}
+          <div className="hidden lg:flex flex-1 items-center justify-evenly overflow-x-auto no-scrollbar px-4">
             {navLinks.map((link) => (
               <Link key={link.path} to={link.path} className={linkClass(link.path)}>
                 {link.label}
@@ -74,14 +90,14 @@ export default function NavBar() {
             <LanguageToggle />
             <button
               onClick={logout}
-              className="hidden md:block text-sm font-medium text-text-muted hover:text-rose-500 transition-colors"
+              className="hidden lg:block text-sm font-medium text-text-muted hover:text-rose-500 transition-colors"
             >
               {t('logout')}
             </button>
             {/* Mobile hamburger */}
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
-              className="md:hidden p-1.5 -mr-1.5 text-text-body hover:text-rose-500 transition-colors"
+              className="lg:hidden p-1.5 -mr-1.5 text-text-body hover:text-rose-500 transition-colors"
               aria-label="Menu"
             >
               <span className="material-symbols-outlined text-[22px]">
@@ -96,10 +112,10 @@ export default function NavBar() {
       {mobileOpen && (
         <>
           <div
-            className="fixed inset-0 bg-black/20 z-40 md:hidden"
+            className="fixed inset-0 bg-black/20 z-40 lg:hidden"
             onClick={() => setMobileOpen(false)}
           />
-          <div className="fixed top-14 right-0 w-64 bg-white border-b border-border shadow-lg z-50 md:hidden">
+          <div className="fixed top-14 right-0 w-64 bg-white border-b border-border shadow-lg z-50 lg:hidden">
             <div className="flex flex-col py-2">
               {navLinks.map((link) => (
                 <Link
@@ -107,7 +123,7 @@ export default function NavBar() {
                   to={link.path}
                   onClick={() => setMobileOpen(false)}
                   className={`flex items-center gap-3 px-5 py-3 text-sm transition-colors ${
-                    (['/patients', '/schedule', '/supervisor'].includes(link.path)
+                    (['/patients', '/schedule', '/supervisor', '/admin'].includes(link.path)
                       ? location.pathname.startsWith(link.path)
                       : location.pathname === link.path)
                       ? 'text-rose-500 font-semibold bg-rose-50'

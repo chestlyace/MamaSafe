@@ -4,6 +4,10 @@ import 'package:go_router/go_router.dart';
 import '../../../core/validators/validators.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_text_field.dart';
+import '../../../l10n/tr.dart';
+import '../../auth/auth_repository.dart';
+import '../../auth/user.dart';
+import '../../profile/profile_repository.dart';
 import '../facility_repository.dart';
 
 class FacilityFormScreen extends ConsumerStatefulWidget {
@@ -21,6 +25,19 @@ class _FacilityFormScreenState extends ConsumerState<FacilityFormScreen> {
   final _contactPhoneController = TextEditingController();
   final _latitudeController = TextEditingController();
   final _longitudeController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() {
+      final profile = ref.read(profileProvider);
+      profile.whenData((user) {
+        if (user.district != null && user.district!.isNotEmpty) {
+          _districtController.text = user.district!;
+        }
+      });
+    });
+  }
 
   @override
   void dispose() {
@@ -54,12 +71,13 @@ class _FacilityFormScreenState extends ConsumerState<FacilityFormScreen> {
     try {
       await ref.read(facilityRepositoryProvider).createFacility(data);
       if (!mounted) return;
+      ref.invalidate(facilitiesProvider);
       context.pop();
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(e.toString()),
+          content: Text(tr(ref, 'facility.saveFailed', {'error': e.toString()})),
           backgroundColor: Colors.red,
         ),
       );
@@ -68,8 +86,11 @@ class _FacilityFormScreenState extends ConsumerState<FacilityFormScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final auth = ref.watch(authStateProvider);
+    final isStaff = auth.user?.role == UserRole.supervisor ||
+        auth.user?.role == UserRole.admin;
     return Scaffold(
-      appBar: AppBar(title: const Text('Add Facility')),
+      appBar: AppBar(title: Text(tr(ref, isStaff ? 'facility.new' : 'facility.suggest'))),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Form(
@@ -77,61 +98,58 @@ class _FacilityFormScreenState extends ConsumerState<FacilityFormScreen> {
           child: Column(
             children: [
               AppTextField(
-                label: 'Name',
-                hint: 'e.g. District Hospital Bamenda',
+                label: tr(ref, 'facility.name'),
+                hint: tr(ref, 'facility.nameHint'),
                 controller: _nameController,
-                validator: (v) =>
-                    v == null || v.isEmpty ? 'Name is required' : null,
+                validator: (v) => requiredValidator(v, fieldName: tr(ref, 'facility.name'), ref: ref),
               ),
               const SizedBox(height: 16),
               AppTextField(
-                label: 'Location',
-                hint: 'e.g. Bamenda',
+                label: tr(ref, 'facility.location'),
+                hint: tr(ref, 'facility.locationHint'),
                 controller: _locationController,
-                validator: (v) =>
-                    v == null || v.isEmpty ? 'Location is required' : null,
+                validator: (v) => requiredValidator(v, fieldName: tr(ref, 'facility.location'), ref: ref),
               ),
               const SizedBox(height: 16),
               AppTextField(
-                label: 'District',
-                hint: 'e.g. Mezam',
+                label: tr(ref, 'facility.district'),
+                hint: tr(ref, 'facility.districtHint'),
                 controller: _districtController,
-                validator: (v) =>
-                    v == null || v.isEmpty ? 'District is required' : null,
+                validator: (v) => requiredValidator(v, fieldName: tr(ref, 'facility.district'), ref: ref),
               ),
               const SizedBox(height: 16),
               AppTextField(
-                label: 'Contact Phone (optional)',
-                hint: 'e.g. +237 123 456 789',
+                label: tr(ref, 'facility.contactPhone'),
+                hint: tr(ref, 'facility.contactPhoneHint'),
                 controller: _contactPhoneController,
                 keyboardType: TextInputType.phone,
-                validator: (v) => v == null || v.isEmpty ? null : phoneValidator(v),
+                validator: (v) => v == null || v.isEmpty ? null : phoneValidator(v, ref: ref),
               ),
               const SizedBox(height: 16),
               AppTextField(
-                label: 'Latitude (optional)',
-                hint: 'e.g. 5.96',
+                label: tr(ref, 'facility.latitude'),
+                hint: tr(ref, 'facility.latitudeHint'),
                 controller: _latitudeController,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
                 validator: (v) {
                   if (v == null || v.isEmpty) return null;
-                  if (double.tryParse(v) == null) return 'Enter a valid number';
+                  if (double.tryParse(v) == null) return tr(ref, 'facility.invalidNumber');
                   final lat = double.parse(v);
-                  if (lat < -90 || lat > 90) return 'Latitude must be between -90 and 90';
+                  if (lat < -90 || lat > 90) return tr(ref, 'facility.latRange');
                   return null;
                 },
               ),
               const SizedBox(height: 16),
               AppTextField(
-                label: 'Longitude (optional)',
-                hint: 'e.g. 10.15',
+                label: tr(ref, 'facility.longitude'),
+                hint: tr(ref, 'facility.longitudeHint'),
                 controller: _longitudeController,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
                 validator: (v) {
                   if (v == null || v.isEmpty) return null;
-                  if (double.tryParse(v) == null) return 'Enter a valid number';
+                  if (double.tryParse(v) == null) return tr(ref, 'facility.invalidNumber');
                   final lng = double.parse(v);
-                  if (lng < -180 || lng > 180) return 'Longitude must be between -180 and 180';
+                  if (lng < -180 || lng > 180) return tr(ref, 'facility.lngRange');
                   return null;
                 },
               ),
@@ -139,7 +157,7 @@ class _FacilityFormScreenState extends ConsumerState<FacilityFormScreen> {
               SizedBox(
                 width: double.infinity,
                 child: AppButton.primary(
-                  'Save',
+                  tr(ref, 'common.save'),
                   onPressed: _submit,
                 ),
               ),

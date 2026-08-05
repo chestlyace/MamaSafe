@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 from datetime import date, timedelta
 
-from app.database import (get_db, Assessment, Patient, RiskEscalationEvent)
+from app.database import (get_db, Assessment, Patient, RiskEscalationEvent, User)
 from app.routers.auth import get_current_user
 
 router = APIRouter(prefix="/api/v1", tags=["risk-trend"])
@@ -216,8 +216,19 @@ def recent_escalations(
           .filter(RiskEscalationEvent.created_at >= str(since))
           .order_by(RiskEscalationEvent.created_at.desc())
     )
+    
     if current_user.role != "admin":
-        q = q.filter(RiskEscalationEvent.chw_id == current_user.id)
+        # Get CHWs accessible to this supervisor based on their district
+        if current_user.role == "supervisor" and current_user.district:
+            # Supervisor: see CHWs in their district
+            accessible_chw_ids = [u.id for u in db.query(User.id)
+                                  .filter(User.role == "chw",
+                                          User.district == current_user.district).all()]
+        else:
+            # CHW: only their own escalations
+            accessible_chw_ids = [current_user.id]
+        
+        q = q.filter(RiskEscalationEvent.chw_id.in_(accessible_chw_ids))
 
     events = q.limit(limit).all()
 
@@ -236,6 +247,17 @@ def recent_escalations(
     return result
 
 
+def _accessible_chw_ids(db: Session, current_user) -> list[int]:
+    if current_user.role == "admin":
+        return [u.id for u in db.query(User.id).filter(User.role == "chw").all()]
+    if current_user.role == "supervisor":
+        return [u.id for u in db.query(User.id).filter(
+            User.role == "chw",
+            User.district == current_user.district,
+        ).all()]
+    return [current_user.id]
+
+
 @router.get("/risk-escalations/analytics")
 def escalation_analytics(
     db: Session = Depends(get_db),
@@ -243,7 +265,7 @@ def escalation_analytics(
 ):
     q = db.query(RiskEscalationEvent)
     if current_user.role != "admin":
-        q = q.filter(RiskEscalationEvent.chw_id == current_user.id)
+        q = q.filter(RiskEscalationEvent.chw_id.in_(_accessible_chw_ids(db, current_user)))
 
     total = q.count()
     low_to_mid = q.filter(

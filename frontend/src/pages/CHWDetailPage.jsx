@@ -1,13 +1,17 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams, Link } from 'react-router-dom';
-import { getChwStats } from '../api/client';
+import { getChwStats, deactivateUser } from '../api/client';
 
 export default function CHWDetailPage() {
   const { t } = useTranslation();
   const { chwId } = useParams();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [confirming, setConfirming] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState('');
+  const [actionError, setActionError] = useState('');
 
   useEffect(() => {
     getChwStats(chwId)
@@ -15,6 +19,21 @@ export default function CHWDetailPage() {
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [chwId]);
+
+  const handleDeactivate = async () => {
+    setSaving(true);
+    setActionError('');
+    try {
+      await deactivateUser(Number(chwId));
+      setConfirming(false);
+      setMessage(t('chw_deactivated'));
+      getChwStats(chwId).then(setData).catch(() => {});
+    } catch (err) {
+      setActionError(err.response?.data?.detail || t('error'));
+    } finally {
+      setSaving(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -44,10 +63,39 @@ export default function CHWDetailPage() {
         {t('back_to_chws')}
       </Link>
 
-      <header className="mb-6">
-        <h1 className="text-2xl font-bold text-text-heading tracking-tight">{data.full_name || data.username}</h1>
-        <p className="text-sm text-text-muted mt-1">{data.facility || t('no_facility')} — {data.username}</p>
+      <header className="mb-6 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-text-heading tracking-tight">{data.full_name || data.username}</h1>
+          <p className="text-sm text-text-muted mt-1">{data.facility || t('no_facility')} — {data.username}</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => { setConfirming(true); setActionError(''); }}
+            className="border border-red-300 text-red-600 px-4 py-2 rounded-xl text-sm font-semibold hover:bg-red-50 transition-colors flex items-center gap-1.5"
+          >
+            <span className="material-symbols-outlined text-[18px]">block</span>
+            {t('deactivate_chw')}
+          </button>
+          <Link
+            to={`/supervisor/chws/${chwId}/patients`}
+            className="bg-rose-500 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-rose-600 transition-colors flex items-center gap-1.5"
+          >
+            <span className="material-symbols-outlined text-[18px]">swap_horiz</span>
+            {t('manage_patients')}
+          </Link>
+        </div>
       </header>
+
+      {message && (
+        <div className="mb-6 bg-green-50 border border-green-200 text-green-700 text-sm rounded-xl px-4 py-3">
+          {message}
+        </div>
+      )}
+      {actionError && (
+        <div className="mb-6 bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl px-4 py-3">
+          {actionError}
+        </div>
+      )}
 
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
         {[
@@ -165,6 +213,35 @@ export default function CHWDetailPage() {
           </tbody>
         </table>
       </div>
+
+      {confirming && (
+        <div className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center px-5">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md">
+            <h2 className="text-lg font-bold text-text-heading mb-1">{t('deactivate_chw')}</h2>
+            <p className="text-sm text-text-muted mb-5">
+              {t('deactivate_chw_confirm', { name: data.full_name || data.username })}
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={handleDeactivate}
+                disabled={saving}
+                className="flex-1 bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-red-700 disabled:opacity-50 flex items-center justify-center gap-1.5"
+              >
+                {saving && <span className="material-symbols-outlined animate-spin text-[18px]">progress_activity</span>}
+                {saving ? t('deactivating') : t('deactivate_chw')}
+              </button>
+              <button
+                type="button"
+                onClick={() => setConfirming(false)}
+                disabled={saving}
+                className="px-4 py-2 text-sm text-text-muted hover:text-text-heading"
+              >
+                {t('cancel')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

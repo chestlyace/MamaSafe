@@ -42,6 +42,16 @@ export const register = async (username, password) => {
   return res.data;
 };
 
+export const supervisorSignup = async (data) => {
+  const res = await client.post('/api/v1/auth/supervisor-signup', data);
+  return res.data;
+};
+
+export const chwSignup = async (data) => {
+  const res = await client.post('/api/v1/auth/chw-signup', data);
+  return res.data;
+};
+
 // ── PREDICTION ────────────────────────────────────────────
 export const predict = async (formData) => {
   const res = await client.post('/api/v1/predict', formData);
@@ -177,13 +187,23 @@ export const getFacilities = async () => {
   return res.data;
 };
 
-export const suggestFacility = async (data) => {
+export const getPendingFacilities = async () => {
+  const res = await client.get('/api/v1/facilities/pending');
+  return res.data;
+};
+
+export const addFacility = async (data) => {
   const res = await client.post('/api/v1/facilities', data);
   return res.data;
 };
 
 export const approveFacility = async (id) => {
   const res = await client.post(`/api/v1/facilities/${id}/approve`);
+  return res.data;
+};
+
+export const rejectFacility = async (id) => {
+  const res = await client.post(`/api/v1/facilities/${id}/reject`);
   return res.data;
 };
 
@@ -375,5 +395,77 @@ export const deactivateUser = async (userId) => {
 
 export const activateUser = async (userId) => {
   const res = await client.patch(`/api/v1/admin/users/${userId}/activate`);
+  return res.data;
+};
+
+// ── INVITE CODES ──────────────────────────────────────────
+export const listInviteCodes = async () => {
+  const res = await client.get('/api/v1/admin/invite-codes');
+  return res.data;
+};
+
+export const createInviteCode = async (data) => {
+  const res = await client.post('/api/v1/admin/invite-codes', data);
+  return res.data;
+};
+
+export const revokeInviteCode = async (inviteId) => {
+  const res = await client.post(`/api/v1/admin/invite-codes/${inviteId}/revoke`);
+  return res.data;
+};
+
+// ── SUPERVISOR PATIENT MANAGEMENT ─────────────────────────
+export const listChwPatients = async (chwId) => {
+  const res = await client.get(`/api/v1/admin/chws/${chwId}/patients`);
+  return res.data;
+};
+
+export const listSupervisorPatients = async () => {
+  const res = await client.get('/api/v1/admin/patients');
+  return res.data;
+};
+
+export const transferPatient = async (patientId, data) => {
+  const res = await client.post(`/api/v1/admin/patients/${patientId}/transfer`, data);
+  return res.data;
+};
+
+// ── ADMIN OVERVIEW ────────────────────────────────────────
+export const listAdminDistricts = async () => {
+  const res = await client.get('/api/v1/admin/districts');
+  return res.data;
+};
+
+export const listAdminSupervisors = async () => {
+  const res = await client.get('/api/v1/admin/supervisors');
+  return res.data;
+};
+
+export const listAdminChws = async () => {
+  const res = await client.get('/api/v1/admin/chws/roster');
+  return res.data;
+};
+
+export const listAdminFacilities = async () => {
+  const res = await client.get('/api/v1/admin/facilities');
+  return res.data;
+};
+
+// ── MY PROFILE ────────────────────────────────────────────
+export const getMe = async () => {
+  const res = await client.get('/api/v1/users/me');
+  return res.data;
+};
+
+export const updateMe = async (data) => {
+  const res = await client.patch('/api/v1/users/me', data);
+  return res.data;
+};
+
+export const changePassword = async (currentPassword, newPassword) => {
+  const res = await client.post('/api/v1/users/me/password', {
+    current_password: currentPassword,
+    new_password: newPassword,
+  });
   return res.data;
 };

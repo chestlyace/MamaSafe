@@ -6,17 +6,23 @@ from typing import List, Optional
 from datetime import datetime, date, timedelta
 import io
 import csv
+import secrets
+import string
 
 from app.database import (
     get_db, User, Patient, Assessment, Referral,
     Delivery, PostnatalScheduledVisit, ScheduledVisit,
-    GrowthAlert, MentalHealthScreening, AuditLog
+    GrowthAlert, MentalHealthScreening, AuditLog, DistrictInvite,
+    Facility, Pregnancy
 )
 from app.schemas_admin import (
     CHWSummary, HighRiskPatient, UserCreate,
-    UserUpdate, MonthlyReport
+    UserUpdate, MonthlyReport, InviteCodeCreate, InviteCodeOut,
+    PatientTransferRequest, ChwPatientOut, AdminPatientOut,
+    SupervisorOut, DistrictSummary, ChwRosterOut
 )
 from app.routers.auth import get_current_user, hash_password
+from app.database import RiskEscalationEvent
 
 router = APIRouter(prefix="/api/v1/admin", tags=["admin"])
 
@@ -28,13 +34,31 @@ def require_supervisor(current_user = Depends(get_current_user)):
     return current_user
 
 
+def require_medical_supervisor(current_user = Depends(get_current_user)):
+    if current_user.role != "supervisor":
+        raise HTTPException(status_code=403,
+                            detail="Supervisor access required")
+    return current_user
+
+
+def require_admin(current_user = Depends(get_current_user)):
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403,
+                            detail="Admin access required")
+    return current_user
+
+
 def get_district_chw_ids(db: Session, supervisor) -> List[int]:
     if supervisor.role == "admin":
         return [u.id for u in db.query(User.id)
                 .filter(User.role == "chw").all()]
-    return [u.id for u in db.query(User.id)
-            .filter(User.role == "chw",
-                    User.district == supervisor.district).all()]
+    if supervisor.role == "supervisor":
+        # Supervisor: see CHWs in their district
+        return [u.id for u in db.query(User.id)
+                .filter(User.role == "chw",
+                        User.district == supervisor.district).all()]
+    # CHW: only their own ID
+    return [supervisor.id]
 
 
 def get_district_patient_ids(db: Session, chw_ids: List[int]) -> List[int]:
@@ -49,12 +73,320 @@ def chw_status(days_since: Optional[int]) -> str:
     return "inactive"
 
 
+# ── INVITE CODES ──────────────────────────────────────────
+
+def _live_invite_status(invite, now: datetime) -> str:
+    if invite.status != "pending":
+        return invite.status
+    if invite.expires_at and invite.expires_at < now:
+        return "expired"
+    return "pending"
+
+
+def generate_invite_code(db: Session) -> str:
+    alphabet = string.ascii_uppercase + string.digits
+    while True:
+        code = "".join(secrets.choice(alphabet) for _ in range(8))
+        if not db.query(DistrictInvite.id).filter(DistrictInvite.code == code).first():
+            return code
+
+
+@router.get("/invite-codes", response_model=List[InviteCodeOut])
+def list_invite_codes(
+    db: Session = Depends(get_db),
+    supervisor = Depends(require_supervisor)
+):
+    query = db.query(DistrictInvite)
+    if supervisor.role != "admin":
+        query = query.filter(DistrictInvite.supervisor_id == supervisor.id)
+    invites = query.order_by(DistrictInvite.created_at.desc()).all()
+
+    now = datetime.utcnow()
+    result = []
+    for inv in invites:
+        used_by = db.query(User).filter(User.id == inv.used_by_user_id).first()
+        sup     = db.query(User).filter(User.id == inv.supervisor_id).first()
+        result.append({
+            "id":                  inv.id,
+            "code":                inv.code,
+            "district":            inv.district,
+            "note":                inv.note,
+            "status":              _live_invite_status(inv, now),
+            "expires_at":          inv.expires_at,
+            "created_at":          inv.created_at,
+            "used_by_username":    used_by.username if used_by else None,
+            "supervisor_username": sup.username if sup else None,
+        })
+    return result
+
+
+@router.post("/invite-codes", status_code=201, response_model=InviteCodeOut)
+def create_invite_code(
+    payload: InviteCodeCreate,
+    db: Session = Depends(get_db),
+    supervisor = Depends(require_supervisor)
+):
+    expires_at = None
+    if payload.expires_in_days and payload.expires_in_days > 0:
+        expires_at = datetime.utcnow() + timedelta(days=payload.expires_in_days)
+
+    invite = DistrictInvite(
+        code          = generate_invite_code(db),
+        supervisor_id = supervisor.id,
+        district      = supervisor.district,
+        note          = payload.note,
+        expires_at    = expires_at,
+        status        = "pending",
+    )
+    db.add(invite)
+    db.commit()
+    db.refresh(invite)
+
+    log = AuditLog(user_id=supervisor.id, action="invite_code_created",
+                   target_type="district_invite", target_id=invite.id)
+    db.add(log)
+    db.commit()
+
+    return {
+        "id":         invite.id,
+        "code":       invite.code,
+        "district":   invite.district,
+        "note":       invite.note,
+        "status":     "pending",
+        "expires_at": invite.expires_at,
+        "created_at": invite.created_at,
+    }
+
+
+@router.post("/invite-codes/{invite_id}/revoke")
+def revoke_invite_code(
+    invite_id: int,
+    db: Session = Depends(get_db),
+    supervisor = Depends(require_supervisor)
+):
+    invite = db.query(DistrictInvite).filter(DistrictInvite.id == invite_id).first()
+    if not invite:
+        raise HTTPException(status_code=404, detail="Invite code not found")
+    if supervisor.role != "admin" and invite.supervisor_id != supervisor.id:
+        raise HTTPException(status_code=403,
+                            detail="You can only revoke your own invite codes")
+    if invite.status != "pending":
+        raise HTTPException(status_code=400,
+                            detail="Only pending invite codes can be revoked")
+
+    invite.status = "revoked"
+    log = AuditLog(user_id=supervisor.id, action="invite_code_revoked",
+                   target_type="district_invite", target_id=invite.id)
+    db.add(log)
+    db.commit()
+
+    return {"message": "Invite code revoked"}
+
+
+# ── SUPERVISOR PATIENT MANAGEMENT ────────────────────────
+
+def _patient_risk_info(db: Session, patient) -> dict:
+    latest = (db.query(Assessment)
+                .filter(Assessment.patient_id == patient.id)
+                .order_by(Assessment.created_at.desc()).first())
+    return {
+        "id":              patient.id,
+        "full_name":       patient.full_name,
+        "date_of_birth":   str(patient.date_of_birth) if patient.date_of_birth else None,
+        "phone":           patient.phone,
+        "facility":        patient.facility,
+        "chw_id":          patient.chw_id,
+        "risk_level":      latest.risk_level if latest else None,
+        "last_assessment": str(latest.created_at.date()) if latest else None,
+    }
+
+
+@router.get("/chws/{chw_id}/patients", response_model=List[ChwPatientOut])
+def get_chw_patients(
+    chw_id: int,
+    db: Session = Depends(get_db),
+    supervisor = Depends(require_medical_supervisor)
+):
+    chw_ids = get_district_chw_ids(db, supervisor)
+    if chw_id not in chw_ids:
+        raise HTTPException(status_code=403,
+                            detail="CHW not in your district")
+    patients = (db.query(Patient)
+                  .filter(Patient.chw_id == chw_id)
+                  .order_by(Patient.full_name).all())
+    return [_patient_risk_info(db, p) for p in patients]
+
+
+@router.get("/patients", response_model=List[AdminPatientOut])
+def list_supervisor_patients(
+    db: Session = Depends(get_db),
+    supervisor = Depends(require_medical_supervisor)
+):
+    chw_ids     = get_district_chw_ids(db, supervisor)
+    patient_ids = get_district_patient_ids(db, chw_ids)
+    chws        = db.query(User).filter(User.id.in_(chw_ids)).all()
+    chw_names   = {u.id: u.full_name for u in chws}
+    chw_district = {u.id: u.district for u in chws}
+
+    result = []
+    for pid in patient_ids:
+        patient = db.query(Patient).filter(Patient.id == pid).first()
+        if not patient:
+            continue
+        info = _patient_risk_info(db, patient)
+        info["chw_name"] = chw_names.get(patient.chw_id)
+        info["district"] = chw_district.get(patient.chw_id)
+        result.append(info)
+    return result
+
+
+@router.post("/patients/{patient_id}/transfer")
+def transfer_patient(
+    patient_id: int,
+    payload: PatientTransferRequest,
+    db: Session = Depends(get_db),
+    supervisor = Depends(require_medical_supervisor)
+):
+    patient = db.query(Patient).filter(Patient.id == patient_id).first()
+    if not patient:
+        raise HTTPException(status_code=404, detail="Patient not found")
+
+    old_chw_id = patient.chw_id
+    if old_chw_id == payload.new_chw_id:
+        raise HTTPException(status_code=400,
+                            detail="Patient is already assigned to this CHW")
+
+    chw_ids = get_district_chw_ids(db, supervisor)
+    if old_chw_id not in chw_ids:
+        raise HTTPException(status_code=403,
+                            detail="Patient is not under a CHW in your district")
+    new_chw = db.query(User).filter(User.id == payload.new_chw_id).first()
+    if not new_chw or new_chw.role != "chw" or new_chw.id not in chw_ids:
+        raise HTTPException(status_code=400,
+                            detail="Target CHW not in your district")
+
+    patient.chw_id = payload.new_chw_id
+    db.query(Referral).filter(
+        Referral.patient_id == patient_id,
+        Referral.chw_id == old_chw_id
+    ).update({"chw_id": payload.new_chw_id}, synchronize_session=False)
+    db.query(RiskEscalationEvent).filter(
+        RiskEscalationEvent.patient_id == patient_id,
+        RiskEscalationEvent.chw_id == old_chw_id
+    ).update({"chw_id": payload.new_chw_id}, synchronize_session=False)
+
+    log = AuditLog(
+        user_id=supervisor.id,
+        action="patient_transferred",
+        target_type="patient",
+        target_id=patient_id,
+    )
+    db.add(log)
+    db.commit()
+
+    return {"message": "Patient transferred",
+            "patient_id": patient_id,
+            "old_chw_id": old_chw_id,
+            "new_chw_id": payload.new_chw_id,
+            "reason":     payload.reason}
+
+
+# ── ADMIN OVERVIEW ────────────────────────────────────────
+
+@router.get("/districts", response_model=List[DistrictSummary])
+def list_districts(
+    db: Session = Depends(get_db),
+    _admin = Depends(require_admin)
+):
+    districts = {}
+    for u in db.query(User).filter(User.role == "supervisor").all():
+        if not u.district:
+            continue
+        d = districts.setdefault(u.district, {
+            "district": u.district, "region": u.region,
+            "supervisor_count": 0, "chw_count": 0,
+            "patient_count": 0,
+        })
+        d["supervisor_count"] += 1
+    for u in db.query(User).filter(User.role == "chw").all():
+        if not u.district:
+            continue
+        d = districts.setdefault(u.district, {
+            "district": u.district, "region": None,
+            "supervisor_count": 0, "chw_count": 0,
+            "patient_count": 0,
+        })
+        d["chw_count"] += 1
+
+    # Region of a district = the region of its supervisors (first found)
+    for name, d in districts.items():
+        sup = (db.query(User)
+                 .filter(User.role == "supervisor",
+                         User.district == name).first())
+        if sup:
+            d["region"] = sup.region
+
+    # Per-district patient registration volume
+    for name, d in districts.items():
+        chw_ids = [c.id for c in db.query(User.id)
+                   .filter(User.role == "chw",
+                           User.district == name).all()]
+        d["patient_count"] = len(get_district_patient_ids(db, chw_ids))
+
+    return list(districts.values())
+
+
+@router.get("/supervisors", response_model=List[SupervisorOut])
+def list_supervisors(
+    db: Session = Depends(get_db),
+    _admin = Depends(require_admin)
+):
+    result = []
+    for u in (db.query(User)
+                .filter(User.role == "supervisor")
+                .order_by(User.district, User.full_name).all()):
+        chw_ids = [c.id for c in
+                   db.query(User.id).filter(User.role == "chw",
+                                            User.district == u.district).all()]
+        patient_ids = get_district_patient_ids(db, chw_ids)
+        result.append({
+            "id":            u.id,
+            "full_name":     u.full_name,
+            "username":      u.username,
+            "district":      u.district,
+            "region":        u.region,
+            "is_active":     u.is_active,
+            "last_active":   u.last_active,
+            "chw_count":     len(chw_ids),
+            "patient_count": len(patient_ids),
+        })
+    return result
+
+
+@router.get("/facilities")
+def list_admin_facilities(
+    db: Session = Depends(get_db),
+    _admin = Depends(require_admin)
+):
+    rows = (db.query(Facility).order_by(Facility.approved,
+                                        Facility.name).all())
+    return [{
+        "id":          f.id,
+        "name":        f.name,
+        "district":    getattr(f, "district", None),
+        "approved":    f.approved,
+        "suggested_by": f.suggested_by,
+        "is_active":   f.is_active,
+        "created_at":  f.created_at,
+    } for f in rows]
+
+
 # ── DASHBOARD ─────────────────────────────────────────────
 
 @router.get("/dashboard")
 def get_dashboard(
     db: Session = Depends(get_db),
-    supervisor = Depends(require_supervisor)
+    supervisor = Depends(require_medical_supervisor)
 ):
     chw_ids     = get_district_chw_ids(db, supervisor)
     patient_ids = get_district_patient_ids(db, chw_ids)
@@ -133,6 +465,14 @@ def get_dashboard(
                    .count())
         return round(done / total * 100, 1) if total else 0
 
+    pending_escalations = (db.query(RiskEscalationEvent)
+                             .join(Patient,
+                                   RiskEscalationEvent.patient_id == Patient.id)
+                             .filter(Patient.chw_id.in_(chw_ids),
+                                     RiskEscalationEvent.created_at >=
+                                     str(week_start))
+                             .count())
+
     phq2_positive = (db.query(MentalHealthScreening)
                        .join(Patient,
                              MentalHealthScreening.patient_id == Patient.id)
@@ -166,6 +506,7 @@ def get_dashboard(
         "pnc1_completion_rate":   pnc_rate(1),
         "phq2_positive_this_month": phq2_positive,
         "growth_alerts_active":   growth_alerts,
+        "pending_escalations":    pending_escalations,
         "this_week":              week_stats(week_start, today),
         "last_week":              week_stats(last_week, week_start),
     }
@@ -176,7 +517,7 @@ def get_dashboard(
 @router.get("/chws")
 def list_chws(
     db: Session = Depends(get_db),
-    supervisor = Depends(require_supervisor)
+    supervisor = Depends(require_medical_supervisor)
 ):
     chw_ids = get_district_chw_ids(db, supervisor)
     chws    = db.query(User).filter(User.id.in_(chw_ids)).all()
@@ -232,13 +573,37 @@ def list_chws(
     return result
 
 
+@router.get("/chws/roster", response_model=List[ChwRosterOut])
+def list_admin_chw_roster(
+    db: Session = Depends(get_db),
+    _admin = Depends(require_admin)
+):
+    result = []
+    for chw in (db.query(User)
+                  .filter(User.role == "chw")
+                  .order_by(User.district, User.full_name).all()):
+        patient_count = (db.query(Patient.id)
+                           .filter(Patient.chw_id == chw.id).count())
+        result.append({
+            "id":          chw.id,
+            "full_name":   chw.full_name,
+            "username":    chw.username,
+            "facility":    chw.facility,
+            "district":    chw.district,
+            "is_active":   chw.is_active,
+            "last_active": chw.last_active,
+            "patient_count": patient_count,
+        })
+    return result
+
+
 # ── CHW DETAIL STATS ──────────────────────────────────────
 
 @router.get("/chws/{chw_id}/stats")
 def chw_detail_stats(
     chw_id: int,
     db: Session = Depends(get_db),
-    supervisor = Depends(require_supervisor)
+    supervisor = Depends(require_medical_supervisor)
 ):
     chw = db.query(User).filter(User.id == chw_id).first()
     if not chw:
@@ -354,7 +719,7 @@ def chw_detail_stats(
 def get_high_risk_patients(
     days_since_assessment: int = 7,
     db: Session = Depends(get_db),
-    supervisor = Depends(require_supervisor)
+    supervisor = Depends(require_medical_supervisor)
 ):
     chw_ids     = get_district_chw_ids(db, supervisor)
     patient_ids = get_district_patient_ids(db, chw_ids)
@@ -404,7 +769,7 @@ def get_high_risk_patients(
 @router.get("/referral-analytics")
 def referral_analytics(
     db: Session = Depends(get_db),
-    supervisor = Depends(require_supervisor)
+    supervisor = Depends(require_medical_supervisor)
 ):
     chw_ids = get_district_chw_ids(db, supervisor)
     refs    = db.query(Referral).filter(Referral.chw_id.in_(chw_ids)).all()
@@ -494,7 +859,7 @@ def monthly_report(
     year:  int = Query(...),
     month: int = Query(...),
     db: Session = Depends(get_db),
-    supervisor = Depends(require_supervisor)
+    supervisor = Depends(require_medical_supervisor)
 ):
     from calendar import monthrange
     chw_ids     = get_district_chw_ids(db, supervisor)
@@ -625,7 +990,7 @@ def monthly_report_csv(
     year:  int = Query(...),
     month: int = Query(...),
     db: Session = Depends(get_db),
-    supervisor = Depends(require_supervisor)
+    supervisor = Depends(require_medical_supervisor)
 ):
     report = monthly_report(year, month, db, supervisor)
     output = io.StringIO()
@@ -651,7 +1016,7 @@ def monthly_report_csv(
 @router.get("/users")
 def list_users(
     db: Session = Depends(get_db),
-    supervisor = Depends(require_supervisor)
+    supervisor = Depends(require_medical_supervisor)
 ):
     chw_ids = get_district_chw_ids(db, supervisor)
     return db.query(User).filter(User.id.in_(chw_ids)).all()
@@ -661,7 +1026,7 @@ def list_users(
 def create_chw(
     data: UserCreate,
     db: Session = Depends(get_db),
-    supervisor = Depends(require_supervisor)
+    supervisor = Depends(require_medical_supervisor)
 ):
     existing = db.query(User).filter(User.username == data.username).first()
     if existing:
@@ -698,7 +1063,7 @@ def update_user(
     user_id: int,
     data: UserUpdate,
     db: Session = Depends(get_db),
-    supervisor = Depends(require_supervisor)
+    supervisor = Depends(require_medical_supervisor)
 ):
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
@@ -713,7 +1078,7 @@ def update_user(
 def deactivate_user(
     user_id: int,
     db: Session = Depends(get_db),
-    supervisor = Depends(require_supervisor)
+    supervisor = Depends(require_medical_supervisor)
 ):
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
@@ -731,7 +1096,7 @@ def deactivate_user(
 def activate_user(
     user_id: int,
     db: Session = Depends(get_db),
-    supervisor = Depends(require_supervisor)
+    supervisor = Depends(require_medical_supervisor)
 ):
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
