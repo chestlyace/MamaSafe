@@ -26,6 +26,11 @@ if [[ ! -f "${ENV_FILE}" ]]; then
     exit 1
 fi
 
+# shellcheck disable=SC1091
+source "$(dirname "${BASH_SOURCE[0]}")/lib-env.sh"
+load_env "${ENV_FILE}"
+ensure_compose_env "${COMPOSE_DIR}"
+
 # ── 1. Pull code ───────────────────────────────────────────────
 echo "==> Pulling origin/${BRANCH} in ${REPO_DIR}"
 git -C "${REPO_DIR}" fetch --prune origin
@@ -41,10 +46,6 @@ sleep 20
 curl -fsS http://127.0.0.1:8000/health || echo "WARN: backend health not ready yet — check 'docker compose logs backend'"
 
 # ── 3. Render & install Nginx config ───────────────────────────
-# shellcheck disable=SC1091
-source "$(dirname "${BASH_SOURCE[0]}")/lib-env.sh"
-load_env "${ENV_FILE}"
-
 TEMPLATE="${COMPOSE_DIR}/nginx/mamasafe.conf"
 RENDERED="/etc/nginx/sites-available/mamasafe"
 

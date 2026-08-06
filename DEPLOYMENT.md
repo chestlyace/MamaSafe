@@ -126,9 +126,15 @@ Renewal is automatic (certbot systemd timer / cron).
 bash deploy/scripts/deploy.sh /opt/mamasafe/MamaSafe
 ```
 
-This: pulls `origin/deployed`, `docker compose up -d --build`, renders
+This: pulls `origin/deployed`, links `deploy/.env -> .env.production`
+(so compose can interpolate `${VAR}` references — `env_file:` alone does
+**not** feed interpolation), `docker compose up -d --build`, renders
 `deploy/nginx/mamasafe.conf` via `envsubst` into
 `/etc/nginx/sites-available/mamasafe`, runs `nginx -t`, and reloads.
+
+For **manual** compose runs outside `deploy.sh`, either link once:
+`ln -s .env.production deploy/.env`, or always pass
+`--env-file deploy/.env.production`.
 
 Verify:
 
@@ -252,9 +258,47 @@ git -C /opt/mamasafe/MamaSafe checkout <PREV_SHA> -- deploy frontend backend mob
 bash deploy/scripts/deploy.sh /opt/mamasafe/MamaSafe
 ```
 
-## 12. Security hardening (final pass)
+## 11.5 Troubleshooting
 
-- [ ] `deploy/.env.production` contains real secrets and is **not** in git
+### `container mamasafe-db-1 is unhealthy` / `dependency failed to start`
+
+Cause: `docker compose` cannot interpolate `${POSTGRES_DB}` etc. because
+`deploy/.env.production` was not linked into the project `.env` — the
+`env_file:` directive feeds containers at runtime but does **not** feed
+compose's `${VAR}` interpolation, so the db started with empty variables
+and its `pg_isready` healthcheck is malformed.
+
+Fix (no code change needed):
+
+```bash
+cd /opt/mamasafe/MamaSafe/deploy
+ln -s .env.production .env      # compose now reads the real values
+docker compose down             # stop the stack
+docker compose up -d --build    # recreate db with correct env
+docker compose ps               # db should show (healthy)
+```
+
+If `db` still won't start (e.g. the first initdb failed partway, leaving
+a partial data directory), check `docker compose logs db`, then reset
+just the db volume and retry:
+
+```bash
+docker compose down
+docker volume rm mamasafe_pgdata    # WAIT: this deletes all DB data
+docker compose up -d --build
+```
+
+(The `wa_auth` volume holding the WhatsApp session is unaffected.)
+
+### `production: command not found`
+
+Cause: an operator sourced `.env.production` with bash `source`; a value
+containing unquoted spaces (e.g. `VITE_APK_CHANGELOG=Initial production
+release.`) was executed as a command. Deploy scripts use the safe
+`load_env` parser now; the deploy scripts never `source` the env file
+directly. Quote any value with spaces in `.env.production` to be tidy.
+
+## 12. Security hardening (final pass)- [ ] `deploy/.env.production` contains real secrets and is **not** in git
       (`git check-ignore deploy/.env.production` should print the path).
 - [ ] `ALLOWED_ORIGINS` lists only `https://yourdomain.com` +
       `https://www.yourdomain.com` (CORS is origin-restricted, not `*`).

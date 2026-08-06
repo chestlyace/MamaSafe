@@ -27,6 +27,7 @@ fi
 # shellcheck disable=SC1091
 source "$(dirname "${BASH_SOURCE[0]}")/lib-env.sh"
 load_env "${ENV_FILE}"
+ensure_compose_env "${COMPOSE_DIR}"
 
 STAMP="$(date +%Y%m%d-%H%M%S)"
 LOG="/opt/mamasafe/logs/backup.log"

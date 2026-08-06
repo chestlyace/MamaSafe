@@ -47,3 +47,26 @@ load_env() {
         fi
     done < "${file}"
 }
+
+# Ensure `docker compose` can interpolate ${VAR} references from
+# .env.production. Compose reads a plain `.env` in the project directory
+# for interpolation (env_file: does NOT feed interpolation), so link
+# deploy/.env -> .env.production. Call this before any compose command.
+ensure_compose_env() {
+    local compose_dir="${1:?ensure_compose_env: missing compose_dir argument}"
+    local link="${compose_dir}/.env"
+    local target="${compose_dir}/.env.production"
+
+    if [[ ! -f "${target}" ]]; then
+        echo "ERROR: ${target} missing — copy from .env.production.example and fill in values." >&2
+        return 1
+    fi
+
+    if [[ ! -e "${link}" ]]; then
+        ln -s ".env.production" "${link}"
+        echo "==> Linked ${link} -> .env.production (for compose interpolation)"
+    elif [[ ! -L "${link}" || "$(readlink "${link}")" != ".env.production" ]]; then
+        echo "WARN: ${link} exists and is not a symlink to .env.production;" >&2
+        echo "      compose interpolation may use stale values." >&2
+    fi
+}
