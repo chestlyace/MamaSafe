@@ -112,7 +112,8 @@ secrets and the compose stack reads it via `env_file`.
 ## 5. TLS certificates
 
 Webroot mode; `certbot-init.sh` installs a temporary HTTP bootstrap
-site so the ACME challenge succeeds, then restores Nginx:
+site so the ACME challenge succeeds, then **leaves that bootstrap
+active** (so Nginx keeps serving port 80 until `deploy.sh` runs):
 
 ```bash
 sudo bash deploy/scripts/certbot-init.sh /opt/mamasafe/MamaSafe

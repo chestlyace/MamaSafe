@@ -6,8 +6,8 @@
 #
 # Bootstraps a temporary HTTP-only Nginx server that answers ACME
 # challenges, requests certs for ${DOMAIN}, www.${DOMAIN},
-# ${API_DOMAIN}, ${DOWNLOAD_DOMAIN}, then restores Nginx. Run
-# deploy.sh afterwards to install the full HTTPS config.
+# ${API_DOMAIN}, ${DOWNLOAD_DOMAIN}, then leaves the HTTP bootstrap
+# active. Run deploy.sh afterwards to install the full HTTPS config.
 # ═══════════════════════════════════════════════════════════════
 set -euo pipefail
 
@@ -56,12 +56,14 @@ echo "==> Requesting certificates for:"
 echo "    ${DOMAIN} www.${DOMAIN} ${API_DOMAIN} ${DOWNLOAD_DOMAIN}"
 mkdir -p "${ACME_ROOT}"
 certbot certonly --webroot -w "${ACME_ROOT}" --keep-until-expiring \
+    --deploy-hook "systemctl reload nginx" \
     -d "${DOMAIN}" -d "www.${DOMAIN}" -d "${API_DOMAIN}" -d "${DOWNLOAD_DOMAIN}"
 
-# ── Restore default site (deploy.sh installs the full config) ──
-rm -f /etc/nginx/sites-enabled/mamasafe-bootstrap
-systemctl reload nginx
-
+# ── Leave the HTTP bootstrap in place ──────────────────────────
+# (deploy.sh replaces it with the full HTTPS config; removing it now
+#  would leave Nginx serving nothing — a confusing "running but dead"
+#  state until deploy.sh runs.)
 echo
-echo "==> Certs issued. Now run: bash ${REPO_DIR}/deploy/scripts/deploy.sh ${REPO_DIR}"
+echo "==> Certs issued. HTTP bootstrap left active on port 80."
+echo "    Now run: bash ${REPO_DIR}/deploy/scripts/deploy.sh ${REPO_DIR}"
 echo "    (renewal is automatic via certbot's systemd timer/cron)"

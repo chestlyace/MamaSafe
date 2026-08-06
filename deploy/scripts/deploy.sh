@@ -50,13 +50,20 @@ TEMPLATE="${COMPOSE_DIR}/nginx/mamasafe.conf"
 RENDERED="/etc/nginx/sites-available/mamasafe"
 
 if [[ ! -f "/etc/letsencrypt/live/${DOMAIN}/fullchain.pem" ]]; then
-    echo "WARN: TLS certs not found for ${DOMAIN}. Run deploy/scripts/certbot-init.sh first,"
-    echo "      then re-run deploy.sh. Installing HTTP-only config meanwhile."
+    echo "==> WARN: TLS certs not found for ${DOMAIN} at"
+    echo "         /etc/letsencrypt/live/${DOMAIN}/. Skipping Nginx install."
+    echo "         Containers are up; the HTTP bootstrap from certbot-init.sh is still"
+    echo "         serving port 80. Run deploy/scripts/certbot-init.sh, then re-run this."
+    echo
+    echo "==> Stack deployed (Nginx config pending TLS certs)."
+    echo "    Inspect:   docker compose --project-directory ${COMPOSE_DIR} ps"
+    echo "               docker compose --project-directory ${COMPOSE_DIR} logs -f"
+    exit 0
 fi
 
 envsubst '${DOMAIN} ${API_DOMAIN} ${DOWNLOAD_DOMAIN}' < "${TEMPLATE}" > "${RENDERED}"
 ln -sfn /etc/nginx/sites-available/mamasafe /etc/nginx/sites-enabled/mamasafe
-rm -f /etc/nginx/sites-enabled/default
+rm -f /etc/nginx/sites-enabled/default /etc/nginx/sites-enabled/mamasafe-bootstrap
 nginx -t
 systemctl reload nginx
 
