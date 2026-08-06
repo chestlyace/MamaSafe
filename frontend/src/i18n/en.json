@@ -45,7 +45,6 @@
   "pushes_away": "reduces high risk",
   "feature_value": "Value",
   "health_worker_id": "Health Worker ID",
-
   "enter_patient_data": "Enter patient clinical data for risk analysis",
   "enter_patient_id": "Enter patient ID or name",
   "search_patient_id": "Search patient ID...",
@@ -84,7 +83,6 @@
   "feature_contributions": "Feature Contributions",
   "shap_explanation": "Analysis of how individual metrics influenced this risk score (SHAP values).",
   "start_new_assessment": "Start New Assessment",
-
   "patients": "Patients",
   "register_patient": "Register Patient",
   "patient_list": "Patient List",
@@ -149,7 +147,6 @@
   "view_patient_card": "View Patient Card",
   "patient_name": "Patient Name",
   "patient_not_found": "Patient not found",
-
   "referrals": "Referrals",
   "referral_history": "Referral History",
   "no_referrals": "No referrals yet",
@@ -172,7 +169,6 @@
   "referral_sent": "Referral Sent",
   "referral_sent_desc": "The facility has been notified. Track status here.",
   "close": "Close",
-
   "schedule": "Schedule",
   "visit_schedule": "Visit Schedule",
   "anc_visit_schedule": "ANC Visit Schedule",
@@ -210,7 +206,6 @@
   "days_ago": "{{count}} day(s) ago",
   "yesterday": "Yesterday",
   "today_label": "Today",
-
   "postnatal": "Postnatal",
   "no_deliveries": "No deliveries recorded",
   "record_delivery_desc": "Record a delivery to start postnatal care tracking.",
@@ -267,7 +262,6 @@
   "phq2_nearly_every": "Nearly every day",
   "phq2_score": "PHQ-2 Score",
   "submit_screening": "Submit Screening",
-
   "growth_tracker": "Growth Tracker",
   "baby_growth": "Baby Growth",
   "growth_chart": "Growth Chart",
@@ -306,7 +300,6 @@
   "visit": "Visit",
   "day": "Day",
   "resolve": "Resolve",
-
   "supervisor": "Supervisor",
   "supervisor_dashboard": "Supervisor Dashboard",
   "total_chws": "Total CHWs",
@@ -337,7 +330,6 @@
   "inactive": "Inactive",
   "never_active": "Never Active",
   "view": "View",
-  "name": "Name",
   "facility": "Facility",
   "create": "Create",
   "cancel": "Cancel",
@@ -362,7 +354,6 @@
   "by_facility": "By Facility",
   "by_chw": "By CHW",
   "sent": "Sent",
-  "arrived": "Arrived",
   "rate": "Rate",
   "avg_time_to_receipt": "Avg. Time to Receipt",
   "avg_time_to_arrival": "Avg. Time to Arrival",
@@ -386,7 +377,6 @@
   "phq2_positive": "PHQ-2 Positive",
   "growth_alerts": "Growth Alerts",
   "growth_alerts_generated": "Growth Alerts Generated",
-
   "no_account": "Don't have an account?",
   "supervisor_signup_cta": "Register as a Supervisor",
   "chw_signup_cta": "Register as a CHW (invite code required)",
@@ -471,7 +461,6 @@
   "actions": "Actions",
   "approve_failed": "Failed to approve facility.",
   "reject_failed": "Failed to reject facility.",
-
   "profile": "Profile",
   "account_info": "Account Information",
   "member_since": "Member since",
@@ -747,6 +736,10 @@
     "feat6": "Bilingual English and French interface",
     "use_web": "In the meantime, you can use MamaSafe on the web:",
     "web_cta": "Sign up for web access",
-    "back_home": "Back to home"
+    "back_home": "Back to home",
+    "apk_ready_text": "The Android app is ready to install. Download the APK below and allow installation from unknown sources on your device.",
+    "download_apk": "Download APK",
+    "version": "Version",
+    "changelog": "What's new"
   }
 }

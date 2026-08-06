@@ -1,6 +1,9 @@
 import axios from 'axios';
 
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+// In production the API is served same-origin through Nginx (path /api/v1),
+// so an empty/unset VITE_API_URL means "same origin". In dev the .env file
+// points VITE_API_URL at the local FastAPI server.
+const BASE_URL = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '');
 
 const client = axios.create({
   baseURL: BASE_URL,

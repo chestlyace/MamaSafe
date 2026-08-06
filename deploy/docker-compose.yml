@@ -1,0 +1,115 @@
+# MamaSafe production stack — single-server Docker Compose
+#
+# Usage (from the deploy/ directory on the server):
+#   cp .env.production.example .env.production   # then fill in real values
+#   docker compose up -d --build
+#
+# All services are bound to 127.0.0.1 only. The host-level Nginx
+# (installed via deploy/scripts/setup-server.sh) terminates TLS and
+# reverse-proxies to these containers.
+name: mamasafe
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  backend:
+    build:
+      context: ..
+      dockerfile: deploy/backend.Dockerfile
+    image: mamasafe-backend
+    restart: unless-stopped
+    env_file: .env.production
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      BAILEYS_URL: http://whatsapp:3001
+      DISABLE_BAILEYS_SPAWN: "1"
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:8000:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 6
+      start_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  whatsapp:
+    build:
+      context: ../backend/whatsapp
+      dockerfile: ../../deploy/whatsapp.Dockerfile
+    image: mamasafe-whatsapp
+    restart: unless-stopped
+    environment:
+      PORT: 3001
+      AUTH_DIR: /app/auth
+      FASTAPI_URL: http://backend:8000
+      WEBHOOK_SECRET: ${WEBHOOK_SECRET}
+    volumes:
+      - wa_auth:/app/auth
+    ports:
+      - "127.0.0.1:3001:3001"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3001/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 20s
+      timeout: 5s
+      retries: 6
+      start_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: ../deploy/frontend.Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL:-}
+        VITE_APK_URL: ${VITE_APK_URL:-}
+        VITE_APK_VERSION: ${VITE_APK_VERSION:-}
+        VITE_APK_CHECKSUM: ${VITE_APK_CHECKSUM:-}
+        VITE_APK_CHANGELOG: ${VITE_APK_CHANGELOG:-}
+    image: mamasafe-frontend
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8080:80"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://localhost/"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+volumes:
+  pgdata:
+  wa_auth:

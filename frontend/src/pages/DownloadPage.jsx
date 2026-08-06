@@ -3,8 +3,14 @@ import { Link } from 'react-router-dom';
 import Reveal from '../components/landing/Reveal';
 import mobileLogo from '../assets/logo.svg';
 
+const APK_URL = import.meta.env.VITE_APK_URL || '';
+const APK_VERSION = import.meta.env.VITE_APK_VERSION || '';
+const APK_CHECKSUM = import.meta.env.VITE_APK_CHECKSUM || '';
+const APK_CHANGELOG = import.meta.env.VITE_APK_CHANGELOG || '';
+
 export default function DownloadPage() {
   const { t } = useTranslation();
+  const apkAvailable = APK_URL !== '';
   return (
     <main className="min-h-screen bg-canvas text-text-body">
       <div className="mx-auto max-w-4xl px-5 py-20 sm:py-32">
@@ -24,15 +30,55 @@ export default function DownloadPage() {
           <div className="mt-16 rounded-3xl border border-border bg-white p-8 sm:p-12 shadow-sm">
             <div className="flex items-center gap-3 mb-6">
               <span className="material-symbols-outlined text-3xl text-rose-primary">
-                schedule
+                android
               </span>
               <h2 className="font-display text-2xl font-semibold text-text-heading">
-                {t('download.coming_soon')}
+                {apkAvailable ? t('download.android') : t('download.coming_soon')}
               </h2>
             </div>
             <p className="text-lg leading-relaxed text-text-body">
-              {t('download.coming_soon_text')}
+              {apkAvailable ? t('download.apk_ready_text') : t('download.coming_soon_text')}
             </p>
+
+            {apkAvailable ? (
+              <div className="mt-8">
+                <a
+                  href={APK_URL}
+                  className="inline-flex items-center gap-2 rounded-full bg-rose-primary px-7 py-3.5 text-base font-semibold text-white shadow-lg shadow-rose-primary/25 hover:bg-rose-hover hover:-translate-y-0.5 transition-all"
+                >
+                  <span className="material-symbols-outlined text-[20px]">download</span>
+                  {APK_VERSION ? `${t('download.download_apk')} · v${APK_VERSION}` : t('download.download_apk')}
+                </a>
+
+                {APK_VERSION && (
+                  <p className="mt-4 text-sm text-text-muted">
+                    {t('download.version')}: v{APK_VERSION}
+                  </p>
+                )}
+                {APK_CHECKSUM && (
+                  <p className="mt-1 text-xs break-all text-text-muted">
+                    SHA-256: <code className="font-mono">{APK_CHECKSUM}</code>
+                  </p>
+                )}
+                {APK_CHANGELOG && (
+                  <div className="mt-6 rounded-2xl bg-surface p-6">
+                    <h3 className="font-display text-lg font-semibold text-text-heading mb-3">
+                      {t('download.changelog')}
+                    </h3>
+                    <p className="whitespace-pre-line text-sm leading-relaxed text-text-body">
+                      {APK_CHANGELOG}
+                    </p>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <button
+                disabled
+                className="mt-6 inline-flex items-center gap-2 rounded-full bg-surface px-6 py-3 text-sm font-semibold text-text-muted cursor-not-allowed"
+              >
+                {t('download.available_soon')}
+              </button>
+            )}
           </div>
         </Reveal>
 
@@ -66,12 +112,22 @@ export default function DownloadPage() {
               <p className="mt-2 text-sm text-text-body">
                 {t('download.android_status')}
               </p>
-              <button
-                disabled
-                className="mt-6 inline-flex items-center gap-2 rounded-full bg-surface px-6 py-3 text-sm font-semibold text-text-muted cursor-not-allowed"
-              >
-                {t('download.available_soon')}
-              </button>
+              {apkAvailable ? (
+                <a
+                  href={APK_URL}
+                  className="mt-6 inline-flex items-center gap-2 rounded-full bg-rose-primary px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-rose-primary/25 hover:bg-rose-hover transition-all"
+                >
+                  {t('download.download_apk')}
+                  <span className="material-symbols-outlined text-[18px]">download</span>
+                </a>
+              ) : (
+                <button
+                  disabled
+                  className="mt-6 inline-flex items-center gap-2 rounded-full bg-surface px-6 py-3 text-sm font-semibold text-text-muted cursor-not-allowed"
+                >
+                  {t('download.available_soon')}
+                </button>
+              )}
             </div>
           </div>
         </Reveal>

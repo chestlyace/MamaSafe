@@ -25,9 +25,16 @@ app = FastAPI(
     version="1.0.0"
 )
 
+_raw_origins = os.getenv("ALLOWED_ORIGINS", "*")
+allowed_origins = (
+    [o.strip() for o in _raw_origins.split(",") if o.strip()]
+    if _raw_origins != "*"
+    else ["*"]
+)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -43,23 +50,32 @@ def seed_admin():
     try:
         existing = db.query(User).filter(User.username == "admin").first()
         if not existing:
+            admin_user = os.getenv("ADMIN_USERNAME", "admin")
+            admin_pass = os.getenv("ADMIN_PASSWORD", "ChangeMe@2025")
             admin = User(
-                username="admin",
-                hashed_password=hash_password("ChangeMe@2025"),
+                username=admin_user,
+                hashed_password=hash_password(admin_pass),
                 role="admin",
                 full_name="System Administrator",
                 must_change_password=True,
             )
             db.add(admin)
             db.commit()
-            print("Admin account seeded: admin / ChangeMe@2025")
+            print(f"Admin account seeded: {admin_user}")
     finally:
         db.close()
 
 
 def start_baileys():
-    """Start the Baileys WhatsApp gateway as a detached background process."""
+    """Start the Baileys WhatsApp gateway as a detached background process.
+
+    In containerized deployments the Baileys gateway runs as its own
+    service, so the subprocess launch is disabled via DISABLE_BAILEYS_SPAWN=1.
+    """
     global baileys_process
+    if os.getenv("DISABLE_BAILEYS_SPAWN") == "1":
+        print("WhatsApp gateway: running as separate service — subprocess spawn disabled")
+        return
     if not os.path.exists(os.path.join(BAILEYS_DIR, "node_modules")):
         print("WhatsApp gateway not installed. Run: cd backend/whatsapp && npm install")
         return

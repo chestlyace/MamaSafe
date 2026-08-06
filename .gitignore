@@ -150,6 +150,8 @@ activemq-data/
 
 # Environments
 .env
+# Production secrets (deploy/ example file IS committed)
+deploy/.env.production
 .envrc
 .venv
 env/

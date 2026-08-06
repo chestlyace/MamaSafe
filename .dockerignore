@@ -1,0 +1,20 @@
+# Root .dockerignore — keeps the backend build context small.
+# The backend image only needs backend/requirements.txt, backend/app, backend/model.
+.git
+**/node_modules
+**/__pycache__
+**/*.py[codz]
+**/.pytest_cache
+backend/venv
+backend/.env
+backend/whatsapp
+frontend
+mobile
+ml
+docs
+plans
+report
+deploy
+*.log
+*.md
+.DS_Store

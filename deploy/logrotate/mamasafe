@@ -1,0 +1,13 @@
+# MamaSafe — rotate operator-script logs (backup.sh, monitor.sh, deploy.sh).
+# Docker container logs are already capped by the json-file driver
+# (10m x 5 per service), so only host-level logs are rotated here.
+
+/opt/mamasafe/logs/*.log {
+    weekly
+    rotate 4
+    compress
+    delaycompress
+    missingok
+    notifempty
+    copytruncate
+}

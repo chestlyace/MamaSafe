@@ -45,7 +45,6 @@
   "pushes_away": "réduit le risque élevé",
   "feature_value": "Valeur",
   "health_worker_id": "ID Agent de santé",
-
   "enter_patient_data": "Saisissez les données cliniques du patient pour l'analyse du risque",
   "enter_patient_id": "Saisir l'identifiant ou le nom du patient",
   "search_patient_id": "Rechercher un ID patient...",
@@ -84,7 +83,6 @@
   "feature_contributions": "Contributions des variables",
   "shap_explanation": "Analyse de l'influence de chaque mesure sur le score de risque (valeurs SHAP).",
   "start_new_assessment": "Commencer une nouvelle évaluation",
-
   "patients": "Patientes",
   "register_patient": "Enregistrer une Patiente",
   "patient_list": "Liste des Patientes",
@@ -149,7 +147,6 @@
   "view_patient_card": "Voir la Carte Patiente",
   "patient_name": "Nom de la Patiente",
   "patient_not_found": "Patiente non trouvée",
-
   "referrals": "Référals",
   "referral_history": "Historique des Référals",
   "no_referrals": "Aucun réferral pour l'instant",
@@ -172,7 +169,6 @@
   "referral_sent": "Réferral Envoyé",
   "referral_sent_desc": "L'établissement a été notifié. Suivez le statut ici.",
   "close": "Fermer",
-
   "schedule": "Calendrier",
   "visit_schedule": "Calendrier des Visites",
   "anc_visit_schedule": "Calendrier des Visites Prénatales",
@@ -210,7 +206,6 @@
   "days_ago": "Il y a {{count}} jour(s)",
   "yesterday": "Hier",
   "today_label": "Aujourd'hui",
-
   "postnatal": "Postnatal",
   "no_deliveries": "Aucun accouchement enregistré",
   "record_delivery_desc": "Enregistrez un accouchement pour commencer le suivi postnatal.",
@@ -267,7 +262,6 @@
   "phq2_nearly_every": "Presque tous les jours",
   "phq2_score": "Score PHQ-2",
   "submit_screening": "Soumettre le Dépistage",
-
   "growth_tracker": "Suivi de Croissance",
   "baby_growth": "Croissance du Bébé",
   "growth_chart": "Courbe de Croissance",
@@ -306,7 +300,6 @@
   "visit": "Visite",
   "day": "Jour",
   "resolve": "Résoudre",
-
   "supervisor": "Superviseur",
   "supervisor_dashboard": "Tableau de Bord Superviseur",
   "total_chws": "Total AS",
@@ -337,7 +330,6 @@
   "inactive": "Inactif",
   "never_active": "Jamais Actif",
   "view": "Voir",
-  "name": "Nom",
   "facility": "Établissement",
   "create": "Créer",
   "cancel": "Annuler",
@@ -362,7 +354,6 @@
   "by_facility": "Par Établissement",
   "by_chw": "Par AS",
   "sent": "Envoyés",
-  "arrived": "Arrivés",
   "rate": "Taux",
   "avg_time_to_receipt": "Délai Moyen de Réception",
   "avg_time_to_arrival": "Délai Moyen d'Arrivée",
@@ -386,7 +377,6 @@
   "phq2_positive": "PHQ-2 Positif",
   "growth_alerts": "Alertes de Croissance",
   "growth_alerts_generated": "Alertes de Croissance Générées",
-
   "no_account": "Pas encore de compte ?",
   "supervisor_signup_cta": "S'inscrire comme superviseur",
   "chw_signup_cta": "S'inscrire comme ASC (code d'invitation requis)",
@@ -471,7 +461,6 @@
   "actions": "Actions",
   "approve_failed": "Échec de l'approbation de l'établissement.",
   "reject_failed": "Échec du rejet de l'établissement.",
-
   "profile": "Profil",
   "account_info": "Informations du compte",
   "member_since": "Membre depuis",
@@ -747,6 +736,10 @@
     "feat6": "Interface bilingue français et anglais",
     "use_web": "En attendant, vous pouvez utiliser MamaSafe sur le web :",
     "web_cta": "S'inscrire pour l'accès web",
-    "back_home": "Retour à l'accueil"
+    "back_home": "Retour à l'accueil",
+    "apk_ready_text": "L'application Android est prête à installer. Téléchargez l'APK ci-dessous et autorisez l'installation depuis des sources inconnues sur votre appareil.",
+    "download_apk": "Télécharger l'APK",
+    "version": "Version",
+    "changelog": "Nouveautés"
   }
 }
