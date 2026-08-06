@@ -24,7 +24,8 @@ if [[ ! -f "${ENV_FILE}" ]]; then
 fi
 
 # shellcheck disable=SC1091
-source "${ENV_FILE}"
+source "$(dirname "${BASH_SOURCE[0]}")/lib-env.sh"
+load_env "${ENV_FILE}"
 
 BOOTSTRAP="/etc/nginx/sites-available/mamasafe-bootstrap"
 ACME_ROOT="/var/www/certbot"

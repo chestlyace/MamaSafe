@@ -25,7 +25,8 @@ if [[ ! -f "${ENV_FILE}" ]]; then
 fi
 
 # shellcheck disable=SC1091
-source "${ENV_FILE}"
+source "$(dirname "${BASH_SOURCE[0]}")/lib-env.sh"
+load_env "${ENV_FILE}"
 
 STAMP="$(date +%Y%m%d-%H%M%S)"
 LOG="/opt/mamasafe/logs/backup.log"

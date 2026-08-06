@@ -42,7 +42,8 @@ curl -fsS http://127.0.0.1:8000/health || echo "WARN: backend health not ready y
 
 # ── 3. Render & install Nginx config ───────────────────────────
 # shellcheck disable=SC1091
-source "${ENV_FILE}"
+source "$(dirname "${BASH_SOURCE[0]}")/lib-env.sh"
+load_env "${ENV_FILE}"
 
 TEMPLATE="${COMPOSE_DIR}/nginx/mamasafe.conf"
 RENDERED="/etc/nginx/sites-available/mamasafe"

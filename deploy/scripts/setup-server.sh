@@ -34,7 +34,7 @@ case "${OS_ID}" in
     apt-get install -y --no-install-recommends \
         ca-certificates curl jq git nginx python3 \
         python3-certbot python3-certbot-nginx \
-        openssl
+        gettext-base openssl
     # Docker Engine (official repo)
     install -m 0755 -d /etc/apt/keyrings
     curl -fsSL https://download.docker.com/linux/${OS_ID}/gpg \
@@ -49,7 +49,7 @@ https://download.docker.com/linux/${OS_ID} $(. /etc/os-release && echo "$VERSION
     ;;
   amzn)
     dnf update -y
-    dnf install -y curl jq git nginx certbot python3-certbot-nginx openssl
+    dnf install -y curl jq git nginx certbot python3-certbot-nginx openssl gettext
     dnf install -y docker
     systemctl enable --now docker
     # Compose plugin on Amazon Linux 2023
