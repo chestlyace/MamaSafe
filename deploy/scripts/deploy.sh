@@ -26,6 +26,13 @@ if [[ ! -f "${ENV_FILE}" ]]; then
     exit 1
 fi
 
+# Nginx install + TLS cert check require root (letsencrypt dirs are 700 root).
+# Re-exec with sudo so a non-root run can't silently skip the Nginx step.
+if [[ "${EUID}" -ne 0 ]]; then
+    echo "==> Re-executing with sudo (needs root for the Nginx/TLS steps)..."
+    exec sudo "$0" "$@"
+fi
+
 # shellcheck disable=SC1091
 source "$(dirname "${BASH_SOURCE[0]}")/lib-env.sh"
 load_env "${ENV_FILE}"
