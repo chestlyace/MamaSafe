@@ -17,7 +17,7 @@ def _get_district_chw_ids(db: Session, current_user) -> list[int]:
     if current_user.role == "admin":
         return [u.id for u in db.query(User.id).filter(User.role == "chw").all()]
     if current_user.role == "supervisor":
-        return [u.id for u in db.query(User.id)
+        return [current_user.id] + [u.id for u in db.query(User.id)
                 .filter(User.role == "chw", User.district == current_user.district).all()]
     # CHW: only their own ID
     return [current_user.id]

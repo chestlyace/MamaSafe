@@ -118,14 +118,20 @@ void main() {
   });
 
   group('AssessmentRepository.createAssessment', () {
-    test('posts to the versioned endpoint and stores normalized risk', () async {
-      when(() => dio.post('/api/v1/assessments', data: any(named: 'data')))
+    test('posts to the predict endpoint and stores normalized risk', () async {
+      when(() => dio.post('/api/v1/predict', data: any(named: 'data')))
           .thenAnswer((_) async => Response<Map<String, dynamic>>(
                 requestOptions:
-                    RequestOptions(path: '/api/v1/assessments'),
+                    RequestOptions(path: '/api/v1/predict'),
                 data: {
-                  'id': 7,
-                  ...remoteAssessment(id: 7, risk: 'high risk'),
+                  'assessment_id': 7,
+                  'risk_level': 'high risk',
+                  'confidence': 0.9,
+                  'prob_high': 0.9,
+                  'prob_low': 0.05,
+                  'prob_mid': 0.05,
+                  'recommendation': 'refer',
+                  'shap_values': [],
                 },
                 statusCode: 200,
               ));
@@ -141,7 +147,7 @@ void main() {
 
       expect(created.id, 7);
       expect(created.riskLevel, 'high');
-      verify(() => dio.post('/api/v1/assessments', data: any(named: 'data')))
+      verify(() => dio.post('/api/v1/predict', data: any(named: 'data')))
           .called(1);
     });
   });

@@ -162,3 +162,30 @@ def test_supervisor_views_are_limited_to_their_district(db_session):
     assert summary["active_pregnancies"] == 1
     assert [p.id for p in patients_out] == [patient_a.id]
     assert [e["patient_id"] for e in escalations_out] == [patient_a.id]
+
+
+def test_supervisor_can_see_assessments_they_created(db_session):
+    supervisor = _user(db_session, username="sup", role="supervisor", district="District A")
+    chw_a = _user(db_session, username="chw-a", role="chw", district="District A")
+
+    patient_a = _patient(db_session, name="Alice A", chw_id=chw_a.id)
+
+    now = datetime.utcnow()
+    own_assessment = _assessment(
+        db_session,
+        patient=patient_a,
+        created_by=supervisor.id,
+        risk_level="high risk",
+        created_at=now,
+    )
+
+    db_session.commit()
+
+    assessments_out = assessments.get_assessments(
+        db=db_session,
+        current_user=supervisor,
+        skip=0,
+        limit=20,
+    )
+
+    assert own_assessment.id in [a.id for a in assessments_out]

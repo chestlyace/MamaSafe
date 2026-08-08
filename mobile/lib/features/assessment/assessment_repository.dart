@@ -48,14 +48,15 @@ class AssessmentRepository {
     final id = DateTime.now().millisecondsSinceEpoch;
 
     try {
-      final response = await _dio.post('/api/v1/assessments', data: jsonData);
+      final response = await _dio.post('/api/v1/predict', data: jsonData);
       final body = response.data as Map<String, dynamic>;
 
       final riskLevel = _normalizeRisk(body['risk_level'] as String? ?? 'unknown');
       final probHigh = (body['prob_high'] as num?)?.toDouble() ?? 0.0;
       final probLow = (body['prob_low'] as num?)?.toDouble() ?? 0.0;
       final probMid = (body['prob_mid'] as num?)?.toDouble() ?? 0.0;
-      final remoteId = body['id'] as int?;
+      final remoteId = (body['assessment_id'] as num?)?.toInt() ??
+          (body['id'] as int?);
 
       await _db.into(_db.assessments).insertOnConflictUpdate(
         AssessmentsCompanion.insert(
@@ -100,7 +101,7 @@ class AssessmentRepository {
       await _db.into(_db.pendingOps).insert(
         PendingOpsCompanion.insert(
           operationType: 'create_assessment',
-          endpoint: '/api/v1/assessments',
+          endpoint: '/api/v1/predict',
           payload: jsonEncode(jsonData),
           createdAt: now,
         ),
