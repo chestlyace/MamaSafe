@@ -1,4 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Required for all network access in release builds. The Flutter template
+         only adds this to the debug/profile manifests, so without it here the
+         production APK fails DNS lookups (SocketException: Failed host lookup). -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
         android:label="MamaSafe"
         android:name="${applicationName}"
