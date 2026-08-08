@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import '../../onboarding/onboarding_provider.dart';
 import '../auth_repository.dart';
@@ -35,10 +36,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.favorite_rounded,
-              size: 64,
-              color: Theme.of(context).colorScheme.primary,
+            SvgPicture.asset(
+              'assets/images/logo.svg',
+              width: 120,
+              height: 120,
             ),
             const SizedBox(height: 16),
             Text(
