@@ -53,8 +53,10 @@ def get_district_chw_ids(db: Session, supervisor) -> List[int]:
         return [u.id for u in db.query(User.id)
                 .filter(User.role == "chw").all()]
     if supervisor.role == "supervisor":
-        # Supervisor: see CHWs in their district
-        return [u.id for u in db.query(User.id)
+        # Supervisor: see CHWs in their district plus their own directly-
+        # created records (supervisors register patients/assessments
+        # themselves; those rows carry the supervisor's own id).
+        return [supervisor.id] + [u.id for u in db.query(User.id)
                 .filter(User.role == "chw",
                         User.district == supervisor.district).all()]
     # CHW: only their own ID
@@ -395,6 +397,9 @@ def get_dashboard(
     week_start = today - timedelta(days=7)
     last_week  = today - timedelta(days=14)
 
+    total_chws = len([c for c in db.query(User)
+                      .filter(User.role == "chw",
+                              User.district == supervisor.district).all()])
     total_patients    = len(patient_ids)
     total_assessments = (db.query(Assessment)
                            .filter(Assessment.patient_id.in_(patient_ids))
@@ -491,7 +496,7 @@ def get_dashboard(
     return {
         "district":               supervisor.district or "All districts",
         "region":                 supervisor.region,
-        "total_chws":             len(chw_ids),
+        "total_chws":             total_chws,
         "active_chws_today":      active_today,
         "total_patients":         total_patients,
         "total_assessments":      total_assessments,
@@ -507,7 +512,7 @@ def get_dashboard(
         "phq2_positive_this_month": phq2_positive,
         "growth_alerts_active":   growth_alerts,
         "pending_escalations":    pending_escalations,
-        "this_week":              week_stats(week_start, today),
+        "this_week":              week_stats(week_start, today + timedelta(days=1)),
         "last_week":              week_stats(last_week, week_start),
     }
 
@@ -520,7 +525,8 @@ def list_chws(
     supervisor = Depends(require_medical_supervisor)
 ):
     chw_ids = get_district_chw_ids(db, supervisor)
-    chws    = db.query(User).filter(User.id.in_(chw_ids)).all()
+    chws    = db.query(User).filter(User.id.in_(chw_ids),
+                                   User.role == "chw").all()
     result  = []
 
     for chw in chws:
@@ -1019,7 +1025,8 @@ def list_users(
     supervisor = Depends(require_medical_supervisor)
 ):
     chw_ids = get_district_chw_ids(db, supervisor)
-    return db.query(User).filter(User.id.in_(chw_ids)).all()
+    return db.query(User).filter(User.id.in_(chw_ids),
+                                 User.role == "chw").all()
 
 
 @router.post("/users")

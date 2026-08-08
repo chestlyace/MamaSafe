@@ -17,7 +17,7 @@ from app.database import (  # noqa: E402
     User,
     engine,
 )
-from app.routers import assessments, anc, dashboard, risk_trend  # noqa: E402
+from app.routers import assessments, anc, dashboard, risk_trend, admin  # noqa: E402
 
 
 @pytest.fixture()
@@ -189,3 +189,54 @@ def test_supervisor_can_see_assessments_they_created(db_session):
     )
 
     assert own_assessment.id in [a.id for a in assessments_out]
+
+
+def test_supervisor_dashboard_counts_district_chw_work(db_session):
+    supervisor = _user(db_session, username="sup", role="supervisor", district="District A")
+    chw_a = _user(db_session, username="chw-a", role="chw", district="District A")
+    chw_b = _user(db_session, username="chw-b", role="chw", district="District B")
+
+    patient_a = _patient(db_session, name="Alice A", chw_id=chw_a.id)
+    _patient(db_session, name="Beatrice B", chw_id=chw_b.id)
+
+    now = datetime.utcnow()
+    _assessment(
+        db_session,
+        patient=patient_a,
+        created_by=chw_a.id,
+        risk_level="high risk",
+        created_at=now,
+    )
+    db_session.add(Pregnancy(patient_id=patient_a.id, lmp_date="2026-01-01", is_active=True))
+    db_session.commit()
+
+    result = admin.get_dashboard(db=db_session, supervisor=supervisor)
+
+    assert result["total_chws"] == 1
+    assert result["total_patients"] == 1
+    assert result["total_assessments"] == 1
+    assert result["high_risk_active"] == 1
+
+
+def test_supervisor_dashboard_counts_own_direct_records(db_session):
+    supervisor = _user(db_session, username="sup", role="supervisor", district="District A")
+
+    patient = _patient(db_session, name="Alice", chw_id=supervisor.id)
+    now = datetime.utcnow()
+    _assessment(
+        db_session,
+        patient=patient,
+        created_by=supervisor.id,
+        risk_level="high risk",
+        created_at=now,
+    )
+    db_session.add(Pregnancy(patient_id=patient.id, lmp_date="2026-01-01", is_active=True))
+    db_session.commit()
+
+    result = admin.get_dashboard(db=db_session, supervisor=supervisor)
+
+    assert result["total_patients"] == 1
+    assert result["total_assessments"] == 1
+    assert result["high_risk_active"] == 1
+    assert result["this_week"]["assessments"] == 1
+    assert result["this_week"]["new_patients"] == 1
