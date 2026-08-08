@@ -66,7 +66,10 @@ class AuthRepository {
         'full_name': fullName,
         'username': username,
         'password': password,
-        'invite_code': inviteCode.trim().toUpperCase(),
+        'invite_code': inviteCode
+            .trim()
+            .toUpperCase()
+            .replaceAll(RegExp(r'[^A-Z0-9]'), ''),
         if (facility != null && facility.trim().isNotEmpty)
           'facility': facility.trim(),
         if (whatsappNumber != null && whatsappNumber.trim().isNotEmpty)

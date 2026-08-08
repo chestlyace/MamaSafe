@@ -63,10 +63,11 @@ void main() {
 
       final captured = verify(() => dio.post(
             '/api/v1/auth/chw-signup',
-            data: any(named: 'data'),
+            data: captureAny(named: 'data'),
             options: captureAny(named: 'options'),
           )).captured;
-      expect(captured.single, isNull);
+      final data = captured[0] as Map<String, dynamic>;
+      expect(data['invite_code'], 'ABCD1234');
     });
   });
 }

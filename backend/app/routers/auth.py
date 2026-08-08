@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 from app.database import get_db, User, DistrictInvite, AuditLog
 from app.schemas import UserCreate, SupervisorSignup, ChwSignup
 import os
+import re
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -123,7 +124,8 @@ def chw_signup(
         raise HTTPException(status_code=400, detail="Username already exists")
 
     invite = db.query(DistrictInvite).filter(
-        DistrictInvite.code == user.invite_code.strip().upper()
+        DistrictInvite.code == re.sub(r"[^A-Z0-9]", "",
+                                      user.invite_code.strip().upper())
     ).first()
     if not invite:
         raise HTTPException(status_code=400,
