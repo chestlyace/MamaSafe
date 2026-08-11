@@ -109,6 +109,11 @@ export default function ProfilePage() {
     }
   };
 
+  const handlePwdInput = (field, value) => {
+    setPwdErr('');
+    setPwd((prev) => ({ ...prev, [field]: value }));
+  };
+
   const initial = (profile.full_name || profile.username || '?').trim().charAt(0).toUpperCase();
 
   const fieldInput = (name, label, placeholder) => (
@@ -214,7 +219,7 @@ export default function ProfilePage() {
                 <input
                   type="password"
                   value={pwd.current_password}
-                  onChange={(e) => setPwd({ ...pwd, current_password: e.target.value })}
+                  onChange={(e) => handlePwdInput('current_password', e.target.value)}
                   className="w-full px-3 py-2 bg-surface border border-border rounded-lg text-sm text-text-heading"
                 />
               </label>
@@ -223,7 +228,7 @@ export default function ProfilePage() {
                 <input
                   type="password"
                   value={pwd.new_password}
-                  onChange={(e) => setPwd({ ...pwd, new_password: e.target.value })}
+                  onChange={(e) => handlePwdInput('new_password', e.target.value)}
                   className="w-full px-3 py-2 bg-surface border border-border rounded-lg text-sm text-text-heading"
                 />
               </label>
@@ -232,7 +237,7 @@ export default function ProfilePage() {
                 <input
                   type="password"
                   value={pwd.confirm_password}
-                  onChange={(e) => setPwd({ ...pwd, confirm_password: e.target.value })}
+                  onChange={(e) => handlePwdInput('confirm_password', e.target.value)}
                   className="w-full px-3 py-2 bg-surface border border-border rounded-lg text-sm text-text-heading"
                 />
               </label>
